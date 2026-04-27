@@ -6,164 +6,123 @@
 <title>Painel Império Hap-on — Josy Bomfim</title>
  
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',sans-serif;background:#f0f2f7;padding:16px;color:#1a1a2e;font-size:13px}
- 
-/* TÍTULO */
-h1{font-size:16px;font-weight:800;margin-bottom:2px}
-.subtitle{font-size:11.5px;color:#666;margin-bottom:14px}
- 
-/* KPIs */
-.kpi-row,.kpi-row2{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:10px}
-.kpi{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-top:3px solid #ccc}
-.kpi-label{font-size:10px;text-transform:uppercase;color:#888}
-.kpi-value{font-size:20px;font-weight:800}
-.kpi-pct{font-size:11px;font-weight:700}
-.kpi-sub{font-size:10px;color:#999}
- 
-/* SEÇÕES */
-.section-title{font-size:12px;font-weight:700;margin:14px 0 8px;color:#555}
- 
-/* CARDS SUP */
-.sup-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-.sup-card{background:#fff;border-radius:12px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.sup-name{font-size:11px;font-weight:800}
-.sup-alias{font-size:10px;color:#aaa;margin-bottom:6px}
-.sup-stats{display:flex;justify-content:space-between}
-.sup-stat-val{font-size:12px;font-weight:800}
-.bar-bg{background:#eee;height:6px;border-radius:20px;margin-top:6px}
-.bar-fill{height:100%;background:#4361ee;border-radius:20px}
- 
-/* TABELA */
-.table-wrap{background:#fff;border-radius:12px;padding:12px;margin-top:10px}
-table{width:100%;border-collapse:collapse}
-th,td{padding:6px;font-size:12px}
-thead{background:#f5f5f5}
- 
-/* BASE */
-.bases-tabs-nav{display:flex;gap:6px;margin-top:20px}
-.base-tab{padding:6px 16px;border-radius:20px;border:1px solid #ddd;cursor:pointer}
-.base-tab.active{background:#4361ee;color:#fff}
- 
+body{font-family:Arial;background:#f4f6fb;padding:20px}
+h1{font-size:18px}
+.kpi{background:#fff;padding:12px;border-radius:10px;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.card{background:#fff;padding:10px;border-radius:10px}
+.bar{height:6px;background:#eee;border-radius:10px;margin-top:5px}
+.fill{height:100%;background:#4361ee;border-radius:10px}
+table{width:100%;background:#fff;border-radius:10px;margin-top:10px}
+td,th{padding:6px;font-size:12px}
 </style>
-</head>
  
+</head>
 <body>
  
 <h1>📊 Painel de Performance — Equipe Império</h1>
-<p class="subtitle">Gestão Josy Bomfim · Atualizado</p>
  
-<div id="kpi-row1" class="kpi-row"></div>
-<div id="kpi-row2" class="kpi-row2"></div>
+<div id="kpis"></div>
  
-<div class="section-title">Performance por Equipe</div>
-<div id="sup-grid" class="sup-grid"></div>
+<div class="grid" id="cards"></div>
  
-<div class="section-title">Ranking</div>
-<div class="table-wrap">
 <table>
 <thead>
 <tr>
 <th>#</th>
 <th>Promotor</th>
 <th>Equipe</th>
-<th>Vidas</th>
+<th>PF</th>
+<th>Adesão</th>
+<th>PME</th>
+<th>Total</th>
 <th>Meta</th>
 <th>%</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
-</div>
- 
-<div class="section-title">📋 Bases de Vendas</div>
- 
-<div class="bases-tabs-nav">
-<button class="base-tab active">PF</button>
-<button class="base-tab">Adesão</button>
-<button class="base-tab">PME</button>
-</div>
- 
-<div class="table-wrap">
-<table>
-<thead>
-<tr>
-<th>Promotor</th>
-<th>Supervisor</th>
-<th>Cliente</th>
-<th>Data</th>
-</tr>
-</thead>
-<tbody id="base-tbody"></tbody>
-</table>
-</div>
  
 <script>
  
-/* ===== DADOS ===== */
-const data = [
-{nome:"Aline", eq:"Alfa", v:64, meta:90},
-{nome:"Andreza", eq:"Gladiadores", v:91, meta:90},
-{nome:"Giovanna", eq:"Adm", v:64, meta:60},
+/* ===== DADOS ATUALIZADOS DA PLANILHA ===== */
+const rawData = [
+{s:"HUMBERTO BANQUERI",p:"JAQUELINE SILVA",meta:90,v:128,pf:98,a:0,pme:30},
+{s:"HUMBERTO BANQUERI",p:"BRUNA CAMPASSI",meta:90,v:118,pf:110,a:0,pme:8},
+{s:"HUMBERTO BANQUERI",p:"MARIANA FELIX",meta:90,v:110,pf:75,a:0,pme:35},
+{s:"HUMBERTO BANQUERI",p:"JULIA SILVA",meta:90,v:87,pf:87,a:0,pme:0},
+{s:"HUMBERTO BANQUERI",p:"ROBSON SOUZA",meta:90,v:86,pf:51,a:0,pme:35},
+ 
+{s:"LUIZ ROBERTO",p:"ANA CAROLINA ANTUNES",meta:90,v:95,pf:95,a:0,pme:0},
+{s:"LUIZ ROBERTO",p:"ANDREZZA MACCHINI",meta:90,v:91,pf:91,a:0,pme:0},
+ 
+{s:"REBECA MOURA",p:"ELISAMA GIZZI",meta:100,v:65,pf:65,a:0,pme:0},
+{s:"REBECA MOURA",p:"GUSTAVO BARROS",meta:80,v:68,pf:64,a:4,pme:0},
+ 
+{s:"BENVE",p:"CAMILA MOREIRA",meta:57,v:35,pf:35,a:0,pme:0}
 ];
  
-/* ===== KPIs ===== */
-function renderKPIs(){
-let total = data.reduce((a,b)=>a+b.v,0);
-let meta = data.reduce((a,b)=>a+b.meta,0);
+/* ===== KPI ===== */
+function renderKPI(){
+let total = rawData.reduce((a,b)=>a+b.v,0);
+let meta = rawData.reduce((a,b)=>a+b.meta,0);
  
-document.getElementById("kpi-row1").innerHTML = `
-<div class="kpi">
-<div class="kpi-label">Vidas</div>
-<div class="kpi-value">${total}</div>
-</div>
- 
-<div class="kpi">
-<div class="kpi-label">Meta</div>
-<div class="kpi-value">${meta}</div>
-</div>
- 
-<div class="kpi">
-<div class="kpi-label">% Atingido</div>
-<div class="kpi-value">${((total/meta)*100).toFixed(1)}%</div>
-</div>
+document.getElementById("kpis").innerHTML = `
+<div class="kpi">Vidas: ${total}</div>
+<div class="kpi">Meta: ${meta}</div>
+<div class="kpi">%: ${(total/meta*100).toFixed(1)}%</div>
 `;
 }
  
-/* ===== SUPERVISORES ===== */
-function renderSup(){
-document.getElementById("sup-grid").innerHTML = data.map(r=>`
-<div class="sup-card">
-<div class="sup-name">${r.nome}</div>
-<div class="sup-alias">${r.eq}</div>
-<div class="sup-stats">
-<span>${r.v}</span>
-<span>${r.meta}</span>
+/* ===== CARDS ===== */
+function renderCards(){
+let grupos = {};
+ 
+rawData.forEach(r=>{
+if(!grupos[r.s]) grupos[r.s]={v:0,meta:0};
+grupos[r.s].v+=r.v;
+grupos[r.s].meta+=r.meta;
+});
+ 
+document.getElementById("cards").innerHTML =
+Object.entries(grupos).map(([sup,val])=>{
+let pct = (val.v/val.meta*100).toFixed(1);
+return `
+<div class="card">
+<strong>${sup}</strong><br>
+${val.v} / ${val.meta} (${pct}%)
+<div class="bar">
+<div class="fill" style="width:${pct}%"></div>
 </div>
-<div class="bar-bg">
-<div class="bar-fill" style="width:${(r.v/r.meta)*100}%"></div>
-</div>
-</div>
-`).join('');
+</div>`;
+}).join('');
 }
  
 /* ===== TABELA ===== */
 function renderTable(){
-document.getElementById("tbody").innerHTML = data.map((r,i)=>`
+let sorted = [...rawData].sort((a,b)=>b.v-a.v);
+ 
+document.getElementById("tbody").innerHTML =
+sorted.map((r,i)=>{
+let pct = (r.v/r.meta*100).toFixed(1);
+return `
 <tr>
 <td>${i+1}</td>
-<td>${r.nome}</td>
-<td>${r.eq}</td>
-<td>${r.v}</td>
+<td>${r.p}</td>
+<td>${r.s}</td>
+<td>${r.pf}</td>
+<td>${r.a}</td>
+<td>${r.pme}</td>
+<td><strong>${r.v}</strong></td>
 <td>${r.meta}</td>
-<td>${((r.v/r.meta)*100).toFixed(1)}%</td>
-</tr>
-`).join('');
+<td>${pct}%</td>
+</tr>`;
+}).join('');
 }
  
 /* ===== INIT ===== */
-renderKPIs();
-renderSup();
+renderKPI();
+renderCards();
 renderTable();
  
 </script>

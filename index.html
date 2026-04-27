@@ -47,6 +47,14 @@ body {
   background: #4361ee;
   color: #fff;
 }
+
+/* 🔒 Ocultar botões específicos */
+button[onclick*="carteira.html"],
+button[onclick*="disparos.html"],
+button[onclick*="qualidade.html"],
+button[onclick*="absenteismo.html"] {
+  display: none;
+}
  
 iframe {
   flex: 1;
@@ -61,7 +69,7 @@ iframe {
 <div class="menu">
 <h2>📊 Império Hap-on</h2>
  
-  <button onclick="loadPage('vidas.html', this)" class="active">Vidas</button>
+<button onclick="loadPage('vidas.html', this)" class="active">Vidas</button>
 <button onclick="loadPage('conversao.html', this)">Conversão</button>
 <button onclick="loadPage('disponivel.html', this)">Disponível / 1º resposta</button>
 <button onclick="loadPage('carteira.html', this)">Carteira de Clientes</button>
@@ -77,12 +85,10 @@ iframe {
 function loadPage(page, element){
   document.getElementById('frame').src = page;
  
-  // remover ativo de todos
   document.querySelectorAll('.menu button').forEach(btn => {
     btn.classList.remove('active');
   });
  
-  // ativar o clicado
   element.classList.add('active');
 }
 </script>

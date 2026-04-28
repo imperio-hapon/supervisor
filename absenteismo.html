@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hap Vida — EQUIPE IMPÉRIO — Comercial Digital Hap On</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --surface: #ffffff;
+    --card: #ffffff;
+    --border: #e2e7f0;
+    --accent: #e8620a;
+    --accent2: #e8541e;
+    --accent3: #18a05c;
+    --accent4: #d4900a;
+    --text: #1a2035;
+    --muted: #6b7595;
+    --danger: #d63b5a;
+    --success: #18a05c;
+    --warning: #d4900a;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+  /* ====== HEADER ====== */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .badge { background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.5px; }
+  .header-actions { display: flex; gap: 10px; }
+  .btn { padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; transition: all .2s; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); background: rgba(232,98,10,.06); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-danger { background: var(--danger); color: #fff; font-size: 12px; padding: 5px 12px; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  /* ====== TABS ====== */
+  .tabs { display: flex; gap: 4px; padding: 16px 32px 0; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .tab { padding: 10px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; transition: all .2s; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(232,98,10,.07); }
+  .tab:hover:not(.active) { color: var(--text); background: rgba(232,98,10,.04); }
+  /* ====== LAYOUT ====== */
+  .main { padding: 28px 32px; max-width: 1600px; margin: 0 auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+  /* ====== FILTERS ====== */
+  .filters { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; align-items: flex-end; }
+  .filter-group { display: flex; flex-direction: column; gap: 5px; }
+  .filter-group label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .filter-group select, .filter-group input {
+    background: #ffffff; border: 1px solid var(--border); color: var(--text);
+    padding: 8px 14px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px;
+    min-width: 160px; outline: none; transition: border .2s;
+  }
+  .filter-group select:focus, .filter-group input:focus { border-color: var(--accent); }
+  /* ====== KPI CARDS ====== */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .kpi-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px 22px; position: relative; overflow: hidden;
+    transition: border-color .2s; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .kpi-card:hover { border-color: var(--accent); box-shadow: 0 4px 16px rgba(232,98,10,.12); }
+  .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .kpi-card.blue::before { background: var(--accent); }
+  .kpi-card.red::before { background: var(--danger); }
+  .kpi-card.green::before { background: var(--success); }
+  .kpi-card.yellow::before { background: var(--warning); }
+  .kpi-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+  .kpi-value { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; line-height: 1; }
+  .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .kpi-trend { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; margin-top: 6px; }
+  .kpi-trend.up { color: var(--danger); }
+  .kpi-trend.down { color: var(--success); }
+  /* ====== CHARTS GRID ====== */
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .chart-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px; position: relative; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .chart-card.wide { grid-column: 1 / -1; }
+  .chart-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+  .chart-title span { font-family: 'DM Sans', sans-serif; font-weight: 400; font-size: 12px; color: var(--muted); }
+  canvas { max-height: 260px; }
+  /* ====== TABLE ====== */
+  .table-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .table-header { padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+  .table-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border); background: #f8fafd; }
+  td { padding: 12px 16px; border-bottom: 1px solid rgba(226,231,240,.7); font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(232,98,10,.04); }
+  .pill { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .pill-red { background: rgba(247,79,111,.15); color: var(--danger); }
+  .pill-yellow { background: rgba(247,201,79,.15); color: var(--warning); }
+  .pill-green { background: rgba(79,201,138,.15); color: var(--success); }
+  .pill-blue { background: rgba(79,142,247,.15); color: var(--accent); }
+  .pill-orange { background: rgba(247,111,79,.15); color: var(--accent2); }
+  .rate-bar { display: flex; align-items: center; gap: 8px; }
+  .rate-fill { height: 6px; border-radius: 3px; background: var(--accent); }
+  .rate-fill.bad { background: var(--danger); }
+  .rate-fill.ok { background: var(--warning); }
+  .rate-fill.good { background: var(--success); }
+  /* ====== FORMS / MODALS ====== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200;
+    display: none; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #ffffff; border: 1px solid var(--border); border-radius: 16px;
+    padding: 28px; min-width: 440px; max-width: 90vw; max-height: 88vh; overflow-y: auto;
+    box-shadow: 0 8px 40px rgba(0,0,0,.15);
+  }
+  .modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; margin-bottom: 20px; }
+  .form-row { display: flex; gap: 12px; margin-bottom: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .form-group label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .form-group input, .form-group select, .form-group textarea {
+    background: #f8fafd; border: 1px solid var(--border); color: var(--text);
+    padding: 9px 13px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px;
+    outline: none; transition: border .2s; width: 100%;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+  /* ====== HIERARCHY TREE ====== */
+  .tree { padding: 8px 0; }
+  .tree-node { margin: 3px 0; }
+  .tree-row {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px;
+    cursor: pointer; transition: background .15s; border: 1px solid transparent;
+  }
+  .tree-row:hover { background: rgba(232,98,10,.06); border-color: var(--border); }
+  .tree-indent { padding-left: 24px; }
+  .tree-icon { font-size: 16px; min-width: 22px; }
+  .tree-name { flex: 1; font-weight: 500; }
+  .tree-role { font-size: 11px; color: var(--muted); }
+  .tree-actions { display: flex; gap: 6px; opacity: 0; transition: opacity .15s; }
+  .tree-row:hover .tree-actions { opacity: 1; }
+  .tree-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 14px; padding: 2px 5px; border-radius: 4px; transition: color .15s, background .15s; }
+  .tree-btn:hover { color: var(--accent); background: rgba(232,98,10,.1); }
+  .tree-btn.del:hover { color: var(--danger); background: rgba(214,59,90,.1); }
+  .level-gestao > .tree-row .tree-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; color: #e8620a; }
+  .level-supervisor > .tree-row .tree-name { font-weight: 600; font-size: 14px; color: var(--accent4); }
+  /* ====== ABSENCE REGISTER ====== */
+  .absence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  /* ====== SCROLLBAR ====== */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #f0f2f8; }
+  ::-webkit-scrollbar-thumb { background: #c8d0e0; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+  /* ====== RESPONSIVE ====== */
+  @media (max-width: 900px) {
+    .charts-grid { grid-template-columns: 1fr; }
+    .charts-grid .chart-card.wide { grid-column: 1; }
+    .absence-grid { grid-template-columns: 1fr; }
+    .main { padding: 16px; }
+  }
+  /* ====== SECTION HEADER ====== */
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .section-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; }
+  .section-sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
+  /* ====== TOAST ====== */
+  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--success); color: #fff; padding: 12px 22px; border-radius: 10px; font-weight: 500; font-size: 13px; z-index: 999; opacity: 0; transform: translateY(8px); transition: all .3s; pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,.15); }
+  #toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">Hap <span>Vida</span></div>
+    <div style="display:flex;flex-direction:column;gap:3px">
+      <div class="badge" style="background:#e8620a">EQUIPE IMPÉRIO</div>
+      <div style="font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.3px">Comercial Digital Hap On</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="exportCSV()">⬇ Exportar CSV</button>
+    <button class="btn btn-primary" onclick="openModal('modal-absence')">+ Registrar Ausência</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('dashboard', this)">📊 Dashboard</div>
+  <div class="tab" onclick="switchTab('hierarchy', this)">🏢 Hierarquia</div>
+  <div class="tab" onclick="switchTab('absences', this)">📋 Ausências</div>
+  <div class="tab" onclick="switchTab('colaboradores', this)">👥 Colaboradores</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB: DASHBOARD -->
+<!-- ============================================================ -->
+<div class="main">
+<div id="tab-dashboard" class="section active">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Visão Geral — Absenteísmo</div>
+      <div class="section-sub">Período: Abril / 2026 · Gerente: Josy Bomfim — Equipe Império</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-group">
+      <label>Período</label>
+      <select id="f-period" onchange="updateDashboard()">
+        <option value="all">Todos</option>
+        <option value="2026-04" selected>Abril 2026</option>
+        <option value="2026-03">Março 2026</option>
+        <option value="2026-02">Fevereiro 2026</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Gestão</label>
+      <select id="f-gestao" onchange="updateDashboard()">
+        <option value="all">Todas</option>
+        <option value="JOSY BOMFIM">JOSY BOMFIM</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Supervisor</label>
+      <select id="f-supervisor" onchange="updateDashboard()">
+        <option value="all">Todos</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Colaborador</label>
+      <input type="text" id="f-colab" placeholder="Nome..." oninput="updateDashboard()">
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="kpi-label">Colaboradores Ativos</div>
+      <div class="kpi-value" id="kpi-total">—</div>
+      <div class="kpi-sub">No período selecionado</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Taxa de Absenteísmo</div>
+      <div class="kpi-value" id="kpi-taxa">—</div>
+      <div class="kpi-trend" id="kpi-taxa-trend"></div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-label">Horas Perdidas</div>
+      <div class="kpi-value" id="kpi-horas">—</div>
+      <div class="kpi-sub">Total no período</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Horas Previstas</div>
+      <div class="kpi-value" id="kpi-prev">—</div>
+      <div class="kpi-sub">Carga: 40h/sem × 4 sem</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Ausências Registradas</div>
+      <div class="kpi-value" id="kpi-ausencias">—</div>
+      <div class="kpi-sub">Ocorrências no período</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-grid">
+    <div class="chart-card wide">
+      <div class="chart-title">Evolução do Absenteísmo <span>% por semana</span></div>
+      <canvas id="chart-line"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Absenteísmo por Supervisor <span>horas perdidas</span></div>
+      <canvas id="chart-bar"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Tipos de Ausência <span>distribuição</span></div>
+      <canvas id="chart-pie"></canvas>
+    </div>
+  </div>
+
+  <!-- Ranking table -->
+  <div class="table-card">
+    <div class="table-header">
+      <div class="table-title">Ranking de Absenteísmo por Colaborador</div>
+      <span style="font-size:12px;color:var(--muted)">Ordenado por taxa</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Colaborador</th>
+          <th>Supervisor</th>
+          <th>Gestão</th>
+          <th>H. Previstas</th>
+          <th>H. Ausentes</th>
+          <th>Taxa Absenteísmo</th>
+          <th>Tipo Principal</th>
+        </tr>
+      </thead>
+      <tbody id="ranking-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB: HIERARQUIA -->
+<!-- ============================================================ -->
+<div id="tab-hierarchy" class="section">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Hierarquia Organizacional</div>
+      <div class="section-sub">Gerencie a estrutura da equipe</div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-outline" onclick="openModal('modal-colab')">+ Colaborador</button>
+      <button class="btn btn-primary" onclick="openModal('modal-supervisor')">+ Supervisor</button>
+    </div>
+  </div>
+  <div class="table-card" style="padding:20px">
+    <div id="tree-container" class="tree"></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB: AUSÊNCIAS -->
+<!-- ============================================================ -->
+<div id="tab-absences" class="section">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Registro de Ausências</div>
+      <div class="section-sub">Todas as ocorrências de absenteísmo</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-absence')">+ Nova Ausência</button>
+  </div>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Colaborador</th>
+          <th>Supervisor</th>
+          <th>Tipo</th>
+          <th>Duração (h)</th>
+          <th>Observação</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="absences-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB: COLABORADORES -->
+<!-- ============================================================ -->
+<div id="tab-colaboradores" class="section">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Colaboradores</div>
+      <div class="section-sub">Cadastro completo da equipe</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-colab')">+ Adicionar</button>
+  </div>
+  <div class="filters">
+    <div class="filter-group">
+      <label>Buscar</label>
+      <input type="text" id="search-colab" placeholder="Nome ou cargo..." oninput="renderColabTable()">
+    </div>
+    <div class="filter-group">
+      <label>Supervisor</label>
+      <select id="filter-colab-sup" onchange="renderColabTable()"><option value="all">Todos</option></select>
+    </div>
+  </div>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Cargo</th>
+          <th>Supervisor</th>
+          <th>Gestão</th>
+          <th>Admissão</th>
+          <th>H. Previstas/mês</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="colab-tbody"></tbody>
+    </table>
+  </div>
+</div>
+</div><!-- /main -->
+
+<!-- ============================================================ -->
+<!-- MODALS -->
+<!-- ============================================================ -->
+
+<!-- Modal: Ausência -->
+<div class="modal-overlay" id="modal-absence">
+  <div class="modal">
+    <div class="modal-title">Registrar Ausência</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Colaborador *</label>
+        <select id="abs-colab"></select>
+      </div>
+      <div class="form-group">
+        <label>Data *</label>
+        <input type="date" id="abs-data">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tipo de Ausência *</label>
+        <select id="abs-tipo">
+          <option value="Falta">Falta Injustificada</option>
+          <option value="Atestado">Atestado Médico</option>
+          <option value="Atraso">Atraso</option>
+          <option value="Saída Antecipada">Saída Antecipada</option>
+          <option value="Licença">Licença</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Duração (horas) *</label>
+        <input type="number" id="abs-horas" min="0.5" max="8" step="0.5" placeholder="Ex: 4">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Observação</label>
+        <textarea id="abs-obs" rows="2" placeholder="Detalhes opcionais..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-absence')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAbsence()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Colaborador -->
+<div class="modal-overlay" id="modal-colab">
+  <div class="modal">
+    <div class="modal-title" id="modal-colab-title">Novo Colaborador</div>
+    <input type="hidden" id="colab-edit-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nome Completo *</label>
+        <input type="text" id="colab-nome" placeholder="Nome do colaborador">
+      </div>
+      <div class="form-group">
+        <label>Cargo *</label>
+        <input type="text" id="colab-cargo" placeholder="Ex: Promotor" value="Promotor">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Supervisor *</label>
+        <select id="colab-supervisor"></select>
+      </div>
+      <div class="form-group">
+        <label>Data de Admissão</label>
+        <input type="date" id="colab-admissao">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-colab')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveColab()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Supervisor -->
+<div class="modal-overlay" id="modal-supervisor">
+  <div class="modal">
+    <div class="modal-title">Novo Supervisor</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nome *</label>
+        <input type="text" id="sup-nome" placeholder="Nome do supervisor">
+      </div>
+      <div class="form-group">
+        <label>Gestão *</label>
+        <select id="sup-gestao">
+          <option value="JOSY BOMFIM">JOSY BOMFIM</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-supervisor')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveSupervisor()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast">✓ Salvo com sucesso!</div>
+
+<script>
+// ================================================================
+// DATA MODEL
+// ================================================================
+const TIPO_COLORS = {
+  'Falta': '#f74f6f',
+  'Atestado': '#4f8ef7',
+  'Atraso': '#f7c94f',
+  'Saída Antecipada': '#f76f4f',
+  'Licença': '#4fc98a',
+  'Outro': '#7a8099'
+};
+
+let state = {
+  gestoes: ['JOSY BOMFIM'],
+  supervisores: [
+    { id:'sup1', nome:'HUMBERTO BANQUERI', gestao:'JOSY BOMFIM' },
+    { id:'sup2', nome:'GIOVANNA SANTANA',  gestao:'JOSY BOMFIM' },
+    { id:'sup3', nome:'LUIZ ROBERTO',      gestao:'JOSY BOMFIM' },
+    { id:'sup4', nome:'REBECA MOURA',      gestao:'JOSY BOMFIM' },
+    { id:'sup5', nome:'TAIS COLARES',      gestao:'JOSY BOMFIM' },
+  ],
+  colaboradores: [
+    // HUMBERTO BANQUERI
+    {id:'c1',  nome:'JAQUELINE SILVA',       cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c2',  nome:'BRUNA CAMPASSI',        cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c3',  nome:'MARIANA FELIX',         cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c4',  nome:'JULIA SILVA',           cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c5',  nome:'ROBSON SOUZA',          cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c6',  nome:'DELIANE GOMES',         cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c7',  nome:'ALINE GUNELLO',         cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c8',  nome:'ALINE RIBEIRO',         cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c9',  nome:'SUELLEN GUIMARAES',     cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c10', nome:'ISABELLA MATTOS',       cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c11', nome:'MOOARA RODRIGUES',      cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c12', nome:'GLEIRE VALERIO',        cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c13', nome:'ANA PAULA CAMPANA',     cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c14', nome:'LARISSA PAES',          cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c15', nome:'GIOVANNA BARBIERI',     cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c16', nome:'ANA JULIA COSTA',       cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c17', nome:'LUZINETE DOURADO',      cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c18', nome:'LUCIANA TRIPICCHIO',    cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c19', nome:'ISABELLA SOUZA',        cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c20', nome:'ISAQUE FERREIRA',       cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c21', nome:'HIGOR CRISPIM',         cargo:'Promotor', supervisor:'sup1', admissao:''},
+    {id:'c22', nome:'BRUNA LAVESSO',         cargo:'Promotor', supervisor:'sup1', admissao:''},
+    // GIOVANNA SANTANA
+    {id:'c23', nome:'TATI SILVA',            cargo:'Promotor', supervisor:'sup2', admissao:''},
+    {id:'c24', nome:'PATRICIA LIMA',         cargo:'Promotor', supervisor:'sup2', admissao:''},
+    {id:'c25', nome:'BRUNO IGNACIO',         cargo:'Promotor', supervisor:'sup2', admissao:''},
+    {id:'c26', nome:'ANDREA ANTUNES',        cargo:'Promotor', supervisor:'sup2', admissao:''},
+    {id:'c27', nome:'AMANDA SOUZA',          cargo:'Promotor', supervisor:'sup2', admissao:''},
+    {id:'c28', nome:'KARLA MONTEIRO',        cargo:'Promotor', supervisor:'sup2', admissao:''},
+    // LUIZ ROBERTO
+    {id:'c29', nome:'ANA CAROLINA ANTUNES',  cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c30', nome:'ANDREZZA MACCHINI',     cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c31', nome:'RAYANE LOPES',          cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c32', nome:'MARCELA MONTANARI',     cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c33', nome:'UNILDO FERREIRA',       cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c34', nome:'RAIANE LIMA',           cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c35', nome:'LIGIVANIA SILVA',       cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c36', nome:'THAISA ALMEIDA',        cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c37', nome:'JANEILA FIGUEIREDO',    cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c38', nome:'SOFIA LUNGA',           cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c39', nome:'MIRIAM FERREIRA',       cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c40', nome:'SONIA LINO',            cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c41', nome:'DANILO FOGACA',         cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c42', nome:'THAMIRIS FRANCISQUELLI',cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c43', nome:'JADY QUEIROZ',          cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c44', nome:'SABRINA GIOLO',         cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c45', nome:'RAISSA BURIN',          cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c46', nome:'RENATO JESUS',          cargo:'Promotor', supervisor:'sup3', admissao:''},
+    {id:'c47', nome:'ISABELLE SCHANZ',       cargo:'Promotor', supervisor:'sup3', admissao:''},
+    // REBECA MOURA (REBECA BENVE no CSV = REBECA MOURA)
+    {id:'c48', nome:'GUSTAVO BARROS',        cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c49', nome:'ELISAMA GIZZI',         cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c50', nome:'FELIPE SOUZA',          cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c51', nome:'THAINA BERCHELI',       cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c52', nome:'LUAN RIBEIRO',          cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c53', nome:'PAULA JESUS',           cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c54', nome:'KEILA OLIVEIRA',        cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c55', nome:'GABRIELA REIS',         cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c56', nome:'NATALIA BORGES',        cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c57', nome:'BRUNO FERREIRA',        cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c58', nome:'MARIA APARECIDA CORREA',cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c59', nome:'BEATRIZ CORDEIRO',      cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c60', nome:'FERNANDA CARRARO',      cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c61', nome:'KAMILA KUNER',          cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c62', nome:'JESSICA COSTA',         cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c63', nome:'MIKAELLY CAMILY',       cargo:'Promotor', supervisor:'sup4', admissao:''},
+    {id:'c64', nome:'FERNANDA FRANCISCO',    cargo:'Promotor', supervisor:'sup4', admissao:''},
+    // TAIS COLARES
+    {id:'c65', nome:'CAMILA MOREIRA',        cargo:'Promotor', supervisor:'sup5', admissao:''},
+    {id:'c66', nome:'ANA BEATRIZ MACHUCA',   cargo:'Promotor', supervisor:'sup5', admissao:''},
+    {id:'c67', nome:'DANIELLE MUZELL',       cargo:'Promotor', supervisor:'sup5', admissao:''},
+    {id:'c68', nome:'JULIA MARQUES',         cargo:'Promotor', supervisor:'sup5', admissao:''},
+    {id:'c69', nome:'CRISTINA LOPES',        cargo:'Promotor', supervisor:'sup5', admissao:''},
+    {id:'c70', nome:'TAIS LOPES',            cargo:'Promotor', supervisor:'sup5', admissao:''},
+  ],
+  ausencias: []
+};
+
+// Sem ausências simuladas — registre manualmente via "+ Registrar Ausência"
+
+
+// ================================================================
+// CHARTS
+// ================================================================
+let charts = {};
+
+function initCharts(){
+  // Line chart
+  const ctxLine = document.getElementById('chart-line').getContext('2d');
+  charts.line = new Chart(ctxLine, {
+    type:'line',
+    data:{ labels:[], datasets:[] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:'#6b7595', font:{family:'DM Sans'} } } },
+      scales:{
+        x:{ grid:{color:'rgba(0,0,0,.06)'}, ticks:{color:'#6b7595'} },
+        y:{ grid:{color:'rgba(0,0,0,.06)'}, ticks:{color:'#6b7595', callback:v=>v+'%'} }
+      }
+    }
+  });
+  // Bar chart
+  const ctxBar = document.getElementById('chart-bar').getContext('2d');
+  charts.bar = new Chart(ctxBar, {
+    type:'bar',
+    data:{ labels:[], datasets:[] },
+    options:{
+      responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ grid:{color:'rgba(0,0,0,.06)'}, ticks:{color:'#6b7595'} },
+        y:{ grid:{color:'rgba(0,0,0,.06)'}, ticks:{color:'#6b7595', font:{size:11}} }
+      }
+    }
+  });
+  // Pie chart
+  const ctxPie = document.getElementById('chart-pie').getContext('2d');
+  charts.pie = new Chart(ctxPie, {
+    type:'doughnut',
+    data:{ labels:[], datasets:[] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'right', labels:{ color:'#6b7595', font:{family:'DM Sans'}, padding:14 } } },
+      cutout:'60%'
+    }
+  });
+}
+
+function updateCharts(filtered){
+  // Line: weekly absences
+  const weeks = ['Sem 1 (1-7)','Sem 2 (8-14)','Sem 3 (15-21)','Sem 4 (22-28)'];
+  const weekRanges = [[1,7],[8,14],[15,21],[22,28]];
+  const totalCollabs = state.colaboradores.length;
+  const weekHoursExpected = totalCollabs * 40;
+  const weeklyHoursLost = weekRanges.map(([s,e])=>{
+    return filtered.filter(a=>{
+      const d = parseInt(a.data.split('-')[2]);
+      return d>=s && d<=e;
+    }).reduce((acc,a)=>acc+a.horas,0);
+  });
+  const weeklyRates = weeklyHoursLost.map(h => +((h/weekHoursExpected)*100).toFixed(2));
+  charts.line.data.labels = weeks;
+  charts.line.data.datasets = [{
+    label:'Taxa Absenteísmo %',
+    data: weeklyRates,
+    borderColor:'#e8620a',
+    backgroundColor:'rgba(232,98,10,.08)',
+    fill:true, tension:.4, pointRadius:5, pointBackgroundColor:'#e8620a'
+  }];
+  charts.line.update();
+
+  // Bar: by supervisor
+  const supHours = {};
+  state.supervisores.forEach(s=>supHours[s.id]=0);
+  filtered.forEach(a=>{
+    const c = state.colaboradores.find(x=>x.id===a.colaboradorId);
+    if(c) supHours[c.supervisor] = (supHours[c.supervisor]||0) + a.horas;
+  });
+  const barLabels = state.supervisores.map(s=>s.nome.split(' ')[0]);
+  const barData = state.supervisores.map(s=>supHours[s.id]||0);
+  charts.bar.data.labels = barLabels;
+  charts.bar.data.datasets = [{
+    data:barData,
+    backgroundColor:['#4f8ef7','#f7c94f','#4fc98a','#f74f6f','#f76f4f'],
+    borderRadius:6
+  }];
+  charts.bar.update();
+
+  // Pie: by type
+  const typeTotals = {};
+  filtered.forEach(a=>{ typeTotals[a.tipo]=(typeTotals[a.tipo]||0)+a.horas; });
+  charts.pie.data.labels = Object.keys(typeTotals);
+  charts.pie.data.datasets = [{
+    data: Object.values(typeTotals),
+    backgroundColor: Object.keys(typeTotals).map(t=>TIPO_COLORS[t]||'#7a8099'),
+    borderWidth:0
+  }];
+  charts.pie.update();
+}
+
+// ================================================================
+// FILTER & UPDATE
+// ================================================================
+function getFilteredAbsences(){
+  const fGestao = document.getElementById('f-gestao')?.value || 'all';
+  const fSup = document.getElementById('f-supervisor')?.value || 'all';
+  const fColab = (document.getElementById('f-colab')?.value||'').toLowerCase();
+  const fPeriod = document.getElementById('f-period')?.value || 'all';
+
+  return state.ausencias.filter(a => {
+    const c = state.colaboradores.find(x=>x.id===a.colaboradorId);
+    if(!c) return false;
+    const s = state.supervisores.find(x=>x.id===c.supervisor);
+    if(fGestao!=='all' && s?.gestao!==fGestao) return false;
+    if(fSup!=='all' && c.supervisor!==fSup) return false;
+    if(fColab && !c.nome.toLowerCase().includes(fColab)) return false;
+    if(fPeriod!=='all' && !a.data.startsWith(fPeriod)) return false;
+    return true;
+  });
+}
+
+function getFilteredCollabs(){
+  const fGestao = document.getElementById('f-gestao')?.value || 'all';
+  const fSup = document.getElementById('f-supervisor')?.value || 'all';
+  const fColab = (document.getElementById('f-colab')?.value||'').toLowerCase();
+  return state.colaboradores.filter(c=>{
+    const s = state.supervisores.find(x=>x.id===c.supervisor);
+    if(fGestao!=='all' && s?.gestao!==fGestao) return false;
+    if(fSup!=='all' && c.supervisor!==fSup) return false;
+    if(fColab && !c.nome.toLowerCase().includes(fColab)) return false;
+    return true;
+  });
+}
+
+function updateDashboard(){
+  const filtered = getFilteredAbsences();
+  const collabs = getFilteredCollabs();
+  const horasPrev = collabs.length * 160; // 40h/sem * 4 sem
+  const horasLost = filtered.reduce((acc,a)=>acc+a.horas,0);
+  const taxa = horasPrev > 0 ? ((horasLost/horasPrev)*100).toFixed(1) : 0;
+
+  document.getElementById('kpi-total').textContent = collabs.length;
+  document.getElementById('kpi-taxa').textContent = taxa+'%';
+  document.getElementById('kpi-horas').textContent = horasLost+'h';
+  document.getElementById('kpi-prev').textContent = horasPrev+'h';
+  document.getElementById('kpi-ausencias').textContent = filtered.length;
+
+  const trend = document.getElementById('kpi-taxa-trend');
+  if(taxa > 5) { trend.className='kpi-trend up'; trend.textContent='▲ Acima do ideal (>5%)'; }
+  else { trend.className='kpi-trend down'; trend.textContent='▼ Dentro do limite'; }
+
+  updateCharts(filtered);
+  renderRankingTable(filtered, collabs);
+  populateSupervisorFilter();
+}
+
+function renderRankingTable(filtered, collabs){
+  const tbody = document.getElementById('ranking-tbody');
+  const rows = collabs.map(c=>{
+    const cAbs = filtered.filter(a=>a.colaboradorId===c.id);
+    const hLost = cAbs.reduce((acc,a)=>acc+a.horas,0);
+    const hPrev = 160;
+    const taxa = ((hLost/hPrev)*100).toFixed(1);
+    const s = state.supervisores.find(x=>x.id===c.supervisor);
+    // dominant type
+    const typeCounts = {};
+    cAbs.forEach(a=>typeCounts[a.tipo]=(typeCounts[a.tipo]||0)+1);
+    const mainType = Object.entries(typeCounts).sort((a,b)=>b[1]-a[1])[0]?.[0] || '—';
+    return { c, hLost, hPrev, taxa: parseFloat(taxa), s, mainType };
+  }).sort((a,b)=>b.taxa-a.taxa);
+
+  tbody.innerHTML = rows.map((r,i)=>{
+    const pct = Math.min(r.taxa,20)/20*100;
+    const cls = r.taxa>=5?'bad':r.taxa>=2?'ok':'good';
+    const pillCls = r.taxa>=5?'pill-red':r.taxa>=2?'pill-yellow':'pill-green';
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td><strong>${r.c.nome}</strong></td>
+      <td style="color:var(--muted);font-size:12px">${r.s?.nome||'—'}</td>
+      <td style="color:var(--muted);font-size:12px">${r.s?.gestao||'—'}</td>
+      <td>${r.hPrev}h</td>
+      <td>${r.hLost}h</td>
+      <td>
+        <div class="rate-bar">
+          <div class="rate-fill ${cls}" style="width:${pct}%;min-width:4px"></div>
+          <span class="pill ${pillCls}">${r.taxa}%</span>
+        </div>
+      </td>
+      <td>${r.mainType==='—'?'<span style="color:var(--muted)">—</span>':`<span class="pill" style="background:${TIPO_COLORS[r.mainType]}22;color:${TIPO_COLORS[r.mainType]}">${r.mainType}</span>`}</td>
+    </tr>`;
+  }).join('');
+}
+
+function populateSupervisorFilter(){
+  const sel = document.getElementById('f-supervisor');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="all">Todos</option>' +
+    state.supervisores.map(s=>`<option value="${s.id}" ${s.id===cur?'selected':''}>${s.nome.split(' ')[0]}</option>`).join('');
+}
+
+// ================================================================
+// HIERARCHY TREE
+// ================================================================
+function renderTree(){
+  const container = document.getElementById('tree-container');
+  let html = '';
+  state.gestoes.forEach(g=>{
+    const sups = state.supervisores.filter(s=>s.gestao===g);
+    const totalColabs = sups.reduce((acc,s)=> acc + state.colaboradores.filter(c=>c.supervisor===s.id).length, 0);
+    html += `<div class="tree-node level-gestao">
+      <div class="tree-row">
+        <span class="tree-icon">👑</span>
+        <span class="tree-name">GERENTE: ${g}</span>
+        <span class="tree-role">${sups.length} supervisor(es) · ${totalColabs} promotor(es)</span>
+      </div>
+      <div class="tree-indent">`;
+    sups.forEach(s=>{
+      const colabs = state.colaboradores.filter(c=>c.supervisor===s.id);
+      html += `<div class="tree-node level-supervisor">
+        <div class="tree-row">
+          <span class="tree-icon">👔</span>
+          <span class="tree-name">${s.nome}</span>
+          <span class="tree-role">Supervisor · ${colabs.length} promotor(es)</span>
+          <div class="tree-actions">
+            <button class="tree-btn del" title="Remover" onclick="removeSupervisor('${s.id}')">🗑</button>
+          </div>
+        </div>
+        <div class="tree-indent">`;
+      colabs.forEach(c=>{
+        html += `<div class="tree-node level-promotor">
+          <div class="tree-row">
+            <span class="tree-icon">👤</span>
+            <span class="tree-name">${c.nome}</span>
+            <span class="tree-role">${c.cargo}${c.admissao?' · desde '+c.admissao:''}</span>
+            <div class="tree-actions">
+              <button class="tree-btn" title="Editar" onclick="editColab('${c.id}')">✏️</button>
+              <button class="tree-btn del" title="Remover" onclick="removeColab('${c.id}')">🗑</button>
+            </div>
+          </div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div></div>`;
+  });
+  container.innerHTML = html;
+}
+
+// ================================================================
+// ABSENCES TABLE
+// ================================================================
+function renderAbsencesTable(){
+  const tbody = document.getElementById('absences-tbody');
+  const sorted = [...state.ausencias].sort((a,b)=>b.data.localeCompare(a.data));
+  tbody.innerHTML = sorted.map(a=>{
+    const c = state.colaboradores.find(x=>x.id===a.colaboradorId);
+    const s = c ? state.supervisores.find(x=>x.id===c.supervisor) : null;
+    const color = TIPO_COLORS[a.tipo]||'#7a8099';
+    return `<tr>
+      <td>${formatDate(a.data)}</td>
+      <td><strong>${c?.nome||'—'}</strong></td>
+      <td style="font-size:12px;color:var(--muted)">${s?.nome||'—'}</td>
+      <td><span class="pill" style="background:${color}22;color:${color}">${a.tipo}</span></td>
+      <td>${a.horas}h</td>
+      <td style="color:var(--muted);font-size:12px">${a.obs||'—'}</td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="removeAbsence('${a.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderColabTable(){
+  const tbody = document.getElementById('colab-tbody');
+  const search = (document.getElementById('search-colab')?.value||'').toLowerCase();
+  const fSup = document.getElementById('filter-colab-sup')?.value||'all';
+  const rows = state.colaboradores.filter(c=>{
+    if(fSup!=='all' && c.supervisor!==fSup) return false;
+    if(search && !c.nome.toLowerCase().includes(search) && !c.cargo.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  tbody.innerHTML = rows.map(c=>{
+    const s = state.supervisores.find(x=>x.id===c.supervisor);
+    return `<tr>
+      <td><strong>${c.nome}</strong></td>
+      <td>${c.cargo}</td>
+      <td style="font-size:12px;color:var(--muted)">${s?.nome||'—'}</td>
+      <td style="font-size:12px;color:var(--muted)">${s?.gestao||'—'}</td>
+      <td style="font-size:12px;color:var(--muted)">${c.admissao?formatDate(c.admissao):'—'}</td>
+      <td>160h</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="editColab('${c.id}')">✏️ Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="removeColab('${c.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // update filter
+  const supSel = document.getElementById('filter-colab-sup');
+  if(supSel){
+    const cur = supSel.value;
+    supSel.innerHTML = '<option value="all">Todos</option>' +
+      state.supervisores.map(s=>`<option value="${s.id}" ${s.id===cur?'selected':''}>${s.nome}</option>`).join('');
+  }
+}
+
+// ================================================================
+// MODALS
+// ================================================================
+function openModal(id){
+  if(id==='modal-absence'){
+    // populate select
+    const sel = document.getElementById('abs-colab');
+    sel.innerHTML = state.colaboradores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+    // set default date
+    document.getElementById('abs-data').value = '2026-04-15';
+  }
+  if(id==='modal-colab'){
+    const supSel = document.getElementById('colab-supervisor');
+    supSel.innerHTML = state.supervisores.map(s=>`<option value="${s.id}">${s.nome}</option>`).join('');
+    document.getElementById('modal-colab-title').textContent = 'Novo Colaborador';
+    document.getElementById('colab-edit-id').value = '';
+    document.getElementById('colab-nome').value = '';
+    document.getElementById('colab-cargo').value = 'Promotor';
+    document.getElementById('colab-admissao').value = '';
+  }
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+window.addEventListener('click', e=>{
+  if(e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
+});
+
+// ================================================================
+// CRUD OPERATIONS
+// ================================================================
+function saveAbsence(){
+  const colId = document.getElementById('abs-colab').value;
+  const data = document.getElementById('abs-data').value;
+  const tipo = document.getElementById('abs-tipo').value;
+  const horas = parseFloat(document.getElementById('abs-horas').value);
+  const obs = document.getElementById('abs-obs').value;
+  if(!colId||!data||!tipo||isNaN(horas)||horas<=0){ alert('Preencha todos os campos obrigatórios.'); return; }
+  state.ausencias.push({ id:'abs'+Date.now(), colaboradorId:colId, data, tipo, horas, obs });
+  closeModal('modal-absence');
+  refreshAll();
+  showToast('Ausência registrada!');
+}
+
+function removeAbsence(id){
+  if(!confirm('Remover esta ausência?')) return;
+  state.ausencias = state.ausencias.filter(a=>a.id!==id);
+  refreshAll();
+  showToast('Removido.');
+}
+
+function saveColab(){
+  const nome = document.getElementById('colab-nome').value.trim().toUpperCase();
+  const cargo = document.getElementById('colab-cargo').value.trim();
+  const supervisor = document.getElementById('colab-supervisor').value;
+  const admissao = document.getElementById('colab-admissao').value;
+  const editId = document.getElementById('colab-edit-id').value;
+  if(!nome||!cargo||!supervisor){ alert('Preencha nome, cargo e supervisor.'); return; }
+  if(editId){
+    const c = state.colaboradores.find(x=>x.id===editId);
+    if(c){ c.nome=nome; c.cargo=cargo; c.supervisor=supervisor; c.admissao=admissao; }
+  } else {
+    state.colaboradores.push({ id:'c'+Date.now(), nome, cargo, supervisor, admissao });
+  }
+  closeModal('modal-colab');
+  refreshAll();
+  showToast('Colaborador salvo!');
+}
+
+function editColab(id){
+  const c = state.colaboradores.find(x=>x.id===id);
+  if(!c) return;
+  document.getElementById('modal-colab-title').textContent = 'Editar Colaborador';
+  document.getElementById('colab-edit-id').value = c.id;
+  document.getElementById('colab-nome').value = c.nome;
+  document.getElementById('colab-cargo').value = c.cargo;
+  document.getElementById('colab-admissao').value = c.admissao||'';
+  const supSel = document.getElementById('colab-supervisor');
+  supSel.innerHTML = state.supervisores.map(s=>`<option value="${s.id}" ${s.id===c.supervisor?'selected':''}>${s.nome}</option>`).join('');
+  document.getElementById('modal-colab').classList.add('open');
+}
+
+function removeColab(id){
+  if(!confirm('Remover este colaborador? As ausências associadas também serão removidas.')) return;
+  state.colaboradores = state.colaboradores.filter(c=>c.id!==id);
+  state.ausencias = state.ausencias.filter(a=>a.colaboradorId!==id);
+  refreshAll();
+  showToast('Removido.');
+}
+
+function saveSupervisor(){
+  const nome = document.getElementById('sup-nome').value.trim().toUpperCase();
+  const gestao = document.getElementById('sup-gestao').value;
+  if(!nome){ alert('Informe o nome.'); return; }
+  state.supervisores.push({ id:'sup'+Date.now(), nome, gestao });
+  closeModal('modal-supervisor');
+  refreshAll();
+  showToast('Supervisor adicionado!');
+}
+
+function removeSupervisor(id){
+  const hasColabs = state.colaboradores.some(c=>c.supervisor===id);
+  if(hasColabs){ alert('Remova os colaboradores deste supervisor antes de excluí-lo.'); return; }
+  if(!confirm('Remover este supervisor?')) return;
+  state.supervisores = state.supervisores.filter(s=>s.id!==id);
+  refreshAll();
+  showToast('Removido.');
+}
+
+// ================================================================
+// EXPORT CSV
+// ================================================================
+function exportCSV(){
+  const headers = ['Data','Colaborador','Supervisor','Gestão','Tipo','Horas','Observação'];
+  const rows = state.ausencias.map(a=>{
+    const c = state.colaboradores.find(x=>x.id===a.colaboradorId);
+    const s = c ? state.supervisores.find(x=>x.id===c.supervisor) : null;
+    return [a.data, c?.nome||'', s?.nome||'', s?.gestao||'', a.tipo, a.horas, a.obs];
+  });
+  const csv = [headers, ...rows].map(r=>r.map(v=>`"${v}"`).join(';')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='absenteismo_abril2026.csv'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Exportado com sucesso!');
+}
+
+// ================================================================
+// TABS
+// ================================================================
+function switchTab(name, el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='hierarchy') renderTree();
+  if(name==='absences') renderAbsencesTable();
+  if(name==='colaboradores') renderColabTable();
+}
+
+// ================================================================
+// UTILS
+// ================================================================
+function formatDate(d){
+  if(!d) return '—';
+  const [y,m,dd] = d.split('-');
+  return `${dd}/${m}/${y}`;
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = '✓ '+msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+function refreshAll(){
+  updateDashboard();
+  renderTree();
+  renderAbsencesTable();
+  renderColabTable();
+}
+
+// ================================================================
+// INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded', ()=>{
+  initCharts();
+  updateDashboard();
+  renderTree();
+  renderAbsencesTable();
+  renderColabTable();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Dinâmico</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3e;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e97b;
+    --accent4: #f7971e;
+    --text: #e8e8f0;
+    --muted: #7070a0;
+    --glow: rgba(108,99,255,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 20% 20%, rgba(108,99,255,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(255,101,132,0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--text) 0%, var(--muted) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  #last-update {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .btn-refresh {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-refresh:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-refresh.spinning svg { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* STATUS BAR */
+  #status-bar {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin-bottom: 28px;
+    transition: all 0.3s;
+  }
+  #status-bar.loading { background: rgba(108,99,255,0.1); border: 1px solid rgba(108,99,255,0.3); color: var(--accent); }
+  #status-bar.success { background: rgba(67,233,123,0.08); border: 1px solid rgba(67,233,123,0.3); color: var(--accent3); }
+  #status-bar.error { background: rgba(255,101,132,0.08); border: 1px solid rgba(255,101,132,0.3); color: var(--accent2); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .dot.pulse { animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+
+  /* KPI CARDS */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    animation: fadeUp 0.4s ease both;
+  }
+  .kpi-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-accent, var(--accent));
+    border-radius: 14px 14px 0 0;
+  }
+
+  .kpi-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .kpi-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* CONTROLS */
+  .controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .control-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  select, input[type="text"] {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  select:focus, input:focus { border-color: var(--accent); }
+
+  /* CHART GRID */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 900px) { .chart-grid { grid-template-columns: 1fr; } }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .chart-card.full-width { grid-column: 1 / -1; }
+
+  .chart-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .chart-subtitle { font-size: 11px; color: var(--muted); margin-bottom: 20px; }
+
+  .chart-container { position: relative; height: 280px; }
+
+  /* TABLE */
+  .table-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .search-input {
+    width: 220px;
+  }
+
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  th:hover { color: var(--accent); }
+  th .sort-icon { opacity: 0.4; margin-left: 4px; }
+  th.active .sort-icon { opacity: 1; color: var(--accent); }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(42,42,62,0.5);
+    white-space: nowrap;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(108,99,255,0.04); }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    justify-content: flex-end;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .page-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s;
+  }
+  .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .page-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .page-btn:disabled { opacity: 0.3; cursor: default; }
+
+  /* EMPTY / ERROR */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .empty .emoji { font-size: 40px; margin-bottom: 12px; display: block; }
+
+  /* COLUMN SELECTOR */
+  .col-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .chip {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--surface);
+    color: var(--muted);
+  }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  /* URL BAR */
+  .url-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  .url-bar:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,99,255,0.1); }
+  .url-bar-label {
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .url-bar svg { color: var(--muted); flex-shrink: 0; }
+  #url-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    padding: 0;
+    min-width: 0;
+  }
+  #url-input::placeholder { color: var(--muted); }
+  .btn-load-url {
+    background: var(--accent);
+    border: none;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+    font-weight: 500;
+  }
+  .btn-load-url:hover { opacity: 0.85; }
+  .url-hint {
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    margin-top: -12px;
+    padding-left: 4px;
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 24px 0;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">📊</div>
+      <div>
+        <h1>Dashboard Dinâmico</h1>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Google Sheets • Tempo Real</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span id="last-update">—</span>
+      <button class="btn-refresh" id="btn-refresh" onclick="loadData()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0018.49 15"/>
+        </svg>
+        Atualizar
+      </button>
+    </div>
+  </header>
+
+  <!-- URL BAR -->
+  <div class="url-bar">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+      <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+    </svg>
+    <span class="url-bar-label">Fonte</span>
+    <input id="url-input" type="text"
+      placeholder="Cole aqui a URL do Google Sheets publicado como CSV..."
+      value="https://docs.google.com/spreadsheets/d/e/2PACX-1vRnlwiAP5sVy5NpzqrHObGJcqL6BsyzNoWNM8CC-iBD74TkHRDYVzFHOm14WEBv8mwXmn0N2lgX87pH/pub?output=csv"
+      onkeydown="if(event.key==='Enter') applyUrl()"
+    />
+    <button class="btn-load-url" onclick="applyUrl()">Carregar</button>
+  </div>
+  <div class="url-hint">💡 Arquivo → Publicar na web → Formato CSV → copie o link e cole acima</div>
+
+  <div id="status-bar" class="loading">
+    <div class="dot pulse"></div>
+    <span id="status-text">Conectando ao Google Sheets...</span>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpi-grid"></div>
+
+  <!-- CONTROLES DE GRÁFICO -->
+  <div class="controls" id="chart-controls" style="display:none">
+    <span class="control-label">Eixo X:</span>
+    <select id="sel-x"></select>
+    <span class="control-label">Eixo Y:</span>
+    <select id="sel-y"></select>
+    <span class="control-label">Tipo:</span>
+    <select id="sel-chart">
+      <option value="bar">Barras</option>
+      <option value="line">Linha</option>
+      <option value="doughnut">Rosca</option>
+      <option value="radar">Radar</option>
+    </select>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="chart-grid" id="chart-grid" style="display:none">
+    <div class="chart-card full-width">
+      <div class="chart-title" id="chart-main-title">Visualização Principal</div>
+      <div class="chart-subtitle" id="chart-main-sub">Selecione as colunas acima</div>
+      <div class="chart-container"><canvas id="chart-main"></canvas></div>
+    </div>
+    <div class="chart-card" id="card-dist">
+      <div class="chart-title">Distribuição por Coluna</div>
+      <div class="chart-subtitle" id="dist-sub">Top valores únicos</div>
+      <div class="chart-container"><canvas id="chart-dist"></canvas></div>
+    </div>
+    <div class="chart-card" id="card-num">
+      <div class="chart-title">Resumo Numérico</div>
+      <div class="chart-subtitle">Totais por categoria</div>
+      <div class="chart-container"><canvas id="chart-num"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-card" id="table-card" style="display:none">
+    <div class="table-header">
+      <div>
+        <div class="chart-title">Dados Completos</div>
+        <div class="chart-subtitle" id="table-subtitle">—</div>
+      </div>
+      <input type="text" class="search-input" id="search" placeholder="🔍 Buscar..." oninput="filterTable()">
+    </div>
+    <div class="col-chips" id="col-chips"></div>
+    <div class="table-wrap">
+      <table id="data-table">
+        <thead id="table-head"></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <footer>Dashboard conectado via CSV público do Google Sheets • Auto-detecta tipos de dados • Atualização sob demanda</footer>
+</div>
+
+<script>
+let CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnlwiAP5sVy5NpzqrHObGJcqL6BsyzNoWNM8CC-iBD74TkHRDYVzFHOm14WEBv8mwXmn0N2lgX87pH/pub?output=csv';
+const COLORS = ['#6c63ff','#ff6584','#43e97b','#f7971e','#38b2f4','#f953c6','#b91d73','#ffe259'];
+
+function applyUrl() {
+  let url = document.getElementById('url-input').value.trim();
+  if (!url) return;
+  // Auto-converte link de edição do Sheets para link publicado CSV, se necessário
+  if (url.includes('/edit') || url.includes('/view')) {
+    setStatus('error', '⚠️ Use o link "Publicar na web" (CSV), não o link de edição.');
+    return;
+  }
+  // Garante output=csv
+  if (url.includes('docs.google.com/spreadsheets') && !url.includes('output=csv')) {
+    url = url.includes('?') ? url + '&output=csv' : url + '?output=csv';
+    document.getElementById('url-input').value = url;
+  }
+  CSV_URL = url;
+  loadData();
+}
+
+let allData = [], headers = [], numCols = [], catCols = [];
+let filteredData = [], currentPage = 1, pageSize = 15;
+let visibleCols = [];
+let chartMain = null, chartDist = null, chartNum = null;
+
+// ──────────────────────────────────────────────
+// CSV PARSER
+// ──────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const hdrs = lines[0].split(',').map(h => h.replace(/^"|"$/g,'').trim());
+  const rows = lines.slice(1).map(line => {
+    const vals = [];
+    let cur = '', inQ = false;
+    for (let c of line) {
+      if (c === '"') { inQ = !inQ; continue; }
+      if (c === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+      else cur += c;
+    }
+    vals.push(cur.trim());
+    const obj = {};
+    hdrs.forEach((h, i) => obj[h] = (vals[i] || '').trim());
+    return obj;
+  }).filter(r => Object.values(r).some(v => v !== ''));
+  return { hdrs, rows };
+}
+
+function detectTypes(rows, hdrs) {
+  const nums = [], cats = [];
+  hdrs.forEach(h => {
+    const vals = rows.map(r => r[h]).filter(v => v !== '');
+    const numCount = vals.filter(v => !isNaN(parseFloat(v.replace(/[R$%.,\s]/g,''))) && v !== '').length;
+    if (numCount / vals.length > 0.6) nums.push(h);
+    else cats.push(h);
+  });
+  return { nums, cats };
+}
+
+// ──────────────────────────────────────────────
+// LOAD DATA
+// ──────────────────────────────────────────────
+async function fetchWithProxy(url) {
+  // Tenta direto primeiro, depois fallback por proxies CORS
+  const proxies = [
+    u => u, // direto
+    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u => `https://cors-anywhere.herokuapp.com/${u}`,
+  ];
+  for (const proxy of proxies) {
+    try {
+      const res = await fetch(proxy(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now()));
+      if (res.ok) return res;
+    } catch(e) { /* tenta próximo */ }
+  }
+  throw new Error('Não foi possível acessar a planilha. Verifique se está publicada como CSV.');
+}
+
+async function loadData() {
+  setStatus('loading', 'Buscando dados do Google Sheets...');
+  const btn = document.getElementById('btn-refresh');
+  btn.classList.add('spinning');
+
+  try {
+    const res = await fetchWithProxy(CSV_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const { hdrs, rows } = parseCSV(text);
+    headers = hdrs;
+    allData = rows;
+    filteredData = [...rows];
+    const types = detectTypes(rows, hdrs);
+    numCols = types.nums;
+    catCols = types.cats;
+    visibleCols = [...hdrs];
+
+    setStatus('success', `✓ ${rows.length} registros carregados · ${hdrs.length} colunas`);
+    document.getElementById('last-update').textContent = 'Atualizado ' + new Date().toLocaleTimeString('pt-BR');
+
+    buildKPIs();
+    buildControls();
+    buildTable();
+    buildCharts();
+
+    document.getElementById('chart-controls').style.display = 'flex';
+    document.getElementById('chart-grid').style.display = 'grid';
+    document.getElementById('table-card').style.display = 'block';
+
+  } catch(e) {
+    setStatus('error', '✗ Erro ao carregar: ' + e.message + ' — Verifique se a planilha está publicada como CSV.');
+  } finally {
+    btn.classList.remove('spinning');
+  }
+}
+
+function setStatus(type, msg) {
+  const bar = document.getElementById('status-bar');
+  const dot = bar.querySelector('.dot');
+  bar.className = type;
+  document.getElementById('status-text').textContent = msg;
+  dot.className = 'dot' + (type === 'loading' ? ' pulse' : '');
+}
+
+// ──────────────────────────────────────────────
+// KPIs
+// ──────────────────────────────────────────────
+function toNum(v) {
+  const n = parseFloat(String(v).replace(/[R$%.,\s]/g,'').replace(',','.'));
+  return isNaN(n) ? null : n;
+}
+
+function buildKPIs() {
+  const grid = document.getElementById('kpi-grid');
+  const cards = [];
+
+  // Total de registros
+  cards.push({ label: 'Total de Registros', value: allData.length.toLocaleString('pt-BR'), sub: `${headers.length} colunas`, accent: COLORS[0] });
+
+  // Numeric summaries (up to 3)
+  numCols.slice(0, 3).forEach((col, i) => {
+    const vals = allData.map(r => toNum(r[col])).filter(v => v !== null);
+    const sum = vals.reduce((a,b) => a+b, 0);
+    const avg = sum / vals.length;
+    cards.push({
+      label: col,
+      value: formatNum(sum),
+      sub: `Média: ${formatNum(avg)}`,
+      accent: COLORS[(i+1) % COLORS.length]
+    });
+  });
+
+  // Unique values for first cat col
+  if (catCols.length) {
+    const col = catCols[0];
+    const uniq = new Set(allData.map(r => r[col]).filter(Boolean)).size;
+    cards.push({ label: col + ' (únicos)', value: uniq.toLocaleString('pt-BR'), sub: 'valores distintos', accent: COLORS[4] });
+  }
+
+  grid.innerHTML = cards.map((c, i) => `
+    <div class="kpi-card" style="--card-accent:${c.accent};animation-delay:${i*0.07}s">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value" style="color:${c.accent}">${c.value}</div>
+      <div class="kpi-sub">${c.sub}</div>
+    </div>`).join('');
+}
+
+function formatNum(n) {
+  if (n === null || isNaN(n)) return '—';
+  if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return n.toLocaleString('pt-BR', {maximumFractionDigits: 2});
+}
+
+// ──────────────────────────────────────────────
+// CONTROLS
+// ──────────────────────────────────────────────
+function buildControls() {
+  const sx = document.getElementById('sel-x');
+  const sy = document.getElementById('sel-y');
+  sx.innerHTML = catCols.concat(numCols).map(h => `<option value="${h}">${h}</option>`).join('');
+  sy.innerHTML = numCols.concat(catCols).map(h => `<option value="${h}">${h}</option>`).join('');
+  sx.onchange = sy.onchange = document.getElementById('sel-chart').onchange = buildCharts;
+}
+
+// ──────────────────────────────────────────────
+// CHARTS
+// ──────────────────────────────────────────────
+function destroyChart(ref) { if (ref) { try { ref.destroy(); } catch(e){} } }
+
+function buildCharts() {
+  destroyChart(chartMain); destroyChart(chartDist); destroyChart(chartNum);
+
+  const xCol = document.getElementById('sel-x')?.value || catCols[0] || headers[0];
+  const yCol = document.getElementById('sel-y')?.value || numCols[0] || headers[1];
+  const type = document.getElementById('sel-chart')?.value || 'bar';
+
+  document.getElementById('chart-main-title').textContent = `${yCol} por ${xCol}`;
+  document.getElementById('chart-main-sub').textContent = `Tipo: ${type} · ${filteredData.length} registros`;
+
+  // Aggregate
+  const agg = {};
+  filteredData.forEach(r => {
+    const k = r[xCol] || '(vazio)';
+    const v = toNum(r[yCol]) || 0;
+    agg[k] = (agg[k] || 0) + v;
+  });
+
+  const entries = Object.entries(agg).sort((a,b) => b[1]-a[1]).slice(0, 20);
+  const labels = entries.map(e => truncate(e[0], 18));
+  const values = entries.map(e => e[1]);
+
+  const chartCfg = {
+    type,
+    data: {
+      labels,
+      datasets: [{
+        label: yCol,
+        data: values,
+        backgroundColor: COLORS.map(c => c + 'cc'),
+        borderColor: COLORS,
+        borderWidth: 1.5,
+        borderRadius: type === 'bar' ? 4 : 0,
+        tension: 0.4,
+        fill: type === 'line' ? false : undefined,
+        pointRadius: type === 'line' ? 4 : undefined,
+      }]
+    },
+    options: baseOptions(type)
+  };
+
+  chartMain = new Chart(document.getElementById('chart-main'), chartCfg);
+
+  // Distribution chart (first cat column)
+  if (catCols.length) {
+    const col2 = catCols.find(c => c !== xCol) || catCols[0];
+    document.getElementById('dist-sub').textContent = `Top 8 · ${col2}`;
+    const dist = {};
+    filteredData.forEach(r => { const k = r[col2] || '(vazio)'; dist[k] = (dist[k]||0)+1; });
+    const distE = Object.entries(dist).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    chartDist = new Chart(document.getElementById('chart-dist'), {
+      type: 'doughnut',
+      data: {
+        labels: distE.map(e=>truncate(e[0],16)),
+        datasets: [{ data: distE.map(e=>e[1]), backgroundColor: COLORS, borderWidth: 0 }]
+      },
+      options: { ...baseOptions('doughnut'), plugins: { legend: { position: 'right', labels: { color: '#7070a0', font: { size: 11 }, boxWidth: 12 } } } }
+    });
+  }
+
+  // Numeric summary chart
+  if (numCols.length >= 2) {
+    const colA = numCols[0], colB = numCols[1];
+    const catRef = catCols[0];
+    if (catRef) {
+      const groups = {};
+      filteredData.forEach(r => {
+        const k = r[catRef] || '(vazio)';
+        if (!groups[k]) groups[k] = [0,0,0];
+        groups[k][0] += toNum(r[colA])||0;
+        groups[k][1] += toNum(r[colB])||0;
+        groups[k][2]++;
+      });
+      const ge = Object.entries(groups).sort((a,b)=>b[1][0]-a[1][0]).slice(0,10);
+      chartNum = new Chart(document.getElementById('chart-num'), {
+        type: 'bar',
+        data: {
+          labels: ge.map(e=>truncate(e[0],14)),
+          datasets: [
+            { label: colA, data: ge.map(e=>e[1][0]), backgroundColor: COLORS[0]+'cc', borderColor: COLORS[0], borderWidth:1.5, borderRadius:4 },
+            { label: colB, data: ge.map(e=>e[1][1]), backgroundColor: COLORS[1]+'cc', borderColor: COLORS[1], borderWidth:1.5, borderRadius:4 }
+          ]
+        },
+        options: baseOptions('bar')
+      });
+    }
+  }
+}
+
+function baseOptions(type) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: type !== 'bar' && type !== 'line', labels: { color: '#7070a0', font: {size:11}, boxWidth:12 } },
+      tooltip: { backgroundColor: '#1a1a26', borderColor: '#2a2a3e', borderWidth:1, titleColor:'#e8e8f0', bodyColor:'#7070a0', padding:10 }
+    },
+    scales: type === 'doughnut' || type === 'radar' ? {} : {
+      x: { ticks: { color: '#7070a0', font:{size:10}, maxRotation: 35 }, grid: { color: 'rgba(42,42,62,0.5)' } },
+      y: { ticks: { color: '#7070a0', font:{size:10} }, grid: { color: 'rgba(42,42,62,0.5)' } }
+    }
+  };
+}
+
+// ──────────────────────────────────────────────
+// TABLE
+// ──────────────────────────────────────────────
+let sortCol = null, sortAsc = true;
+
+function buildTable() {
+  buildColChips();
+  renderTable();
+}
+
+function buildColChips() {
+  const chips = document.getElementById('col-chips');
+  chips.innerHTML = headers.map(h => `
+    <div class="chip active" data-col="${h}" onclick="toggleCol('${h}')">${h}</div>
+  `).join('');
+}
+
+function toggleCol(col) {
+  if (visibleCols.includes(col)) {
+    if (visibleCols.length === 1) return;
+    visibleCols = visibleCols.filter(c => c !== col);
+  } else {
+    visibleCols.push(col);
+  }
+  document.querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('active', visibleCols.includes(c.dataset.col));
+  });
+  renderTable();
+}
+
+function filterTable() {
+  const q = document.getElementById('search').value.toLowerCase();
+  filteredData = q ? allData.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(q))) : [...allData];
+  currentPage = 1;
+  renderTable();
+  buildCharts();
+}
+
+function sortBy(col) {
+  if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
+  filteredData.sort((a, b) => {
+    const av = a[col]||'', bv = b[col]||'';
+    const an = toNum(av), bn = toNum(bv);
+    if (an !== null && bn !== null) return sortAsc ? an-bn : bn-an;
+    return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+  renderTable();
+}
+
+function renderTable() {
+  const cols = visibleCols;
+  const start = (currentPage - 1) * pageSize;
+  const page = filteredData.slice(start, start + pageSize);
+  const totalPages = Math.ceil(filteredData.length / pageSize);
+
+  document.getElementById('table-subtitle').textContent = `${filteredData.length} registros · Página ${currentPage}/${totalPages||1}`;
+
+  document.getElementById('table-head').innerHTML = `<tr>${cols.map(h=>`
+    <th onclick="sortBy('${h}')" class="${sortCol===h?'active':''}">
+      ${h} <span class="sort-icon">${sortCol===h?(sortAsc?'↑':'↓'):'↕'}</span>
+    </th>`).join('')}</tr>`;
+
+  document.getElementById('table-body').innerHTML = page.length
+    ? page.map(r => `<tr>${cols.map(c=>`<td title="${r[c]||''}">${r[c]||'—'}</td>`).join('')}</tr>`).join('')
+    : `<tr><td colspan="${cols.length}" class="empty"><span class="emoji">🔍</span>Nenhum resultado</td></tr>`;
+
+  // Pagination
+  const pg = document.getElementById('pagination');
+  let pHtml = '';
+  if (totalPages > 1) {
+    pHtml += `<span>${filteredData.length} registros</span>`;
+    pHtml += `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+    for (let p = Math.max(1, currentPage-2); p <= Math.min(totalPages, currentPage+2); p++) {
+      pHtml += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+    }
+    pHtml += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+  }
+  pg.innerHTML = pHtml;
+}
+
+function goPage(p) {
+  currentPage = p;
+  renderTable();
+}
+
+function truncate(s, n) { return s.length > n ? s.slice(0,n)+'…' : s; }
+
+// ──────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>

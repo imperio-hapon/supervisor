@@ -47,15 +47,6 @@ body {
   background: #4361ee;
   color: #fff;
 }
-
-/* 🔒 Ocultar botões específicos */
-button[onclick*="carteira.html"],
-button[onclick*="disparos.html"],
-button[onclick*="conversao.html"],
-button[onclick*="leads.html"],
-button[onclick*="qualidade.html"],{
-  display: none;
-}
  
 iframe {
   flex: 1;
@@ -71,12 +62,19 @@ iframe {
 <h2>📊 Império Hap-on</h2>
  
 <button onclick="loadPage('vidas.html', this)" class="active">Vidas</button>
-<button onclick="loadPage('conversao.html', this)">Conversão</button>
+
+<button id="btnConversao" onclick="loadPage('conversao.html', this)">Conversão</button>
+
 <button onclick="loadPage('disponivel.html', this)">Disponível / 1º resposta</button>
-<button onclick="loadPage('carteira.html', this)">Carteira de Clientes</button>
-<button onclick="loadPage('disparos.html', this)">Disparos</button>
-<button onclick="loadPage('leads.html', this)">Leads</button>
-<button onclick="loadPage('qualidade.html', this)">Qualidade</button>
+
+<button id="btnCarteira" onclick="loadPage('carteira.html', this)">Carteira de Clientes</button>
+
+<button id="btnDisparos" onclick="loadPage('disparos.html', this)">Disparos</button>
+
+<button id="btnLeads" onclick="loadPage('leads.html', this)">Leads</button>
+
+<button id="btnQualidade" onclick="loadPage('qualidade.html', this)">Qualidade</button>
+
 <button onclick="loadPage('absenteismo.html', this)">Absenteísmo</button>
 </div>
  
@@ -85,13 +83,27 @@ iframe {
 <script>
 function loadPage(page, element){
   document.getElementById('frame').src = page;
- 
+
   document.querySelectorAll('.menu button').forEach(btn => {
     btn.classList.remove('active');
   });
- 
+
   element.classList.add('active');
 }
+
+// 🔒 BLOCO PARA OCULTAR BOTÕES
+function ocultarBotoes() {
+  document.getElementById('btnConversao').style.display = 'none';
+  document.getElementById('btnCarteira').style.display = 'none';
+  document.getElementById('btnDisparos').style.display = 'none';
+  document.getElementById('btnLeads').style.display = 'none';
+  document.getElementById('btnQualidade').style.display = 'none';
+}
+
+// Executa automaticamente ao carregar a página
+window.onload = function() {
+  ocultarBotoes();
+};
 </script>
  
 </body>

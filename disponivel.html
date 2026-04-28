@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Central de Performance — Hapvida JR</title>
+<title>Central de Performance</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',system-ui,sans-serif;background:#F0F4F8;color:#1A2332;font-size:14px}
@@ -37,10 +37,14 @@
   .filter-bar{background:var(--surface);border-radius:12px;padding:12px 16px;margin-bottom:16px;border:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;box-shadow:0 1px 4px rgba(0,0,0,.04)}
   .filter-group{display:flex;flex-direction:column;gap:5px}
   .filter-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase}
-  .filter-bar select,.filter-bar input{padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:#F8FAFC;outline:none;cursor:pointer;font-family:inherit}
+  .filter-bar select{padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:#F8FAFC;outline:none;cursor:pointer;font-family:inherit;min-width:160px}
   .btn-group{display:flex;gap:4px}
-  .btn-toggle{background:transparent;border:1px solid var(--border);color:var(--sub);border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:400;font-family:inherit;transition:all .15s}
+  .btn-toggle{background:transparent;border:1px solid var(--border);color:var(--sub);border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:400;font-family:inherit;transition:all .15s;white-space:nowrap}
   .btn-toggle.active{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+  /* EQUIPE CHIP BUTTONS */
+  .equipe-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .equipe-btn{border:2px solid transparent;border-radius:20px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;opacity:.7}
+  .equipe-btn.active{opacity:1;transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.15)}
   /* CARD */
   .card{background:var(--surface);border-radius:12px;padding:18px 20px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:16px}
   .card-title{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
@@ -50,34 +54,15 @@
   .kpi-inner .val{font-size:22px;font-weight:900;letter-spacing:-.5px}
   .kpi-inner .lbl{font-size:11px;color:var(--muted);margin-top:2px;font-weight:500}
   .kpi-inner .sub{font-size:11px;margin-top:2px;font-weight:600}
-  /* STACKED BAR */
-  .sup-bar-wrap{margin-bottom:12px}
-  .sup-bar-meta{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-  .sup-bar-name{font-size:11px;font-weight:700;min-width:180px}
-  .sup-bar-count{font-size:10px;color:var(--muted)}
-  .stacked-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;cursor:pointer}
-  .seg{display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;transition:opacity .15s;cursor:pointer}
-  .seg:hover{opacity:.85}
-  .seg.highlighted{outline:3px solid currentColor;outline-offset:1px}
-  /* DRILL BOX */
-  .drill-box{background:var(--surface);border-radius:12px;padding:16px 20px;margin-bottom:16px;border:2px solid var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.06);display:none}
-  .drill-box.visible{display:block}
-  .drill-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-  .drill-title{font-size:12px;font-weight:700;color:var(--blue)}
-  .drill-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1}
-  .drill-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
-  .drill-chip{background:#F8FAFC;border-radius:8px;padding:8px 12px;border:1px solid var(--border)}
-  .drill-chip-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .drill-chip-val{font-size:11px;color:var(--muted)}
   /* TOP10 */
-  .top10-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .top10-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
   .top10-card{background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
   .top10-header{padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
-  .top10-strip{width:4px;height:18px;border-radius:2px}
+  .top10-strip{width:4px;height:18px;border-radius:2px;flex-shrink:0}
   .top10-title{font-size:13px;font-weight:700}
   .top10-sub{font-size:10px;color:var(--sub)}
   .top10-col-head{display:grid;grid-template-columns:28px 1fr 60px 60px;gap:6px;padding:6px 14px;font-size:9px;color:var(--muted);letter-spacing:.7px;text-transform:uppercase;background:#FAFBFD;border-bottom:1px solid var(--border)}
-  .top10-row{display:grid;grid-template-columns:28px 1fr 60px 60px;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid #F0F4F8;cursor:default;transition:background .12s}
+  .top10-row{display:grid;grid-template-columns:28px 1fr 60px 60px;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid #F0F4F8;transition:background .12s}
   .top10-row:hover{background:#F7FAFB}
   .top10-medal{text-align:center;font-size:14px}
   .top10-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -100,21 +85,15 @@
   .td-right{text-align:right}
   .eq-badge{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;white-space:nowrap}
   .status-badge{font-size:9px;padding:2px 7px;border-radius:6px;font-weight:700;white-space:nowrap}
-  /* MINI BAR */
   .mini-bar-wrap{display:flex;align-items:center;justify-content:flex-end;gap:6px}
   .mini-bar-bg{width:48px;height:5px;border-radius:3px;background:#F1F5F9;overflow:hidden}
   .mini-bar-fill{height:100%;border-radius:3px;transition:width .3s}
-  /* PAGINATION */
   .pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border);background:#FAFBFD}
   .pagination span{font-size:11px;color:var(--sub)}
   .pg-btns{display:flex;gap:4px}
   .pg-btn{padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);cursor:pointer;font-size:11px;font-family:inherit}
   .pg-btn:disabled{background:#F1F5F9;color:var(--muted);cursor:default}
-  /* LEGEND */
-  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
-  .legend-item{display:flex;align-items:center;gap:5px;font-size:11px}
-  .legend-dot{width:10px;height:10px;border-radius:2px}
-  /* SUP CHIPS */
+  /* SUP CHIPS INFO */
   .sup-chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
   .sup-chip{border-radius:10px;padding:10px 14px;min-width:150px;border:1px solid transparent}
   .sup-chip-name{font-size:11px;font-weight:700;margin-bottom:4px}
@@ -130,7 +109,7 @@
 <div class="header">
   <div class="header-top">
     <div>
-      <div class="header-label">HAPVIDA</div>
+      <div class="header-label">HAPVIDA · JR VENDAS CHAT</div>
       <div class="header-title">Central de Performance</div>
       <div class="header-sub" id="period-label">Carregando...</div>
     </div>
@@ -142,15 +121,14 @@
     </div>
   </div>
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(0)">Visão Geral</button>
-    <button class="tab-btn" onclick="switchTab(1)">Primeira Resposta</button>
-    <button class="tab-btn" onclick="switchTab(2)">Disponibilidade</button>
+    <button class="tab-btn active" onclick="switchTab(0)">Primeira Resposta</button>
+    <button class="tab-btn" onclick="switchTab(1)">Disponibilidade</button>
   </div>
 </div>
 
 <div class="main">
 
-<!-- PANEL 0: VISÃO GERAL -->
+<!-- PANEL 0: PRIMEIRA RESPOSTA -->
 <div class="panel active" id="panel-0">
   <div class="filter-bar">
     <div class="filter-group">
@@ -164,31 +142,14 @@
       <div class="filter-label">Data</div>
       <select id="sel-date-0" onchange="render()"></select>
     </div>
-    <div class="filter-group">
-      <div class="filter-label">Equipe</div>
-      <select id="sel-sup-0" onchange="render()"><option value="Todos">Todas as Equipes</option></select>
-    </div>
   </div>
 
-  <div class="card" id="sup-bars-card">
-    <div class="card-title">Distribuição por Equipe — clique em um segmento para ver os promotores</div>
-    <div id="sup-bars"></div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#10B981"></div><span>≤1min</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div><span>1-2min</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:#EF4444"></div><span>&gt;2min</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:#94A3B8"></div><span>Sem Resp.</span></div>
-    </div>
-  </div>
+  <!-- EQUIPE BUTTONS -->
+  <div class="equipe-btns" id="equipe-btns-0"></div>
 
-  <div class="drill-box" id="drill-box">
-    <div class="drill-header">
-      <div class="drill-title" id="drill-title"></div>
-      <button class="drill-close" onclick="closeDrill()">×</button>
-    </div>
-    <div class="drill-grid" id="drill-grid"></div>
-  </div>
+  <div class="kpi-grid" id="pr-kpis"></div>
 
+  <!-- TOP 10 -->
   <div class="top10-grid">
     <div class="top10-card">
       <div class="top10-header" style="background:#D1FAE5">
@@ -197,7 +158,7 @@
         <div class="top10-sub">maior % ≤2min</div>
       </div>
       <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Leads</div><div style="text-align:right">%≤2min</div></div>
-      <div id="top10-best"></div>
+      <div id="pr-top10-best"></div>
     </div>
     <div class="top10-card">
       <div class="top10-header" style="background:#FEE2E2">
@@ -206,36 +167,15 @@
         <div class="top10-sub">menor % ≤2min</div>
       </div>
       <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Leads</div><div style="text-align:right">%≤2min</div></div>
-      <div id="top10-worst"></div>
+      <div id="pr-top10-worst"></div>
     </div>
   </div>
-</div>
 
-<!-- PANEL 1: PRIMEIRA RESPOSTA -->
-<div class="panel" id="panel-1">
-  <div class="filter-bar">
-    <div class="filter-group">
-      <div class="filter-label">Período</div>
-      <div class="btn-group">
-        <button class="btn-toggle" id="btn-acum-1" onclick="setPeriod('dia',1)">Por Dia</button>
-        <button class="btn-toggle active" id="btn-dia-1" onclick="setPeriod('acum',1)">Acumulado</button>
-      </div>
-    </div>
-    <div class="filter-group" id="date-wrap-1" style="display:none">
-      <div class="filter-label">Data</div>
-      <select id="sel-date-1" onchange="render()"></select>
-    </div>
-    <div class="filter-group">
-      <div class="filter-label">Equipe</div>
-      <select id="sel-sup-1" onchange="render()"><option value="Todos">Todas as Equipes</option></select>
-    </div>
-  </div>
-  <div class="kpi-grid" id="pr-kpis"></div>
-  <div class="sup-chips" id="pr-sup-chips"></div>
+  <!-- SEARCH + TABLE -->
   <div class="search-bar">
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
-      <input type="text" id="ag-search" placeholder="Buscar promotor ou equipe..." oninput="agPage=0;renderAgTable()">
+      <input type="text" id="ag-search" placeholder="Buscar promotor..." oninput="agPage=0;renderAgTable()">
     </div>
     <span style="font-size:12px;color:var(--sub)"><b id="ag-count"></b> promotores</span>
   </div>
@@ -258,35 +198,58 @@
     <div class="pagination">
       <span id="ag-page-info"></span>
       <div class="pg-btns">
-        <button class="pg-btn" id="ag-pg-first" onclick="agPage=0;renderAgTable()">«</button>
-        <button class="pg-btn" id="ag-pg-prev" onclick="agPage=Math.max(0,agPage-1);renderAgTable()">‹</button>
-        <button class="pg-btn" id="ag-pg-next" onclick="agPage=Math.min(agTotalPages-1,agPage+1);renderAgTable()">›</button>
-        <button class="pg-btn" id="ag-pg-last" onclick="agPage=agTotalPages-1;renderAgTable()">»</button>
+        <button class="pg-btn" id="ag-pg-first"  onclick="agPage=0;renderAgTable()">«</button>
+        <button class="pg-btn" id="ag-pg-prev"   onclick="agPage=Math.max(0,agPage-1);renderAgTable()">‹</button>
+        <button class="pg-btn" id="ag-pg-next"   onclick="agPage=Math.min(agTotalPages-1,agPage+1);renderAgTable()">›</button>
+        <button class="pg-btn" id="ag-pg-last"   onclick="agPage=agTotalPages-1;renderAgTable()">»</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- PANEL 2: DISPONIBILIDADE -->
-<div class="panel" id="panel-2">
+<!-- PANEL 1: DISPONIBILIDADE -->
+<div class="panel" id="panel-1">
   <div class="filter-bar">
     <div class="filter-group">
       <div class="filter-label">Período</div>
       <div class="btn-group">
-        <button class="btn-toggle" id="btn-acum-2" onclick="setPeriod('dia',2)">Por Dia</button>
-        <button class="btn-toggle active" id="btn-dia-2" onclick="setPeriod('acum',2)">Acumulado</button>
+        <button class="btn-toggle" id="btn-acum-1" onclick="setPeriod('dia',1)">Por Dia</button>
+        <button class="btn-toggle active" id="btn-dia-1" onclick="setPeriod('acum',1)">Acumulado</button>
       </div>
     </div>
-    <div class="filter-group" id="date-wrap-2" style="display:none">
+    <div class="filter-group" id="date-wrap-1" style="display:none">
       <div class="filter-label">Data</div>
-      <select id="sel-date-2" onchange="render()"></select>
-    </div>
-    <div class="filter-group">
-      <div class="filter-label">Equipe</div>
-      <select id="sel-sup-2" onchange="render()"><option value="Todos">Todas as Equipes</option></select>
+      <select id="sel-date-1" onchange="render()"></select>
     </div>
   </div>
+
+  <!-- EQUIPE BUTTONS -->
+  <div class="equipe-btns" id="equipe-btns-1"></div>
+
   <div class="kpi-grid" id="av-kpis"></div>
+
+  <!-- TOP 10 DISPONIBILIDADE -->
+  <div class="top10-grid">
+    <div class="top10-card">
+      <div class="top10-header" style="background:#D1FAE5">
+        <div class="top10-strip" style="background:#10B981"></div>
+        <div class="top10-title">Top 10 Mais Disponíveis</div>
+        <div class="top10-sub">maior média diária de horas</div>
+      </div>
+      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Total h</div><div style="text-align:right">Média/dia</div></div>
+      <div id="av-top10-best"></div>
+    </div>
+    <div class="top10-card">
+      <div class="top10-header" style="background:#FEE2E2">
+        <div class="top10-strip" style="background:#EF4444"></div>
+        <div class="top10-title">Top 10 Menos Disponíveis</div>
+        <div class="top10-sub">menor média diária de horas</div>
+      </div>
+      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Total h</div><div style="text-align:right">Média/dia</div></div>
+      <div id="av-top10-worst"></div>
+    </div>
+  </div>
+
   <div class="table-wrap">
     <table>
       <thead>
@@ -294,8 +257,8 @@
           <th onclick="sortAv('name')" id="av-th-name" style="text-align:left">Promotor ↕</th>
           <th>Equipe</th>
           <th onclick="sortAv('totalH')" id="av-th-totalH" class="td-right">Total Horas ↕</th>
-          <th onclick="sortAv('days')" id="av-th-days" class="td-right">Dias ↕</th>
-          <th onclick="sortAv('avgH')" id="av-th-avgH" class="td-right sorted">Média Diária ↓</th>
+          <th onclick="sortAv('days')"   id="av-th-days"   class="td-right">Dias ↕</th>
+          <th onclick="sortAv('avgH')"   id="av-th-avgH"   class="td-right sorted">Média Diária ↓</th>
           <th class="td-right">Status</th>
         </tr>
       </thead>
@@ -305,9 +268,9 @@
       <span id="av-page-info"></span>
       <div class="pg-btns">
         <button class="pg-btn" id="av-pg-first" onclick="avPage=0;renderAvTable()">«</button>
-        <button class="pg-btn" id="av-pg-prev" onclick="avPage=Math.max(0,avPage-1);renderAvTable()">‹</button>
-        <button class="pg-btn" id="av-pg-next" onclick="avPage=Math.min(avTotalPages-1,avPage+1);renderAvTable()">›</button>
-        <button class="pg-btn" id="av-pg-last" onclick="avPage=avTotalPages-1;renderAvTable()">»</button>
+        <button class="pg-btn" id="av-pg-prev"  onclick="avPage=Math.max(0,avPage-1);renderAvTable()">‹</button>
+        <button class="pg-btn" id="av-pg-next"  onclick="avPage=Math.min(avTotalPages-1,avPage+1);renderAvTable()">›</button>
+        <button class="pg-btn" id="av-pg-last"  onclick="avPage=avTotalPages-1;renderAvTable()">»</button>
       </div>
     </div>
   </div>
@@ -323,20 +286,7 @@ const ALL_DATES  = ["2026-04-01", "2026-04-02", "2026-04-03", "2026-04-04", "202
 const ALL_SUPS   = ["ADMINISTRATIVO", "BENVE", "EQUIPE ALFA", "EQUIPE FENIX", "EQUIPE GLADIADORES"];
 const DEFAULT_DATE = "2026-04-23";
 
-// ── STATE ─────────────────────────────────────────────────────────────────────
-let currentTab = 0;
-const state = {
-  dateMode: ['acum','acum','acum'],
-  selDate:  [DEFAULT_DATE, DEFAULT_DATE, DEFAULT_DATE],
-  selSup:   ['Todos','Todos','Todos'],
-};
-let drillSup=null, drillCat=null;
-let agSortCol='total_leads', agSortDir=-1, agPage=0;
-let avSortCol='avgH',        avSortDir=-1, avPage=0;
-let agTotalPages=1, avTotalPages=1;
-const PAGE=15;
-
-// ── COLORS ────────────────────────────────────────────────────────────────────
+// ── SUP COLORS ────────────────────────────────────────────────────────────────
 const SUP_C = {
   'ADMINISTRATIVO':    {bg:'#E8F4F8',tc:'#2C7A9E'},
   'BENVE':             {bg:'#F0F0FF',tc:'#553C9A'},
@@ -346,51 +296,46 @@ const SUP_C = {
 };
 const medals=['🥇','🥈','🥉'];
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
-function init(){
-  // Fill date selects & sup selects
-  for(let i=0;i<3;i++){
-    const ds=document.getElementById(`sel-date-${i}`);
-    [...ALL_DATES].reverse().forEach(d=>{
-      const o=document.createElement('option');
-      o.value=d;
-      const dt=new Date(d+'T12:00:00');
-      o.textContent=dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit',year:'2-digit'});
-      if(d===DEFAULT_DATE) o.selected=true;
-      ds.appendChild(o);
-    });
-    const ss=document.getElementById(`sel-sup-${i}`);
-    ALL_SUPS.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;ss.appendChild(o);});
-  }
-  render();
-}
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let currentTab=0;
+const state={
+  dateMode:['acum','acum'],
+  selDate: [DEFAULT_DATE,DEFAULT_DATE],
+  selSup:  ['Todos','Todos'],
+};
+let agSortCol='total_leads',agSortDir=-1,agPage=0,agTotalPages=1;
+let avSortCol='avgH',       avSortDir=-1,avPage=0,avTotalPages=1;
+const PAGE=15;
 
-// ── FILTER ────────────────────────────────────────────────────────────────────
-function filterPR(tab){
-  const dm=state.dateMode[tab], sd=state.selDate[tab], sup=state.selSup[tab];
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmt(n){return Math.round(n).toLocaleString('pt-BR');}
+function pct(a,b){return b>0?((a/b)*100).toFixed(1)+'%':'–';}
+
+function filterPR(t){
+  const dm=state.dateMode[t],sd=state.selDate[t],sup=state.selSup[t];
   return RAW_BY_DAY.filter(r=>{
-    if(sup!=='Todos'&&r.SUPERVISOR!==sup) return false;
-    if(dm==='dia') return r.date_str===sd;
+    if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
+    if(dm==='dia')return r.date_str===sd;
     return true;
   });
 }
-function filterAv(tab){
-  const dm=state.dateMode[tab], sd=state.selDate[tab], sup=state.selSup[tab];
+function filterAv(t){
+  const dm=state.dateMode[t],sd=state.selDate[t],sup=state.selSup[t];
   return RAW_AVAIL.filter(r=>{
-    if(sup!=='Todos'&&r.SUPERVISOR!==sup) return false;
-    if(dm==='dia') return r.date_str===sd;
+    if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
+    if(dm==='dia')return r.date_str===sd;
     return true;
   });
 }
 function aggTotals(rows){
-  let t={total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
+  const t={total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
   rows.forEach(r=>{t.total_leads+=r.total_leads;t.ate1+=r.ate1;t.ate2+=r.ate2;t.gt2+=r.gt2;t.sem_resp+=r.sem_resp;});
   return t;
 }
 function aggByAgent(rows){
   const m={};
   rows.forEach(r=>{
-    if(!m[r.POWER_BI]) m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
+    if(!m[r.POWER_BI])m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
     const a=m[r.POWER_BI];
     a.total_leads+=r.total_leads;a.ate1+=r.ate1;a.ate2+=r.ate2;a.gt2+=r.gt2;a.sem_resp+=r.sem_resp;
   });
@@ -399,7 +344,7 @@ function aggByAgent(rows){
 function aggBySup(rows){
   const m={};
   rows.forEach(r=>{
-    if(!m[r.SUPERVISOR]) m[r.SUPERVISOR]={sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
+    if(!m[r.SUPERVISOR])m[r.SUPERVISOR]={sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
     const s=m[r.SUPERVISOR];
     s.total_leads+=r.total_leads;s.ate1+=r.ate1;s.ate2+=r.ate2;s.gt2+=r.gt2;s.sem_resp+=r.sem_resp;
   });
@@ -408,26 +353,21 @@ function aggBySup(rows){
 function aggAvByAgent(rows){
   const m={};
   rows.forEach(r=>{
-    if(!m[r.POWER_BI]) m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,totalH:0,days:0};
+    if(!m[r.POWER_BI])m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,totalH:0,days:0};
     m[r.POWER_BI].totalH+=r.avail_hours;
     m[r.POWER_BI].days++;
   });
   return Object.values(m).map(a=>({...a,avgH:a.days>0?a.totalH/a.days:0}));
 }
-
-// ── HELPERS ───────────────────────────────────────────────────────────────────
-function fmt(n){return Math.round(n).toLocaleString('pt-BR');}
-function pct(a,b){return b>0?((a/b)*100).toFixed(1)+'%':'–';}
-function h(n){return n.toFixed(1)+'h';}
 function availStatus(v){
-  if(v>=6) return {label:'Ideal',    color:'#10B981',bg:'#D1FAE5'};
-  if(v>=4) return {label:'Aceitável',color:'#F59E0B',bg:'#FEF3C7'};
-  return          {label:'Crítico',  color:'#EF4444',bg:'#FEE2E2'};
+  if(v>=6)return{label:'Ideal',    color:'#10B981',bg:'#D1FAE5'};
+  if(v>=4)return{label:'Aceitável',color:'#F59E0B',bg:'#FEF3C7'};
+  return        {label:'Crítico',  color:'#EF4444',bg:'#FEE2E2'};
 }
 function agStatus(p){
-  if(p>=80) return {label:'Aceitável',color:'#10B981',bg:'#D1FAE5'};
-  if(p>=50) return {label:'Atenção',  color:'#F59E0B',bg:'#FEF3C7'};
-  return           {label:'Crítico',  color:'#EF4444',bg:'#FEE2E2'};
+  if(p>=80)return{label:'Aceitável',color:'#10B981',bg:'#D1FAE5'};
+  if(p>=50)return{label:'Atenção',  color:'#F59E0B',bg:'#FEF3C7'};
+  return         {label:'Crítico',  color:'#EF4444',bg:'#FEE2E2'};
 }
 function supBadge(sup){
   const sc=SUP_C[sup]||{bg:'#EEE',tc:'#666'};
@@ -435,123 +375,120 @@ function supBadge(sup){
 }
 function periodLabel(){
   const t=currentTab,dm=state.dateMode[t];
-  if(dm==='acum') return 'Acumulado (abr/26)';
+  if(dm==='acum')return'Acumulado (abr/26)';
   const d=new Date(state.selDate[t]+'T12:00:00');
   return d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
 }
 
-// ── SWITCHES ─────────────────────────────────────────────────────────────────
+// ── RENDER EQUIPE BUTTONS ─────────────────────────────────────────────────────
+function renderEquipeBtns(t){
+  const container=document.getElementById(`equipe-btns-${t}`);
+  const cur=state.selSup[t];
+  const sups=['Todos',...ALL_SUPS];
+  container.innerHTML=sups.map(s=>{
+    const sc=s==='Todos'?{bg:'#E2E8F0',tc:'#1A2332'}:(SUP_C[s]||{bg:'#EEE',tc:'#666'});
+    const isActive=cur===s;
+    return `<button class="equipe-btn${isActive?' active':''}"
+      style="background:${sc.bg};color:${sc.tc};border-color:${isActive?sc.tc:'transparent'}"
+      onclick="selectEquipe('${s}',${t})">${s==='Todos'?'Todas as Equipes':s}</button>`;
+  }).join('');
+}
+
+function selectEquipe(sup,t){
+  state.selSup[t]=sup;
+  agPage=0;avPage=0;
+  render();
+}
+
+// ── MAIN SWITCHES ─────────────────────────────────────────────────────────────
 function switchTab(i){
   currentTab=i;
   document.querySelectorAll('.tab-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
   document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('active',j===i));
   render();
 }
-function setPeriod(mode,tab){
-  state.dateMode[tab]=mode;
+function setPeriod(mode,t){
+  state.dateMode[t]=mode;
   const isDia=mode==='dia';
-  document.getElementById(`btn-acum-${tab}`).classList.toggle('active',!isDia);
-  document.getElementById(`btn-dia-${tab}`).classList.toggle('active',isDia);
-  document.getElementById(`date-wrap-${tab}`).style.display=isDia?'':'none';
+  document.getElementById(`btn-acum-${t}`).classList.toggle('active',!isDia);
+  document.getElementById(`btn-dia-${t}`).classList.toggle('active',isDia);
+  document.getElementById(`date-wrap-${t}`).style.display=isDia?'':'none';
   render();
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────────
-function render(){
-  const t=currentTab;
-  state.selDate[t]=document.getElementById(`sel-date-${t}`)?.value||DEFAULT_DATE;
-  state.selSup[t]=document.getElementById(`sel-sup-${t}`)?.value||'Todos';
-
-  const prRows=filterPR(t);
-  const avRows=filterAv(t);
-  const tots=aggTotals(prRows);
-  const agData=aggByAgent(prRows);
-  const supData=aggBySup(prRows);
-  const avData=aggAvByAgent(avRows);
-
-  // Header KPIs
-  document.getElementById('period-label').textContent=`${periodLabel()} · ${state.selSup[t]==='Todos'?'Todas as equipes':state.selSup[t]}`;
-  document.getElementById('h-leads').textContent=fmt(tots.total_leads);
-  document.getElementById('h-sem').textContent=fmt(tots.sem_resp);
-  document.getElementById('h-sem-pct').textContent=pct(tots.sem_resp,tots.total_leads);
-  document.getElementById('h-ate2').textContent=fmt(tots.ate1+tots.ate2);
-  document.getElementById('h-ate2-pct').textContent=pct(tots.ate1+tots.ate2,tots.total_leads);
-  document.getElementById('h-gt2').textContent=fmt(tots.gt2);
-  document.getElementById('h-gt2-pct').textContent=pct(tots.gt2,tots.total_leads);
-
-  if(t===0) renderGeral(prRows,agData,supData);
-  if(t===1) renderPR(tots,agData,supData);
-  if(t===2) renderAvail(avData);
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function init(){
+  for(let i=0;i<2;i++){
+    const ds=document.getElementById(`sel-date-${i}`);
+    [...ALL_DATES].reverse().forEach(d=>{
+      const o=document.createElement('option');
+      o.value=d;
+      const dt=new Date(d+'T12:00:00');
+      o.textContent=dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit',year:'2-digit'});
+      if(d===DEFAULT_DATE)o.selected=true;
+      ds.appendChild(o);
+    });
+  }
+  render();
 }
 
-// ── VISÃO GERAL ───────────────────────────────────────────────────────────────
-function renderGeral(prRows,agData,supData){
-  // Stacked bars
-  const container=document.getElementById('sup-bars');
-  container.innerHTML='';
-  supData.forEach(s=>{
-    const sc=SUP_C[s.sup]||{tc:'#666'};
-    const total=s.total_leads;
-    if(!total) return;
-    const segs=[
-      {key:'ate1',   label:'≤1min',  val:s.ate1,      color:'#10B981'},
-      {key:'ate2',   label:'1-2min', val:s.ate2,      color:'#F59E0B'},
-      {key:'gt2',    label:'>2min',  val:s.gt2,       color:'#EF4444'},
-      {key:'sem_resp',label:'S/R',   val:s.sem_resp,  color:'#94A3B8'},
-    ];
-    const barDiv=document.createElement('div');
-    barDiv.className='sup-bar-wrap';
-    barDiv.innerHTML=`
-      <div class="sup-bar-meta">
-        <span class="sup-bar-name" style="color:${sc.tc}">${s.sup}</span>
-        <span class="sup-bar-count">${fmt(total)} leads</span>
-      </div>
-      <div class="stacked-bar" id="bar-${s.sup.replace(/ /g,'_')}">
-        ${segs.map(seg=>{
-          if(!seg.val) return '';
-          const w=(seg.val/total*100).toFixed(1);
-          const isDrilled=drillSup===s.sup&&drillCat===seg.key;
-          return `<div class="seg ${isDrilled?'highlighted':''}"
-            style="width:${w}%;background:${seg.color};color:${seg.color}"
-            title="${s.sup} - ${seg.label}: ${fmt(seg.val)} (${w}%)"
-            onclick="clickSeg('${s.sup}','${seg.key}')">
-            ${parseFloat(w)>5?w+'%':''}
-          </div>`;
-        }).join('')}
-      </div>`;
-    container.appendChild(barDiv);
-  });
+// ── RENDER ─────────────────────────────────────────────────────────────────────
+function render(){
+  const t=currentTab;
+  // sync date from select if visible
+  const dEl=document.getElementById(`sel-date-${t}`);
+  if(dEl&&state.dateMode[t]==='dia')state.selDate[t]=dEl.value||DEFAULT_DATE;
 
-  // Drill box
-  if(drillSup && drillCat){
-    const catLabel={ate1:'≤1min',ate2:'1-2min',gt2:'>2min',sem_resp:'Sem Resposta'}[drillCat];
-    document.getElementById('drill-title').textContent=`Promotores — ${drillSup} · ${catLabel}`;
-    const agents=agData.filter(a=>a.sup===drillSup).map(a=>{
-      const val=drillCat==='ate1'?a.ate1:drillCat==='ate2'?a.ate2:drillCat==='gt2'?a.gt2:a.sem_resp;
-      return {...a,drillVal:val};
-    }).filter(a=>a.drillVal>0).sort((a,b)=>b.drillVal-a.drillVal);
-    document.getElementById('drill-grid').innerHTML=agents.map(a=>`
-      <div class="drill-chip">
-        <div class="drill-chip-name">${a.name}</div>
-        <div class="drill-chip-val">${fmt(a.drillVal)} leads nessa faixa</div>
-      </div>`).join('');
-    document.getElementById('drill-box').classList.add('visible');
-  } else {
-    document.getElementById('drill-box').classList.remove('visible');
-  }
+  // update header
+  const prRows0=filterPR(0);
+  const tots0=aggTotals(prRows0);
+  document.getElementById('period-label').textContent=`${periodLabel()} · ${state.selSup[t]==='Todos'?'Todas as equipes':state.selSup[t]}`;
+  document.getElementById('h-leads').textContent=fmt(tots0.total_leads);
+  document.getElementById('h-sem').textContent=fmt(tots0.sem_resp);
+  document.getElementById('h-sem-pct').textContent=pct(tots0.sem_resp,tots0.total_leads);
+  document.getElementById('h-ate2').textContent=fmt(tots0.ate1+tots0.ate2);
+  document.getElementById('h-ate2-pct').textContent=pct(tots0.ate1+tots0.ate2,tots0.total_leads);
+  document.getElementById('h-gt2').textContent=fmt(tots0.gt2);
+  document.getElementById('h-gt2-pct').textContent=pct(tots0.gt2,tots0.total_leads);
+
+  if(t===0) renderPR();
+  if(t===1) renderAvail();
+}
+
+// ── PRIMEIRA RESPOSTA ─────────────────────────────────────────────────────────
+let _agData=[];
+function renderPR(){
+  const prRows=filterPR(0);
+  const tots=aggTotals(prRows);
+  const agData=aggByAgent(prRows);
+  _agData=agData;
+
+  renderEquipeBtns(0);
+
+  // KPIs
+  document.getElementById('pr-kpis').innerHTML=[
+    {l:'Leads Totais',v:fmt(tots.total_leads),accent:'#2563EB'},
+    {l:'Respondidos ≤2min',v:fmt(tots.ate1+tots.ate2),sub:pct(tots.ate1+tots.ate2,tots.total_leads),accent:'#10B981'},
+    {l:'Respondidos >2min',v:fmt(tots.gt2),sub:pct(tots.gt2,tots.total_leads),accent:'#F59E0B'},
+    {l:'Enc. s/ Resposta',v:fmt(tots.sem_resp),sub:pct(tots.sem_resp,tots.total_leads),accent:'#EF4444'},
+  ].map(k=>`<div class="kpi-inner">
+    <div class="val" style="color:${k.accent}">${k.v}</div>
+    <div class="lbl">${k.l}</div>
+    ${k.sub?`<div class="sub" style="color:${k.accent}">${k.sub}</div>`:''}
+  </div>`).join('');
 
   // Top 10
-  const minLeads=5;
-  const sorted=[...agData].filter(a=>a.total_leads>=minLeads);
+  const minL=5;
+  const sorted=[...agData].filter(a=>a.total_leads>=minL);
   const best=[...sorted].sort((a,b)=>b.pctAte2-a.pctAte2).slice(0,10);
   const worst=[...sorted].sort((a,b)=>a.pctAte2-b.pctAte2).slice(0,10);
+
   ['best','worst'].forEach(type=>{
     const data=type==='best'?best:worst;
     const color=type==='best'?'#10B981':'#EF4444';
-    document.getElementById(`top10-${type}`).innerHTML=data.map((a,i)=>{
+    document.getElementById(`pr-top10-${type}`).innerHTML=data.map((a,i)=>{
       const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
-      const lborder=i<3?`border-left:3px solid ${color}`:'border-left:3px solid transparent';
-      return `<div class="top10-row" style="${lborder}">
+      return `<div class="top10-row" style="border-left:3px solid ${i<3?color:'transparent'}">
         <div class="top10-medal">${medals[i]||`<span style="font-size:11px;color:#94A3B8;font-weight:700">${i+1}</span>`}</div>
         <div>
           <div class="top10-name">${a.name}</div>
@@ -562,50 +499,6 @@ function renderGeral(prRows,agData,supData){
       </div>`;
     }).join('');
   });
-}
-
-function clickSeg(sup,cat){
-  if(drillSup===sup&&drillCat===cat){drillSup=null;drillCat=null;}
-  else{drillSup=sup;drillCat=cat;}
-  render();
-}
-function closeDrill(){drillSup=null;drillCat=null;render();}
-
-// ── PRIMEIRA RESPOSTA ─────────────────────────────────────────────────────────
-let _agData=[];
-function renderPR(tots,agData,supData){
-  _agData=agData;
-  const p2=pct(tots.ate1+tots.ate2,tots.total_leads);
-  const pGt=pct(tots.gt2,tots.total_leads);
-  const pSem=pct(tots.sem_resp,tots.total_leads);
-  document.getElementById('pr-kpis').innerHTML=[
-    {l:'Leads Totais',v:fmt(tots.total_leads),accent:'#2563EB'},
-    {l:'Respondidos ≤2min',v:fmt(tots.ate1+tots.ate2),sub:p2,accent:'#10B981'},
-    {l:'Respondidos >2min',v:fmt(tots.gt2),sub:pGt,accent:'#F59E0B'},
-    {l:'Enc. s/ Resposta',v:fmt(tots.sem_resp),sub:pSem,accent:'#EF4444'},
-  ].map(k=>`<div class="kpi-inner">
-    <div class="val" style="color:${k.accent}">${k.v}</div>
-    <div class="lbl">${k.l}</div>
-    ${k.sub?`<div class="sub" style="color:${k.accent}">${k.sub}</div>`:''}
-  </div>`).join('');
-
-  // Sup chips
-  document.getElementById('pr-sup-chips').innerHTML=supData.map(s=>{
-    const sc=SUP_C[s.sup]||{bg:'#EEE',tc:'#666'};
-    const p=s.total_leads>0?((s.ate1+s.ate2)/s.total_leads*100).toFixed(0):0;
-    const pGt=s.total_leads>0?(s.gt2/s.total_leads*100).toFixed(0):0;
-    const agCnt=agData.filter(a=>a.sup===s.sup).length;
-    const avgLd=agCnt>0?(s.total_leads/agCnt).toFixed(0):0;
-    return `<div class="sup-chip" style="background:${sc.bg};border-color:${sc.tc}30">
-      <div class="sup-chip-name" style="color:${sc.tc}">${s.sup}</div>
-      <div class="sup-chip-count" style="color:#4A5568">${fmt(s.total_leads)} leads</div>
-      <div class="sup-chip-rates">
-        <span style="font-size:11px;color:#10B981;font-weight:700">≤2min: ${p}%</span>
-        <span style="font-size:11px;color:#EF4444;font-weight:700">&gt;2min: ${pGt}%</span>
-      </div>
-      <div class="sup-chip-avg" style="color:#94A3B8">Média: ${avgLd} leads/promotor</div>
-    </div>`;
-  }).join('');
 
   agPage=0;
   renderAgTable();
@@ -614,10 +507,10 @@ function renderPR(tots,agData,supData){
 function renderAgTable(){
   const search=(document.getElementById('ag-search')?.value||'').toLowerCase();
   let data=[..._agData];
-  if(search) data=data.filter(a=>a.name.toLowerCase().includes(search)||a.sup.toLowerCase().includes(search));
+  if(search)data=data.filter(a=>a.name.toLowerCase().includes(search)||a.sup.toLowerCase().includes(search));
   data.sort((a,b)=>{
-    if(agSortCol==='name') return a.name.localeCompare(b.name)*agSortDir;
-    return (a[agSortCol]-b[agSortCol])*agSortDir;
+    if(agSortCol==='name')return a.name.localeCompare(b.name)*agSortDir;
+    return(a[agSortCol]-b[agSortCol])*agSortDir;
   });
   agTotalPages=Math.ceil(data.length/PAGE)||1;
   agPage=Math.min(agPage,agTotalPages-1);
@@ -630,7 +523,6 @@ function renderAgTable(){
     const p1=a.total_leads>0?(a.ate1/a.total_leads*100).toFixed(0):0;
     const p2=a.total_leads>0?(a.ate2/a.total_leads*100).toFixed(0):0;
     const pGt=a.total_leads>0?(a.gt2/a.total_leads*100).toFixed(0):0;
-    const fillW=Math.min(a.pctAte2,100);
     return `<tr>
       <td style="font-weight:700;white-space:nowrap">${a.name}</td>
       <td>${supBadge(a.sup)}</td>
@@ -640,14 +532,13 @@ function renderAgTable(){
       <td class="td-right"><div style="color:#EF4444;font-weight:700">${fmt(a.gt2)}</div><div style="font-size:9px;color:#94A3B8">${pGt}%</div></td>
       <td>
         <div class="mini-bar-wrap">
-          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${fillW}%;background:${st.color}"></div></div>
+          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${Math.min(a.pctAte2,100)}%;background:${st.color}"></div></div>
           <span style="font-size:12px;font-weight:800;color:${st.color};min-width:34px;text-align:right">${a.pctAte2.toFixed(0)}%</span>
         </div>
       </td>
       <td class="td-right"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></td>
     </tr>`;
   }).join('');
-  // pg buttons
   document.getElementById('ag-pg-first').disabled=agPage===0;
   document.getElementById('ag-pg-prev').disabled=agPage===0;
   document.getElementById('ag-pg-next').disabled=agPage>=agTotalPages-1;
@@ -655,10 +546,10 @@ function renderAgTable(){
 }
 
 function sortAg(col){
-  if(agSortCol===col) agSortDir*=-1; else{agSortCol=col;agSortDir=-1;}
+  if(agSortCol===col)agSortDir*=-1;else{agSortCol=col;agSortDir=-1;}
   document.querySelectorAll('[id^="th-"]').forEach(th=>{
     th.classList.toggle('sorted',th.id===`th-${col}`);
-    if(th.id===`th-${col}`) th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+' '+(agSortDir===-1?'↓':'↑');
+    if(th.id===`th-${col}`)th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+' '+(agSortDir===-1?'↓':'↑');
     else th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+'↕';
   });
   agPage=0;renderAgTable();
@@ -666,11 +557,17 @@ function sortAg(col){
 
 // ── DISPONIBILIDADE ───────────────────────────────────────────────────────────
 let _avData=[];
-function renderAvail(avData){
+function renderAvail(){
+  const avRows=filterAv(1);
+  const avData=aggAvByAgent(avRows);
   _avData=avData;
+
+  renderEquipeBtns(1);
+
+  // KPIs
   const ideal=avData.filter(a=>a.avgH>=6).length;
   const aceit=avData.filter(a=>a.avgH>=4&&a.avgH<6).length;
-  const crit =avData.filter(a=>a.avgH<4).length;
+  const crit=avData.filter(a=>a.avgH<4).length;
   document.getElementById('av-kpis').innerHTML=[
     {l:'Promotores',v:fmt(avData.length),accent:'#2563EB'},
     {l:'Ideal (≥6h)',v:fmt(ideal),sub:pct(ideal,avData.length),accent:'#10B981'},
@@ -681,14 +578,39 @@ function renderAvail(avData){
     <div class="lbl">${k.l}</div>
     ${k.sub?`<div class="sub" style="color:${k.accent}">${k.sub}</div>`:''}
   </div>`).join('');
-  avPage=0;renderAvTable();
+
+  // Top 10 disponibilidade
+  const sorted=[...avData].filter(a=>a.days>=1);
+  const best10=[...sorted].sort((a,b)=>b.avgH-a.avgH).slice(0,10);
+  const worst10=[...sorted].sort((a,b)=>a.avgH-b.avgH).slice(0,10);
+
+  ['best','worst'].forEach(type=>{
+    const data=type==='best'?best10:worst10;
+    const color=type==='best'?'#10B981':'#EF4444';
+    document.getElementById(`av-top10-${type}`).innerHTML=data.map((a,i)=>{
+      const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
+      const st=availStatus(a.avgH);
+      return `<div class="top10-row" style="border-left:3px solid ${i<3?color:'transparent'}">
+        <div class="top10-medal">${medals[i]||`<span style="font-size:11px;color:#94A3B8;font-weight:700">${i+1}</span>`}</div>
+        <div>
+          <div class="top10-name">${a.name}</div>
+          <span class="top10-badge" style="background:${sc.bg};color:${sc.tc}">${a.sup}</span>
+        </div>
+        <div class="top10-leads">${a.totalH.toFixed(1)}h</div>
+        <div class="top10-pct" style="color:${st.color}">${a.avgH.toFixed(1)}h</div>
+      </div>`;
+    }).join('');
+  });
+
+  avPage=0;
+  renderAvTable();
 }
 
 function renderAvTable(){
   let data=[..._avData];
   data.sort((a,b)=>{
-    if(avSortCol==='name') return a.name.localeCompare(b.name)*avSortDir;
-    return (a[avSortCol]-b[avSortCol])*avSortDir;
+    if(avSortCol==='name')return a.name.localeCompare(b.name)*avSortDir;
+    return(a[avSortCol]-b[avSortCol])*avSortDir;
   });
   avTotalPages=Math.ceil(data.length/PAGE)||1;
   avPage=Math.min(avPage,avTotalPages-1);
@@ -696,7 +618,6 @@ function renderAvTable(){
   const paged=data.slice(avPage*PAGE,(avPage+1)*PAGE);
   document.getElementById('av-tbody').innerHTML=paged.map(a=>{
     const st=availStatus(a.avgH);
-    const fillW=Math.min((a.avgH/12)*100,100);
     return `<tr>
       <td style="font-weight:700;white-space:nowrap">${a.name}</td>
       <td>${supBadge(a.sup)}</td>
@@ -704,7 +625,7 @@ function renderAvTable(){
       <td class="td-right" style="color:#4A5568">${a.days}</td>
       <td>
         <div class="mini-bar-wrap">
-          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${fillW}%;background:${st.color}"></div></div>
+          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${Math.min((a.avgH/12)*100,100)}%;background:${st.color}"></div></div>
           <span style="font-size:13px;font-weight:800;color:${st.color};min-width:34px;text-align:right">${a.avgH.toFixed(1)}h</span>
         </div>
       </td>
@@ -718,16 +639,15 @@ function renderAvTable(){
 }
 
 function sortAv(col){
-  if(avSortCol===col) avSortDir*=-1; else{avSortCol=col;avSortDir=-1;}
+  if(avSortCol===col)avSortDir*=-1;else{avSortCol=col;avSortDir=-1;}
   document.querySelectorAll('[id^="av-th-"]').forEach(th=>{
     th.classList.toggle('sorted',th.id===`av-th-${col}`);
-    if(th.id===`av-th-${col}`) th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+' '+(avSortDir===-1?'↓':'↑');
+    if(th.id===`av-th-${col}`)th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+' '+(avSortDir===-1?'↓':'↑');
     else th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+'↕';
   });
   avPage=0;renderAvTable();
 }
 
-// ── START ─────────────────────────────────────────────────────────────────────
 init();
 </script>
 </body>

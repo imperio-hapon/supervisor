@@ -67,7 +67,7 @@ iframe {
 
 <button onclick="loadPage('disponivel.html', this)">Disponível / 1º resposta</button>
 
-<button id="btnCarteira" onclick="loadPage('carteira.html', this)">Carteira de Clientes</button>
+<button id="btnPainel" onclick="loadPage('carteira.html', this)">Painel</button>
 
 <button id="btnDisparos" onclick="loadPage('disparos.html', this)">Disparos</button>
 
@@ -75,7 +75,7 @@ iframe {
 
 <button id="btnQualidade" onclick="loadPage('qualidade.html', this)">Qualidade</button>
 
-<button onclick="loadPage('absenteismo.html', this)">Absenteísmo</button>
+<button id="btnAbsenteismo" onclick="loadPage('absenteismo.html', this)">Absenteísmo</button>
 </div>
  
 <iframe id="frame" src="vidas.html"></iframe>
@@ -94,13 +94,13 @@ function loadPage(page, element){
 // 🔒 BLOCO PARA OCULTAR BOTÕES
 function ocultarBotoes() {
   document.getElementById('btnConversao').style.display = 'none';
-  document.getElementById('btnCarteira').style.display = 'none';
   document.getElementById('btnDisparos').style.display = 'none';
   document.getElementById('btnLeads').style.display = 'none';
   document.getElementById('btnQualidade').style.display = 'none';
+  document.getElementById('btnAbsenteismo').style.display = 'none';
 }
 
-// Executa automaticamente ao carregar a página
+// Executa automaticamente ao carregar
 window.onload = function() {
   ocultarBotoes();
 };

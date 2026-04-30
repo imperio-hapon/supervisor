@@ -92,7 +92,10 @@ td{padding:6px 8px;font-size:12px;border-bottom:1px solid #f5f5f5;vertical-align
 .badge.proj-warn{background:#fff8e1;color:#b06000;font-size:10px}
 .badge.proj-bad{background:#fdecea;color:#b00020;font-size:10px}
 .dz-b{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700}
-.dz-0{background:#e8f8ee;color:#1a7a3a}.dz-l{background:#fff8e1;color:#b06000}
+.dz-0{background:#e8f8ee;color:#1a7a3a}
+.cv-good{color:#1a7a3a;font-weight:700}
+.cv-mid{color:#b06000;font-weight:700}
+.cv-low{color:#b00020;font-weight:700}.dz-l{background:#fff8e1;color:#b06000}
 .dz-m{background:#fff0e0;color:#b54800}.dz-h{background:#fdecea;color:#b00020}
 
 .charts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:4px}
@@ -186,13 +189,14 @@ const SUP_MVP_SEMS = {
 };
 
 // ─── DATASET ─────────────────────────────────────────────────────────────
-const rawData=[{"s":"JOSY BOMFIM","p":"GIOVANNA SANTANA","pf":80,"a":0,"pme":0,"v":80,"meta":60},{"s":"JOSY BOMFIM","p":"TATI SILVA","pf":60,"a":0,"pme":0,"v":60,"meta":60},{"s":"JOSY BOMFIM","p":"BRUNO IGNACIO","pf":30,"a":0,"pme":0,"v":30,"meta":34},{"s":"JOSY BOMFIM","p":"PATRICIA LIMA","pf":21,"a":0,"pme":0,"v":21,"meta":34},{"s":"JOSY BOMFIM","p":"ANDREA ANTUNES","pf":20,"a":0,"pme":0,"v":20,"meta":34},{"s":"JOSY BOMFIM","p":"AMANDA SOUZA","pf":10,"a":0,"pme":0,"v":10,"meta":33},{"s":"JOSY BOMFIM","p":"KARLA MONTEIRO","pf":1,"a":0,"pme":0,"v":1,"meta":0},{"s":"HUMBERTO BANQUERI","p":"GIOVANNA BARBIERI","pf":27,"a":0,"pme":0,"v":27,"meta":15},{"s":"HUMBERTO BANQUERI","p":"JAQUELINE SILVA","pf":105,"a":0,"pme":33,"v":138,"meta":100},{"s":"HUMBERTO BANQUERI","p":"JULIA SILVA","pf":104,"a":0,"pme":0,"v":104,"meta":80},{"s":"HUMBERTO BANQUERI","p":"BRUNA CAMPASSI","pf":115,"a":0,"pme":11,"v":126,"meta":100},{"s":"HUMBERTO BANQUERI","p":"MARIANA FELIX","pf":82,"a":0,"pme":36,"v":118,"meta":100},{"s":"HUMBERTO BANQUERI","p":"ISABELLA MATTOS","pf":48,"a":0,"pme":20,"v":68,"meta":60},{"s":"HUMBERTO BANQUERI","p":"ANA JULIA COSTA","pf":17,"a":0,"pme":0,"v":17,"meta":15},{"s":"HUMBERTO BANQUERI","p":"ALINE RIBEIRO","pf":55,"a":0,"pme":11,"v":66,"meta":60},{"s":"HUMBERTO BANQUERI","p":"ALINE GUNELLO","pf":68,"a":0,"pme":8,"v":76,"meta":70},{"s":"HUMBERTO BANQUERI","p":"ROBSON SOUZA","pf":57,"a":0,"pme":39,"v":96,"meta":90},{"s":"HUMBERTO BANQUERI","p":"DELIANE GOMES","pf":80,"a":0,"pme":0,"v":80,"meta":100},{"s":"HUMBERTO BANQUERI","p":"ISAQUE FERREIRA","pf":11,"a":0,"pme":0,"v":11,"meta":15},{"s":"HUMBERTO BANQUERI","p":"SUELLEN GUIMARAES","pf":45,"a":0,"pme":18,"v":63,"meta":90},{"s":"HUMBERTO BANQUERI","p":"MOOARA RODRIGUES","pf":51,"a":0,"pme":0,"v":51,"meta":90},{"s":"HUMBERTO BANQUERI","p":"GLEIRE VALERIO","pf":49,"a":0,"pme":0,"v":49,"meta":100},{"s":"HUMBERTO BANQUERI","p":"ANA PAULA CAMPANA","pf":33,"a":0,"pme":6,"v":39,"meta":80},{"s":"HUMBERTO BANQUERI","p":"LARISSA PAES","pf":26,"a":0,"pme":0,"v":26,"meta":75},{"s":"HUMBERTO BANQUERI","p":"LUCIANA TRIPICCHIO","pf":11,"a":0,"pme":4,"v":15,"meta":60},{"s":"HUMBERTO BANQUERI","p":"LUZINETE DOURADO","pf":13,"a":0,"pme":0,"v":13,"meta":60},{"s":"HUMBERTO BANQUERI","p":"ISABELLA SOUZA","pf":14,"a":0,"pme":0,"v":14,"meta":65},{"s":"HUMBERTO BANQUERI","p":"BRUNA LAVESSO","pf":0,"a":0,"pme":1,"v":1,"meta":0},{"s":"HUMBERTO BANQUERI","p":"HIGOR CRISPIM","pf":2,"a":0,"pme":0,"v":2,"meta":0},{"s":"LUIZ ROBERTO","p":"ANA CAROLINA ANTUNES","pf":119,"a":0,"pme":0,"v":119,"meta":90},{"s":"LUIZ ROBERTO","p":"ANDREZZA MACCHINI","pf":109,"a":0,"pme":0,"v":109,"meta":90},{"s":"LUIZ ROBERTO","p":"MARCELA MONTANARI","pf":67,"a":0,"pme":0,"v":67,"meta":70},{"s":"LUIZ ROBERTO","p":"RAYANE LOPES","pf":66,"a":0,"pme":0,"v":66,"meta":70},{"s":"LUIZ ROBERTO","p":"UNILDO FERREIRA","pf":62,"a":0,"pme":0,"v":62,"meta":70},{"s":"LUIZ ROBERTO","p":"RAIANE LIMA","pf":61,"a":0,"pme":0,"v":61,"meta":70},{"s":"LUIZ ROBERTO","p":"LIGIVANIA SILVA","pf":55,"a":0,"pme":0,"v":55,"meta":70},{"s":"LUIZ ROBERTO","p":"JANEILA FIGUEIREDO","pf":46,"a":0,"pme":0,"v":46,"meta":70},{"s":"LUIZ ROBERTO","p":"SOFIA LUNGA","pf":39,"a":0,"pme":0,"v":39,"meta":60},{"s":"LUIZ ROBERTO","p":"THAISA ALMEIDA","pf":45,"a":0,"pme":0,"v":45,"meta":70},{"s":"LUIZ ROBERTO","p":"MIRIAM FERREIRA","pf":40,"a":0,"pme":0,"v":40,"meta":70},{"s":"LUIZ ROBERTO","p":"JADY QUEIROZ","pf":30,"a":0,"pme":0,"v":30,"meta":60},{"s":"LUIZ ROBERTO","p":"DANILO FOGACA","pf":34,"a":0,"pme":0,"v":34,"meta":70},{"s":"LUIZ ROBERTO","p":"SONIA LINO","pf":34,"a":0,"pme":0,"v":34,"meta":70},{"s":"LUIZ ROBERTO","p":"THAMIRIS FRANCISQUELLI","pf":32,"a":0,"pme":0,"v":32,"meta":70},{"s":"LUIZ ROBERTO","p":"RAISSA BURIN","pf":25,"a":0,"pme":0,"v":25,"meta":60},{"s":"LUIZ ROBERTO","p":"SABRINA GIOLO","pf":24,"a":0,"pme":0,"v":24,"meta":70},{"s":"LUIZ ROBERTO","p":"RENATO JESUS","pf":13,"a":0,"pme":0,"v":13,"meta":70},{"s":"LUIZ ROBERTO","p":"ISABELLE SCHANZ","pf":0,"a":0,"pme":0,"v":0,"meta":80},{"s":"REBECA MOURA","p":"GUSTAVO BARROS","pf":76,"a":6,"pme":0,"v":82,"meta":80},{"s":"REBECA MOURA","p":"KEILA OLIVEIRA","pf":49,"a":0,"pme":0,"v":49,"meta":50},{"s":"REBECA MOURA","p":"FELIPE SOUZA","pf":70,"a":10,"pme":0,"v":80,"meta":90},{"s":"REBECA MOURA","p":"LUAN RIBEIRO","pf":60,"a":1,"pme":0,"v":61,"meta":80},{"s":"REBECA MOURA","p":"THAINA BERCHELI","pf":60,"a":7,"pme":0,"v":67,"meta":90},{"s":"REBECA MOURA","p":"ELISAMA GIZZI","pf":74,"a":0,"pme":0,"v":74,"meta":100},{"s":"REBECA MOURA","p":"GABRIELA REIS","pf":46,"a":12,"pme":0,"v":58,"meta":80},{"s":"REBECA MOURA","p":"MIKAELLY CAMILY","pf":17,"a":0,"pme":0,"v":17,"meta":30},{"s":"REBECA MOURA","p":"PAULA JESUS","pf":43,"a":0,"pme":0,"v":43,"meta":80},{"s":"REBECA MOURA","p":"KAMILA KUNER","pf":26,"a":0,"pme":0,"v":26,"meta":50},{"s":"REBECA MOURA","p":"BRUNO FERREIRA","pf":29,"a":9,"pme":0,"v":38,"meta":80},{"s":"REBECA MOURA","p":"MARIA APARECIDA CORREA","pf":33,"a":0,"pme":0,"v":33,"meta":70},{"s":"REBECA MOURA","p":"NATALIA BORGES","pf":33,"a":0,"pme":0,"v":33,"meta":80},{"s":"REBECA MOURA","p":"FERNANDA CARRARO","pf":26,"a":2,"pme":0,"v":28,"meta":70},{"s":"REBECA MOURA","p":"JESSICA COSTA","pf":24,"a":7,"pme":0,"v":31,"meta":80},{"s":"REBECA MOURA","p":"BEATRIZ CORDEIRO","pf":28,"a":2,"pme":0,"v":30,"meta":90},{"s":"REBECA MOURA","p":"FERNANDA FRANCISCO","pf":1,"a":0,"pme":0,"v":1,"meta":0},{"s":"BENVE","p":"DANIELLE MUZELL","pf":43,"a":0,"pme":0,"v":43,"meta":57},{"s":"BENVE","p":"TAIS COLARES","pf":41,"a":0,"pme":0,"v":41,"meta":57},{"s":"BENVE","p":"CAMILA MOREIRA","pf":37,"a":0,"pme":0,"v":37,"meta":57},{"s":"BENVE","p":"JULIA MARQUES","pf":36,"a":0,"pme":0,"v":36,"meta":57},{"s":"BENVE","p":"ANA BEATRIZ MACHUCA","pf":36,"a":0,"pme":0,"v":36,"meta":58},{"s":"BENVE","p":"CRISTINA LOPES","pf":28,"a":0,"pme":0,"v":28,"meta":57},{"s":"BENVE","p":"TAIS LOPES","pf":26,"a":0,"pme":0,"v":26,"meta":57},{"s":"BENVE","p":"JOICE ALINE","pf":1,"a":0,"pme":0,"v":1,"meta":0}];
+const rawData=[{"s":"JOSY BOMFIM","p":"GIOVANNA SANTANA","pf":80,"a":0,"pme":0,"v":80,"meta":60,"cv":36.87,"dz":2},{"s":"JOSY BOMFIM","p":"TATI SILVA","pf":60,"a":0,"pme":0,"v":60,"meta":60,"cv":12.1,"dz":3},{"s":"JOSY BOMFIM","p":"BRUNO IGNACIO","pf":30,"a":0,"pme":0,"v":30,"meta":34,"cv":3.59,"dz":7},{"s":"JOSY BOMFIM","p":"PATRICIA LIMA","pf":21,"a":0,"pme":0,"v":21,"meta":34,"cv":11.63,"dz":9},{"s":"JOSY BOMFIM","p":"ANDREA ANTUNES","pf":20,"a":0,"pme":0,"v":20,"meta":34,"cv":15.56,"dz":8},{"s":"JOSY BOMFIM","p":"AMANDA SOUZA","pf":10,"a":0,"pme":0,"v":10,"meta":33,"cv":0.0,"dz":14},{"s":"JOSY BOMFIM","p":"KARLA MONTEIRO","pf":1,"a":0,"pme":0,"v":1,"meta":0,"cv":null,"dz":19},{"s":"HUMBERTO BANQUERI","p":"GIOVANNA BARBIERI","pf":27,"a":0,"pme":0,"v":27,"meta":15,"cv":3.45,"dz":6},{"s":"HUMBERTO BANQUERI","p":"JAQUELINE SILVA","pf":105,"a":0,"pme":33,"v":138,"meta":100,"cv":7.33,"dz":2},{"s":"HUMBERTO BANQUERI","p":"JULIA SILVA","pf":104,"a":0,"pme":0,"v":104,"meta":80,"cv":5.18,"dz":0},{"s":"HUMBERTO BANQUERI","p":"BRUNA CAMPASSI","pf":115,"a":0,"pme":11,"v":126,"meta":100,"cv":5.63,"dz":1},{"s":"HUMBERTO BANQUERI","p":"MARIANA FELIX","pf":82,"a":0,"pme":36,"v":118,"meta":100,"cv":8.68,"dz":2},{"s":"HUMBERTO BANQUERI","p":"ISABELLA MATTOS","pf":48,"a":0,"pme":20,"v":68,"meta":60,"cv":6.3,"dz":4},{"s":"HUMBERTO BANQUERI","p":"ANA JULIA COSTA","pf":17,"a":0,"pme":0,"v":17,"meta":15,"cv":2.16,"dz":10},{"s":"HUMBERTO BANQUERI","p":"ALINE RIBEIRO","pf":55,"a":0,"pme":11,"v":66,"meta":60,"cv":7.53,"dz":4},{"s":"HUMBERTO BANQUERI","p":"ALINE GUNELLO","pf":68,"a":0,"pme":8,"v":76,"meta":70,"cv":5.36,"dz":2},{"s":"HUMBERTO BANQUERI","p":"ROBSON SOUZA","pf":57,"a":0,"pme":39,"v":96,"meta":90,"cv":11.96,"dz":4},{"s":"HUMBERTO BANQUERI","p":"DELIANE GOMES","pf":80,"a":0,"pme":0,"v":80,"meta":100,"cv":5.47,"dz":1},{"s":"HUMBERTO BANQUERI","p":"ISAQUE FERREIRA","pf":11,"a":0,"pme":0,"v":11,"meta":15,"cv":2.38,"dz":12},{"s":"HUMBERTO BANQUERI","p":"SUELLEN GUIMARAES","pf":45,"a":0,"pme":18,"v":63,"meta":90,"cv":14.44,"dz":2},{"s":"HUMBERTO BANQUERI","p":"MOOARA RODRIGUES","pf":51,"a":0,"pme":0,"v":51,"meta":90,"cv":5.45,"dz":3},{"s":"HUMBERTO BANQUERI","p":"GLEIRE VALERIO","pf":49,"a":0,"pme":0,"v":49,"meta":100,"cv":4.07,"dz":1},{"s":"HUMBERTO BANQUERI","p":"ANA PAULA CAMPANA","pf":33,"a":0,"pme":6,"v":39,"meta":80,"cv":7.66,"dz":4},{"s":"HUMBERTO BANQUERI","p":"LARISSA PAES","pf":26,"a":0,"pme":0,"v":26,"meta":75,"cv":4.04,"dz":9},{"s":"HUMBERTO BANQUERI","p":"LUCIANA TRIPICCHIO","pf":11,"a":0,"pme":4,"v":15,"meta":60,"cv":4.09,"dz":11},{"s":"HUMBERTO BANQUERI","p":"LUZINETE DOURADO","pf":13,"a":0,"pme":0,"v":13,"meta":60,"cv":4.59,"dz":12},{"s":"HUMBERTO BANQUERI","p":"ISABELLA SOUZA","pf":14,"a":0,"pme":0,"v":14,"meta":65,"cv":5.82,"dz":15},{"s":"HUMBERTO BANQUERI","p":"BRUNA LAVESSO","pf":0,"a":0,"pme":1,"v":1,"meta":0,"cv":null,"dz":0},{"s":"HUMBERTO BANQUERI","p":"HIGOR CRISPIM","pf":2,"a":0,"pme":0,"v":2,"meta":0,"cv":null,"dz":18},{"s":"LUIZ ROBERTO","p":"ANA CAROLINA ANTUNES","pf":119,"a":0,"pme":0,"v":119,"meta":90,"cv":8.22,"dz":0},{"s":"LUIZ ROBERTO","p":"ANDREZZA MACCHINI","pf":109,"a":0,"pme":0,"v":109,"meta":90,"cv":7.98,"dz":0},{"s":"LUIZ ROBERTO","p":"MARCELA MONTANARI","pf":67,"a":0,"pme":0,"v":67,"meta":70,"cv":5.54,"dz":2},{"s":"LUIZ ROBERTO","p":"RAYANE LOPES","pf":66,"a":0,"pme":0,"v":66,"meta":70,"cv":6.59,"dz":1},{"s":"LUIZ ROBERTO","p":"UNILDO FERREIRA","pf":62,"a":0,"pme":0,"v":62,"meta":70,"cv":4.36,"dz":1},{"s":"LUIZ ROBERTO","p":"RAIANE LIMA","pf":61,"a":0,"pme":0,"v":61,"meta":70,"cv":4.09,"dz":3},{"s":"LUIZ ROBERTO","p":"LIGIVANIA SILVA","pf":55,"a":0,"pme":0,"v":55,"meta":70,"cv":3.06,"dz":3},{"s":"LUIZ ROBERTO","p":"JANEILA FIGUEIREDO","pf":46,"a":0,"pme":0,"v":46,"meta":70,"cv":3.9,"dz":4},{"s":"LUIZ ROBERTO","p":"SOFIA LUNGA","pf":39,"a":0,"pme":0,"v":39,"meta":60,"cv":5.05,"dz":5},{"s":"LUIZ ROBERTO","p":"THAISA ALMEIDA","pf":45,"a":0,"pme":0,"v":45,"meta":70,"cv":4.55,"dz":3},{"s":"LUIZ ROBERTO","p":"MIRIAM FERREIRA","pf":40,"a":0,"pme":0,"v":40,"meta":70,"cv":3.59,"dz":6},{"s":"LUIZ ROBERTO","p":"JADY QUEIROZ","pf":30,"a":0,"pme":0,"v":30,"meta":60,"cv":3.53,"dz":7},{"s":"LUIZ ROBERTO","p":"DANILO FOGACA","pf":34,"a":0,"pme":0,"v":34,"meta":70,"cv":4.52,"dz":8},{"s":"LUIZ ROBERTO","p":"SONIA LINO","pf":34,"a":0,"pme":0,"v":34,"meta":70,"cv":4.33,"dz":6},{"s":"LUIZ ROBERTO","p":"THAMIRIS FRANCISQUELLI","pf":32,"a":0,"pme":0,"v":32,"meta":70,"cv":4.15,"dz":5},{"s":"LUIZ ROBERTO","p":"RAISSA BURIN","pf":25,"a":0,"pme":0,"v":25,"meta":60,"cv":5.27,"dz":5},{"s":"LUIZ ROBERTO","p":"SABRINA GIOLO","pf":24,"a":0,"pme":0,"v":24,"meta":70,"cv":3.68,"dz":9},{"s":"LUIZ ROBERTO","p":"RENATO JESUS","pf":13,"a":0,"pme":0,"v":13,"meta":70,"cv":10.4,"dz":16},{"s":"LUIZ ROBERTO","p":"ISABELLE SCHANZ","pf":0,"a":0,"pme":0,"v":0,"meta":80,"cv":null,"dz":20},{"s":"REBECA MOURA","p":"GUSTAVO BARROS","pf":76,"a":6,"pme":0,"v":82,"meta":80,"cv":6.3,"dz":1},{"s":"REBECA MOURA","p":"KEILA OLIVEIRA","pf":49,"a":0,"pme":0,"v":49,"meta":50,"cv":7.49,"dz":3},{"s":"REBECA MOURA","p":"FELIPE SOUZA","pf":70,"a":10,"pme":0,"v":80,"meta":90,"cv":5.35,"dz":2},{"s":"REBECA MOURA","p":"LUAN RIBEIRO","pf":60,"a":1,"pme":0,"v":61,"meta":80,"cv":3.68,"dz":1},{"s":"REBECA MOURA","p":"THAINA BERCHELI","pf":60,"a":7,"pme":0,"v":67,"meta":90,"cv":5.23,"dz":4},{"s":"REBECA MOURA","p":"ELISAMA GIZZI","pf":74,"a":0,"pme":0,"v":74,"meta":100,"cv":15.79,"dz":1},{"s":"REBECA MOURA","p":"GABRIELA REIS","pf":46,"a":12,"pme":0,"v":58,"meta":80,"cv":6.42,"dz":3},{"s":"REBECA MOURA","p":"MIKAELLY CAMILY","pf":17,"a":0,"pme":0,"v":17,"meta":30,"cv":2.93,"dz":9},{"s":"REBECA MOURA","p":"PAULA JESUS","pf":43,"a":0,"pme":0,"v":43,"meta":80,"cv":12.88,"dz":5},{"s":"REBECA MOURA","p":"KAMILA KUNER","pf":26,"a":0,"pme":0,"v":26,"meta":50,"cv":2.25,"dz":6},{"s":"REBECA MOURA","p":"BRUNO FERREIRA","pf":29,"a":9,"pme":0,"v":38,"meta":80,"cv":4.71,"dz":3},{"s":"REBECA MOURA","p":"MARIA APARECIDA CORREA","pf":33,"a":0,"pme":0,"v":33,"meta":70,"cv":6.17,"dz":6},{"s":"REBECA MOURA","p":"NATALIA BORGES","pf":33,"a":0,"pme":0,"v":33,"meta":80,"cv":5.48,"dz":7},{"s":"REBECA MOURA","p":"FERNANDA CARRARO","pf":26,"a":2,"pme":0,"v":28,"meta":70,"cv":3.8,"dz":7},{"s":"REBECA MOURA","p":"JESSICA COSTA","pf":24,"a":7,"pme":0,"v":31,"meta":80,"cv":4.4,"dz":7},{"s":"REBECA MOURA","p":"BEATRIZ CORDEIRO","pf":28,"a":2,"pme":0,"v":30,"meta":90,"cv":4.11,"dz":7},{"s":"REBECA MOURA","p":"FERNANDA FRANCISCO","pf":1,"a":0,"pme":0,"v":1,"meta":0,"cv":5.0,"dz":19},{"s":"BENVE","p":"DANIELLE MUZELL","pf":43,"a":0,"pme":0,"v":43,"meta":57,"cv":7.73,"dz":4},{"s":"BENVE","p":"TAIS COLARES","pf":41,"a":0,"pme":0,"v":41,"meta":57,"cv":8.53,"dz":3},{"s":"BENVE","p":"CAMILA MOREIRA","pf":37,"a":0,"pme":0,"v":37,"meta":57,"cv":5.35,"dz":5},{"s":"BENVE","p":"JULIA MARQUES","pf":36,"a":0,"pme":0,"v":36,"meta":57,"cv":5.07,"dz":5},{"s":"BENVE","p":"ANA BEATRIZ MACHUCA","pf":36,"a":0,"pme":0,"v":36,"meta":58,"cv":4.69,"dz":6},{"s":"BENVE","p":"CRISTINA LOPES","pf":28,"a":0,"pme":0,"v":28,"meta":57,"cv":3.09,"dz":6},{"s":"BENVE","p":"TAIS LOPES","pf":26,"a":0,"pme":0,"v":26,"meta":57,"cv":5.21,"dz":6},{"s":"BENVE","p":"JOICE ALINE","pf":1,"a":0,"pme":0,"v":1,"meta":0,"cv":null,"dz":19}];
 
 rawData.forEach(r=>{
   r.pct  = r.meta>0?+(r.v/r.meta*100).toFixed(1):0;
   r.gap  = r.v-r.meta;
   r.proj = Math.round(r.v * PROJ_FATOR);
   r.projPct = r.meta>0?+(r.proj/r.meta*100).toFixed(1):0;
+  r.cvDisp = r.cv!==null&&r.cv!==undefined ? r.cv.toFixed(2)+'%' : '—';
 });
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────
@@ -215,6 +219,11 @@ const stKey     = (p,nm) => STATUS_ESP[nm]?'especial':p===0?'zerado':isDentro(p)
 const stLabel   = (p,nm) => STATUS_ESP[nm]?STATUS_ESP[nm]+' 🏖️':p===0?'Zerado ⚪':isDentro(p)?'Dentro do esperado ✅':'Abaixo do esperado 🔴';
 const stOrder   = (p,nm) => STATUS_ESP[nm]?3:p===0?4:isDentro(p)?0:1;
 const projBadge = (pp,pv)=>{const i=pp>=100?'📈':'📉';const c=pp>=100?'proj-ok':pp>=70?'proj-warn':'proj-bad';return`<span class="badge ${c}">${i} ${pp}% (${pv} vidas)</span>`;};
+const cvBadge = cv => {
+  if(cv===null||cv===undefined) return '<span style="color:#ccc">—</span>';
+  const cls = cv>=8?'cv-good':cv>=4?'cv-mid':'cv-low';
+  return `<span class="${cls}">${cv.toFixed(2)}%</span>`;
+};
 const dzBadge   = dz=>{const t=dz===0?'0 dias':dz===1?'1 dia':`${dz} dias`;const c=dz===0?'dz-0':dz<=2?'dz-l':dz<=5?'dz-m':'dz-h';return`<span class="dz-b ${c}">${t}</span>`;};
 
 // ─── ESTADO GLOBAL ────────────────────────────────────────────────────────
@@ -244,6 +253,9 @@ function renderKPIs() {
   const proj = Math.round(vtGlobal * PROJ_FATOR);
   const projP= +(proj/mtGlobal*100).toFixed(1);
   const mvp  = rows.length>0?+(vtGlobal/rows.length).toFixed(1):0;
+  const cvRows = rows.filter(r=>r.cv!==null&&r.cv!==undefined);
+  const avgCv  = cvRows.length>0 ? cvRows.reduce((s,r)=>s+r.cv,0)/cvRows.length : 0;
+  const cvCount = cvRows.length;
   const dent = rows.filter(r=>isDentro(r.pct)).length;
 
   document.getElementById('kpi-row1').innerHTML=`
@@ -251,14 +263,14 @@ function renderKPIs() {
     <div class="kpi cinza"><div class="kpi-label">Meta do Período</div><div class="kpi-value">${N(mtGlobal)}</div><div class="kpi-sub">${rows.length} promotores</div></div>
     <div class="kpi proj"><div class="kpi-label">Projeção de Fechamento</div><div class="kpi-value" style="color:#f4a261">${N(proj)}</div><div class="kpi-pct" style="color:#f4a261">${projP}% no ritmo atual</div></div>
     <div class="kpi verm"><div class="kpi-label">GAP atual</div><div class="kpi-value" style="color:#c0392b">-${N(mtGlobal-vtGlobal)}</div><div class="kpi-sub">vidas faltantes p/ 100%</div></div>
+    <div class="kpi" style="border-top-color:#0077b6"><div class="kpi-label">% Conversão Média</div><div class="kpi-value" style="color:#0077b6">${avgCv.toFixed(2)}%</div><div class="kpi-sub">${cvCount} promotores c/ dados</div></div>
     <div class="kpi mvp"><div class="kpi-label">MVP — Média de Vidas Por Promotor</div><div class="kpi-value" style="color:#7b2d8b">${mvp}</div><div class="kpi-sub">${rows.filter(r=>r.v>0).length} ativos de ${rows.length}</div></div>`;
 
   document.getElementById('kpi-row2').innerHTML=`
     <div class="kpi azul"><div class="kpi-label">Vidas PF</div><div class="kpi-value">${N(pfGlobal)}</div><div class="kpi-pct" style="color:#4361ee">${vtGlobal>0?+(pfGlobal/vtGlobal*100).toFixed(1):0}% do total</div></div>
     <div class="kpi verde"><div class="kpi-label">Vidas Adesão</div><div class="kpi-value">${N(adeGlobal)}</div><div class="kpi-pct" style="color:#2dc653">${vtGlobal>0?+(adeGlobal/vtGlobal*100).toFixed(1):0}% do total</div></div>
     <div class="kpi laranja"><div class="kpi-label">Vidas PME</div><div class="kpi-value">${N(pmeGlobal)}</div><div class="kpi-pct" style="color:#f77f00">${vtGlobal>0?+(pmeGlobal/vtGlobal*100).toFixed(1):0}% do total</div></div>
-    <div class="kpi cinza"><div class="kpi-label">Ritmo esperado hoje</div><div class="kpi-value" style="color:#555">${ESP_PCT}%</div><div class="kpi-sub">${DIAS_TRAB} de ${DIAS_UTEIS_MES} dias úteis (hoje em aberto)</div></div>
-    <div class="kpi ritmo"><div class="kpi-label">No Ritmo Esperado Hoje</div><div class="kpi-value" style="color:#2a9d8f">${dent}</div><div class="kpi-pct" style="color:#2a9d8f">${rows.length>0?+(dent/rows.length*100).toFixed(1):0}% dos promotores</div></div>`;
+    <div class="kpi ritmo" style="grid-column:span 1"><div class="kpi-label">Ritmo do Dia — No Esperado</div><div style="display:flex;align-items:baseline;gap:10px;margin:4px 0"><span style="font-size:20px;font-weight:800;color:#2a9d8f">${dent}</span><span style="font-size:12px;color:#2a9d8f;font-weight:700">promotores</span><span style="font-size:11px;color:#aaa;margin-left:4px">${rows.length>0?+(dent/rows.length*100).toFixed(1):0}% da equipe</span></div><div style="display:flex;align-items:center;gap:6px;margin-top:2px"><span style="font-size:11px;color:#555;font-weight:600">Meta de ritmo hoje: <strong style="color:#2a9d8f">${ESP_PCT}%</strong></span></div><div class="kpi-sub" style="margin-top:3px">${DIAS_TRAB} dias trabalhados · 1 dia ainda em aberto</div></div>`;
 }
 
 // ─── CHIPS ────────────────────────────────────────────────────────────────
@@ -320,6 +332,9 @@ function renderSupGrid() {
     const mt   = rows.reduce((a,r)=>a+r.meta,0);
     const n    = rows.length;
     const mvp  = n>0?+(vt/n).toFixed(1):0;
+    const supCvRows = rows.filter(r=>r.cv!==null&&r.cv!==undefined);
+    const supCv     = supCvRows.length>0 ? supCvRows.reduce((s,r)=>s+r.cv,0)/supCvRows.length : null;
+    const supCvDisp = supCv!==null ? supCv.toFixed(2)+'%' : '—';
     const pct  = mt>0?+(vt/mt*100).toFixed(1):0;
     const proj = Math.round(vt * PROJ_FATOR);
     const pjp  = mt>0?+(proj/mt*100).toFixed(1):0;
@@ -336,6 +351,7 @@ function renderSupGrid() {
         <div class="sup-stat"><div class="sup-stat-val">${N(mt)}</div><div class="sup-stat-lbl">Meta</div></div>
         <div class="sup-stat"><div class="sup-stat-val">${n}</div><div class="sup-stat-lbl">Promot.</div></div>
         <div class="sup-stat"><div class="sup-stat-val" style="color:#7b2d8b">${mvp}</div><div class="sup-stat-lbl">MVP</div></div>
+        <div class="sup-stat"><div class="sup-stat-val" style="color:#0077b6">${supCvDisp}</div><div class="sup-stat-lbl">% Conversão</div></div>
       </div>
       <div class="bar-bg"><div class="bar-fill bar-${cfg.cls}" style="width:${Math.min(pct,100)}%"></div><div class="bar-exp" style="left:${Math.min(ESP_PCT,100)}%"></div></div>
       <div class="pct-row"><span class="pct-lbl c-${cfg.cls}">${pct}%</span><span class="st-lbl" style="color:${stC}">${stT}</span></div>
@@ -445,6 +461,7 @@ const COLS=[
   {lbl:'Vidas',key:'v'},{lbl:'Meta',key:'meta'},{lbl:'% Meta',key:'pct'},
   {lbl:'GAP',key:'gap'},{lbl:'Status',key:'stOrd'},{lbl:'Projeção',key:'projPct'},
   {lbl:'Zero Vendas',key:'dz'},
+  {lbl:'% Conversão',key:'cv'},
 ];
 function renderHeader(){
   document.getElementById('thead-row').innerHTML='<tr>'+COLS.map(c=>{
@@ -487,6 +504,7 @@ function render(){
       <td><span class="badge ${bc}">${stLabel(r.pct,r.p)}</span></td>
       <td>${projBadge(r.projPct,r.proj)}</td>
       <td>${dzBadge(r.dz)}</td>
+      <td>${cvBadge(r.cv)}</td>
     </tr>`;
   }).join('');
 }
@@ -634,51 +652,89 @@ buildCharts();
 <script>
 (function(){
 // ─── DATA ─────────────────────────────────────────────────────────────────
-const RAW_PF=[{"supervisor":"HUMBERTO BANQUERI","promotor":"ALINE GUNELLO","controle":"63672052","cpf":"4384844360","nome":"JOSE LEANDRO ALVES DE SOUSA","vidas":"1","celular":"88997857315","data":"29/04/2026","plano":"NP AHO IN GM ENF JN 087 - 484226190","status":"5-Responsavél"},{"supervisor":"LUIZ ROBERTO","promotor":"SOFIA LUNGA","controle":"63690012","cpf":"606.652.663-40","nome":"AMANDA ELLEN DE ARAUJO LIMA","vidas":"1","celular":"88988842095","data":"29/04/2026","plano":"NP AHO IN GM ENF JN 087 - 484226190","status":"2-Ativo"},{"supervisor":"REBECA MOURA","promotor":"DANIELLE MUZELL","controle":"63678449","cpf":"701.248.806-90","nome":"YASMIN VITORIA SILVA TAVARES","vidas":"1","celular":"31971498163","data":"29/04/2026","plano":"NOSSO MÉDICO BH IND AHO CCF ENF CP-L M1","status":"2-Ativo"},{"supervisor":"REBECA MOURA","promotor":"TAIS COLARES","controle":"63669961","cpf":"463.663.868-97","nome":"ALANIS CARVALHO SANTOS","vidas":"1","celular":"11978168225","data":"29/04/2026","plano":"SMART UP IND AHO CCF ENF CP M1","status":"2-Ativo"},{"supervisor":"REBECA MOURA","promotor":"JULIA MARQUES","controle":"63692603","cpf":"139.700.344-85","nome":"MIRIAN MARIA MENDES DA SILVA","vidas":"1","celular":"82991391829","data":"29/04/2026","plano":"NP AHO IN GM ENF JN 087 - 484226190","status":"5-Responsavél"},{"supervisor":"LUIZ ROBERTO","promotor":"ANA CAROLINA ANTUNES","controle":"63680678","cpf":"2323359746","nome":"ERILEIDE GOMES DA SILVA","vidas":"1","celular":"81994555743","data":"29/04/2026","plano":"NOSSO MEDICO RECIFE IND AHO CCF ENF M1","status":"2-Ativo"},{"supervisor":"HUMBERTO BANQUERI","promotor":"JULIA SILVA","controle":"63666018","cpf":"6163638344","nome":"FRANCISCA ALICE RODRIGUES DE SOUZA","vidas":"3","celular":"11965025946","data":"29/04/2026","plano":"SMART UP IND A CCF CP M1","status":"2-Ativo"},{"supervisor":"LUIZ ROBERTO","promotor":"ANDREZZA MACCHINI","controle":"63685109","cpf":"859.714.925-60","nome":"LEONARDO ISENSEE SANTOS","vidas":"2","celular":"71983166262","data":"29/04/2026","plano":"NP AHO IND GM ENF CCF JN 143 - 485115203","status":"2-Ativo"},{"supervisor":"REBECA MOURA","promotor":"NATALIA BORGES","controle":"63685893","cpf":"110.841.996-88","nome":"JADE OLIVEIRA REZENDE","vidas":"1","celular":"31971112221","data":"29/04/2026","plano":"NOSSO PLANO A IN GM CC PRM 066","status":"2-Ativo"},{"supervisor":"REBECA MOURA","promotor":"CRISTINA LOPES","controle":"63666388","cpf":"866.852.225-65","nome":"INGRID SOUZA DE ALMEIDA CORREIA","vidas":"1","celular":"71991234220","data":"29/04/2026","plano":"NP AHO IND GM ENF CCF JN 143 - 485115203","status":"2-Ativo"},{"supervisor":"REBECA MOURA","promotor":"BRUNO FERREIRA","controle":"63666442","cpf":"429.729.698-55","nome":"BIANCA ISALTINO DA ROSA","vidas":"1","celular":"14996163826","data":"29/04/2026","plano":"INDIVIDUAL INTEGRADO 210E-SE","status":"2-Ativo"},{"supervisor":"LUIZ ROBERTO","promotor":"MARCELA MONTANARI","controle":"63680210","cpf":"162.346.247-90","nome":"VALERIA LUCIA SANTANA DOS SANTOS BITTENCOURT","vidas":"1","celular":"71981413754","data":"29/04/2026","plano":"NP AHO IND GM ENF CCF JN 143 - 485115203","status":"2-Ativo"},{"supervisor":"HUMBERTO BANQUERI","promotor":"MARIANA FELIX","controle":"63689494","cpf":"127.586.691-37","nome":"RAQUEL SOUTO SOUZA","vidas":"1","celular":"16982311502","data":"29/04/2026","plano":"NOSSO PLANO AHO IN GM APT CC PRM 020","status":"2-Ativo"},{"supervisor":"HUMBERTO BANQUERI","promotor":"ROBSON SOUZA","controle":"63680665","cpf":"5845478111","nome":"CAMILA DE ANDRADE SANTOS BORGES","vidas":"1","celular":"61996076504","data":"29/04/2026","plano":"NOSSO PLANO AHO IN MUN ENF CCF 370 M1","status":"5-Responsavél"},{"supervisor":"LUIZ ROBERTO","promotor":"THAISA ALMEIDA","controle":"63668482","cpf":"106.368.586-93","nome":"ISABELLE NALON LUCCIOLA","vidas":"1","celular":"33999349657","data":"29/04/2026","plano":"INDIVIDUAL PLENO 210A-SE","status":"2-Ativo"},{"supervisor":"LUIZ ROBERTO","promotor":"RAYANE LOPES","controle":"63669496","cpf":"3730718258","nome":"AMANDA XAIANE","vidas":"1","celular":"11984741048","data":"29/04/2026","plano":"NOSSO PLANO AHO IN GM APT CC PRM 020","status":"2-Ativo"},{"supervisor":"REBECA MOURA","promotor":"FERNANDA CARRARO","controle":"63688783","cpf":"048.964.276-20","nome":"MARIA LUIZA PEREIRA","vidas":"1","celular":"31995047938","data":"29/04/2026","plano":"NP AHO IND GM ENF CCF JN 143 - 485115203","status":"2-Ativo"},{"supervisor":"BENVE","promotor":"CAMILA MOREIRA","controle":"63670604","cpf":"046.764.575-20","nome":"JOSE FELIPE PEREIRA DE OLIVEIRA","vidas":"1","celular":"71991378460","data":"29/04/2026","plano":"NOSSO PLANO AHO IN GM APT CC PRM 020","status":"2-Ativo"},{"supervisor":"BENVE","promotor":"TAIS COLARES","controle":"63690632","cpf":"101.221.000-11","nome":"MARIA VITORIA SANTOS","vidas":"1","celular":"71998112223","data":"29/04/2026","plano":"NP AHO IN GM ENF JN 087 - 484226190","status":"2-Ativo"}];
+const RAW_PF=[{"supervisor":"HUMBERTO BANQUERI","promotor":"ALINE GUNELLO","controle":"63672052","cpf":"4384844360","nome":"JOSE LEANDRO ALVES DE SOUSA","vidas":"1","celular":"88997857315","data":"29/04/2026","plano":"NP AHO IN GM ENF JN 087 - 484226190","status":"5-Responsavél"},{"supervisor":"LUIZ ROBERTO","promotor":"SOFIA LUNGA","controle":"63690012","cpf":"606.652.663-40","nome":"AMANDA ELLEN DE ARAUJO LIMA","vidas":"1","celular":"88988842095","data":"29/04/2026","plano":"NP AHO IN GM ENF JN 087 - 484226190","status":"2-Ativo"}];
 
 const RAW_ADE=[];
 const RAW_PME=[];
 
-// ─── STATE ────────────────────────────────────────────────────────────────
-let baseActive='pf';
-let bsortCol=null, bsortDir=1;
-let bfilterState={ equipe:new Set(['todos']) };
-
-const SUP_LABELS={
+// ─── HELPERS ─────────────────────────────────────────────────────────────
+const SUPMAP = {
   'HUMBERTO BANQUERI':'Alfa',
   'LUIZ ROBERTO':'Gladiadores',
   'REBECA MOURA':'Fênix',
   'BENVE':'Benve',
   'JOSY BOMFIM':'Administrativo'
 };
-const SUP_KEYS2=Object.keys(SUP_LABELS);
+const BASES = {pf:RAW_PF, ade:RAW_ADE, pme:RAW_PME};
 
-function N(x){return (x??'').toString();}
+let baseAtiva = 'pf';
+let bSortCol = null;
+let bSortDir = -1;
+let bEquipeSel = new Set(['todos']);
+let bPromSel   = new Set(['todos']);
 
-// ─── BUILD FILTER DROPDOWN ────────────────────────────────────────────────
-function buildBFilters(){
-  const wrap=document.getElementById('bfilters-wrap');
-  wrap.innerHTML=`
-    <div class="filter-box">
-      <label>Equipe</label>
-      <button class="dropdown-btn" id="bbtn-equipe" onclick="btmenu('equipe')">Todos ▾</button>
-      <div class="dropdown-menu" id="bmenu-equipe">
-        <div id="bitems-equipe">
-          ${['todos',...SUP_KEYS2].map(k=>{
-            const lbl=k==='todos'?'Todos':SUP_LABELS[k];
-            const safe=k.replace(/\s/g,'_');
-            return `<label class="d-item" onclick="btopt('equipe','${safe}','${k}',event)">
-              <input type="checkbox" id="bchk-equipe-${safe}" ${k==='todos'?'checked':''}> ${lbl}
+function uniq(arr){return [...new Set(arr)].filter(Boolean).sort();}
+function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));}
+
+function getEquipeLabel(sup){return SUPMAP[sup]||sup||'—';}
+
+function rowsAtivas(){
+  let rows = BASES[baseAtiva]||[];
+  if(!bEquipeSel.has('todos')){
+    rows = rows.filter(r => bEquipeSel.has(r.supervisor));
+  }
+  if(!bPromSel.has('todos')){
+    rows = rows.filter(r => bPromSel.has(r.promotor));
+  }
+  return rows;
+}
+
+// ─── DROPDOWNS BASE ──────────────────────────────────────────────────────
+function buildBaseFilters(){
+  const wrap = document.getElementById('bfilters-wrap');
+  wrap.innerHTML='';
+
+  const allRows = BASES[baseAtiva]||[];
+  const sups = uniq(allRows.map(r=>r.supervisor));
+  const proms = uniq(allRows.map(r=>r.promotor));
+
+  const defs = [
+    {key:'equipe', label:'Equipe', opts:['todos',...sups], lbl:(o)=>o==='todos'?'Todos':getEquipeLabel(o), search:false},
+    {key:'prom',   label:'Promotor', opts:['todos',...proms], lbl:(o)=>o, search:true},
+  ];
+
+  defs.forEach(d=>{
+    const box=document.createElement('div');box.className='filter-box';
+    const si=d.search?`<input class="search-inp" placeholder="Buscar..." oninput="bsearch('${d.key}',this.value)">`:'' ;
+    box.innerHTML=`<label>${d.label}</label>
+      <button class="dropdown-btn" id="bbtn-${d.key}" onclick="btmenu('${d.key}')">Todos ▾</button>
+      <div class="dropdown-menu" id="bmenu-${d.key}">
+        ${si}
+        <div id="bitems-${d.key}">
+          ${d.opts.map(o=>{
+            const safe = o.replace(/'/g,"\\'").replace(/\s/g,'_');
+            return `<label class="d-item" onclick="btopt('${d.key}','${safe}','${o}',event)">
+              <input type="checkbox" id="bchk-${d.key}-${safe}" ${o==='todos'?'checked':''}> ${esc(d.lbl(o))}
             </label>`;
           }).join('')}
         </div>
-      </div>
-    </div>
-  `;
+      </div>`;
+    wrap.appendChild(box);
+  });
+
   document.addEventListener('click',e=>{
     if(!e.target.closest('#bfilters-wrap .filter-box')){
       document.querySelectorAll('#bfilters-wrap .dropdown-menu').forEach(m=>m.classList.remove('open'));
     }
+  });
+
+  updateBaseBtns();
+}
+
+function bsearch(key,val){
+  const q=val.toLowerCase();
+  document.querySelectorAll(`#bitems-${key} .d-item`).forEach(i=>{
+    i.style.display=i.textContent.toLowerCase().includes(q)?'':'none';
   });
 }
 
@@ -691,126 +747,168 @@ function btmenu(key){
 
 function btopt(key,safe,o,e){
   e.stopPropagation();
-  const st=bfilterState[key];
+  const st = key==='equipe'?bEquipeSel:bPromSel;
+
   if(o==='todos'){
     st.clear();st.add('todos');
-    document.querySelectorAll(`#bitems-${key} input`).forEach(c=>c.checked=c.id===`bchk-${key}-todos`);
+    document.querySelectorAll(`#bitems-${key} input`).forEach(c=>{
+      c.checked = c.id===`bchk-${key}-todos`;
+    });
   } else {
     st.delete('todos');
-    document.getElementById(`bchk-${key}-todos`).checked=false;
-    const id=`bchk-${key}-${safe}`;
-    if(st.has(o)){st.delete(o);document.getElementById(id).checked=false;}
-    else{st.add(o);document.getElementById(id).checked=true;}
-    if(st.size===0){st.add('todos');document.getElementById(`bchk-${key}-todos`).checked=true;}
+    const todos = document.getElementById(`bchk-${key}-todos`);
+    if(todos) todos.checked=false;
+
+    if(st.has(o)){
+      st.delete(o);
+      const el=document.getElementById(`bchk-${key}-${safe}`);
+      if(el) el.checked=false;
+    } else {
+      st.add(o);
+      const el=document.getElementById(`bchk-${key}-${safe}`);
+      if(el) el.checked=true;
+    }
+
+    if(st.size===0){
+      st.add('todos');
+      const el=document.getElementById(`bchk-${key}-todos`);
+      if(el) el.checked=true;
+    }
   }
-  updateBBtn();
-  renderBase();
+
+  updateBaseBtns();
+  renderBaseTable();
 }
 
-function updateBBtn(){
-  const st=bfilterState.equipe;
-  let txt='Todos';
-  if(!st.has('todos')){
-    const arr=[...st].map(k=>SUP_LABELS[k]||k);
-    txt=arr.length===1?arr[0]:`${arr.length} sel.`;
-  }
-  document.getElementById('bbtn-equipe').textContent=txt+' ▾';
-}
-
-// ─── TAB SWITCH ───────────────────────────────────────────────────────────
-function setupTabs(){
-  document.querySelectorAll('.btab').forEach(btn=>{
-    btn.onclick=()=>{
-      document.querySelectorAll('.btab').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      baseActive=btn.dataset.base;
-      bsortCol=null;bsortDir=1;
-      renderBase();
-    };
-  });
+function updateBaseBtns(){
+  const eqTxt = bEquipeSel.has('todos') ? 'Todos' : (bEquipeSel.size===1 ? getEquipeLabel([...bEquipeSel][0]) : `${bEquipeSel.size} sel.`);
+  const prTxt = bPromSel.has('todos') ? 'Todos' : (bPromSel.size===1 ? [...bPromSel][0] : `${bPromSel.size} sel.`);
+  const eqBtn=document.getElementById('bbtn-equipe');
+  const prBtn=document.getElementById('bbtn-prom');
+  if(eqBtn) eqBtn.textContent = eqTxt+' ▾';
+  if(prBtn) prBtn.textContent = prTxt+' ▾';
 }
 
 // ─── TABLE RENDER ─────────────────────────────────────────────────────────
-function getBaseData(){
-  if(baseActive==='pf') return RAW_PF;
-  if(baseActive==='ade') return RAW_ADE;
-  if(baseActive==='pme') return RAW_PME;
+function colsForBase(){
+  if(baseAtiva==='pf'){
+    return [
+      {lbl:'#', key:null},
+      {lbl:'Supervisor', key:'supervisor'},
+      {lbl:'Equipe', key:'eq'},
+      {lbl:'Promotor', key:'promotor'},
+      {lbl:'Controle', key:'controle'},
+      {lbl:'CPF', key:'cpf'},
+      {lbl:'Nome', key:'nome'},
+      {lbl:'Vidas', key:'vidas'},
+      {lbl:'Celular', key:'celular'},
+      {lbl:'Data', key:'data'},
+      {lbl:'Plano', key:'plano'},
+      {lbl:'Status', key:'status'}
+    ];
+  }
+  if(baseAtiva==='ade'){
+    return [
+      {lbl:'#', key:null},
+      {lbl:'Supervisor', key:'supervisor'},
+      {lbl:'Equipe', key:'eq'},
+      {lbl:'Promotor', key:'promotor'},
+      {lbl:'Controle', key:'controle'},
+      {lbl:'CPF', key:'cpf'},
+      {lbl:'Nome', key:'nome'},
+      {lbl:'Vidas', key:'vidas'},
+      {lbl:'Celular', key:'celular'},
+      {lbl:'Data', key:'data'},
+      {lbl:'Plano', key:'plano'},
+      {lbl:'Status', key:'status'}
+    ];
+  }
+  if(baseAtiva==='pme'){
+    return [
+      {lbl:'#', key:null},
+      {lbl:'Supervisor', key:'supervisor'},
+      {lbl:'Equipe', key:'eq'},
+      {lbl:'Promotor', key:'promotor'},
+      {lbl:'Controle', key:'controle'},
+      {lbl:'CNPJ', key:'cnpj'},
+      {lbl:'Empresa', key:'empresa'},
+      {lbl:'Vidas', key:'vidas'},
+      {lbl:'Data', key:'data'},
+      {lbl:'Plano', key:'plano'},
+      {lbl:'Status', key:'status'}
+    ];
+  }
   return [];
 }
 
-function applyBFilters(rows){
-  if(bfilterState.equipe.has('todos')) return rows;
-  return rows.filter(r=>bfilterState.equipe.has(r.supervisor));
-}
-
-function renderBase(){
-  let rows=getBaseData();
-  rows=applyBFilters(rows);
-
-  document.getElementById('bcount').textContent=`Registros: ${rows.length}`;
-
-  const cols=[
-    {lbl:'Supervisor',key:'supervisor'},
-    {lbl:'Promotor',key:'promotor'},
-    {lbl:'Controle',key:'controle'},
-    {lbl:'CPF',key:'cpf'},
-    {lbl:'Nome',key:'nome'},
-    {lbl:'Vidas',key:'vidas'},
-    {lbl:'Celular',key:'celular'},
-    {lbl:'Data',key:'data'},
-    {lbl:'Plano',key:'plano'},
-    {lbl:'Status',key:'status'}
-  ];
+function renderBaseTable(){
+  const rows = rowsAtivas().map(r=>({...r, eq:getEquipeLabel(r.supervisor)}));
+  const cols = colsForBase();
 
   // sort
-  if(bsortCol){
-    rows=[...rows].sort((a,b)=>{
-      const va=(a[bsortCol]??'').toString();
-      const vb=(b[bsortCol]??'').toString();
-      if(!isNaN(va) && !isNaN(vb)) return bsortDir*(Number(va)-Number(vb));
-      return bsortDir*va.localeCompare(vb,'pt-BR');
+  if(bSortCol){
+    rows.sort((a,b)=>{
+      const va = a[bSortCol] ?? '';
+      const vb = b[bSortCol] ?? '';
+      const na = parseFloat(String(va).replace(',','.'));
+      const nb = parseFloat(String(vb).replace(',','.'));
+      const isNum = !isNaN(na) && !isNaN(nb);
+      if(isNum) return bSortDir*(na-nb);
+      return bSortDir*String(va).localeCompare(String(vb));
     });
   }
 
   // header
-  document.getElementById('bthead').innerHTML='<tr>'+cols.map(c=>{
-    const icon=bsortCol===c.key?(bsortDir===1?'↑':'↓'):'↕';
-    const cls=bsortCol===c.key?'sorted':'';
-    return `<th class="${cls}" onclick="bsort('${c.key}')">${c.lbl} <span class="sort-icon">${icon}</span></th>`;
-  }).join('')+'</tr>';
+  document.getElementById('bthead').innerHTML = `<tr>${
+    cols.map(c=>{
+      if(!c.key) return `<th>${c.lbl}</th>`;
+      const icon = (bSortCol===c.key) ? (bSortDir===-1?'↓':'↑') : '';
+      const cls  = (bSortCol===c.key) ? 'sorted' : '';
+      return `<th class="${cls}" onclick="bsort('${c.key}')">${c.lbl} <span class="sort-icon">${icon}</span></th>`;
+    }).join('')
+  }</tr>`;
 
   // body
-  const tbody=document.getElementById('btbody');
   if(!rows.length){
-    tbody.innerHTML=`<tr><td colspan="${cols.length}" style="padding:18px;text-align:center;color:#aaa">Nenhum registro</td></tr>`;
-    return;
+    document.getElementById('btbody').innerHTML = `<tr><td colspan="${cols.length}" style="text-align:center;color:#aaa;padding:20px">Nenhum resultado</td></tr>`;
+  } else {
+    document.getElementById('btbody').innerHTML = rows.map((r,i)=>{
+      return `<tr>${
+        cols.map(c=>{
+          if(!c.key) return `<td style="color:#888">${i+1}</td>`;
+          return `<td>${esc(r[c.key])}</td>`;
+        }).join('')
+      }</tr>`;
+    }).join('');
   }
-  tbody.innerHTML=rows.map(r=>`
-    <tr>
-      <td>${SUP_LABELS[r.supervisor]||r.supervisor}</td>
-      <td style="font-weight:700">${N(r.promotor)}</td>
-      <td>${N(r.controle)}</td>
-      <td>${N(r.cpf)}</td>
-      <td>${N(r.nome)}</td>
-      <td style="font-weight:800">${N(r.vidas)}</td>
-      <td>${N(r.celular)}</td>
-      <td>${N(r.data)}</td>
-      <td>${N(r.plano)}</td>
-      <td>${N(r.status)}</td>
-    </tr>
-  `).join('');
+
+  document.getElementById('bcount').textContent = `Registros: ${rows.length}`;
 }
 
-window.bsort=function(col){
-  if(bsortCol===col) bsortDir*=-1;
-  else {bsortCol=col;bsortDir=1;}
-  renderBase();
+window.bsort = function(col){
+  if(bSortCol===col) bSortDir*=-1;
+  else { bSortCol=col; bSortDir=-1; }
+  renderBaseTable();
 };
 
+// ─── TABS ────────────────────────────────────────────────────────────────
+document.querySelectorAll('#btabs-nav .btab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#btabs-nav .btab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    baseAtiva = btn.dataset.base;
+    bSortCol=null;
+    bEquipeSel=new Set(['todos']);
+    bPromSel=new Set(['todos']);
+    buildBaseFilters();
+    renderBaseTable();
+  });
+});
+
 // ─── INIT ────────────────────────────────────────────────────────────────
-buildBFilters();
-setupTabs();
-renderBase();
+buildBaseFilters();
+renderBaseTable();
+
 })();
 </script>
 

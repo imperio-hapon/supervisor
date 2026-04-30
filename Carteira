@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Central de Performance · Controle de Leads</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#f4f7fb;
+    --header1:#0b1f3a;
+    --header2:#152b4a;
+
+    --card:#ffffff;
+    --card2:#f8fbff;
+    --border:#e6edf7;
+
+    --text:#0f172a;
+    --muted:#64748b;
+
+    --blue:#3b82f6;
+    --blue2:#60a5fa;
+
+    --green:#16a34a;
+    --orange:#f59e0b;
+    --red:#ef4444;
+
+    --shadow:0 10px 30px rgba(15,23,42,.08);
+    --radius:14px;
+
+    --limit:150;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:"Inter",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  /* ======= TOP HEADER (igual da imagem) ======= */
+  .topbar{
+    background:linear-gradient(135deg,var(--header1),var(--header2));
+    color:#fff;
+    padding:22px 26px 18px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .topbar-inner{
+    max-width:1500px;
+    margin:0 auto;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:18px;
+  }
+
+  .brand small{
+    font-size:11px;
+    letter-spacing:3px;
+    opacity:.85;
+    font-weight:700;
+    display:block;
+    margin-bottom:4px;
+  }
+  .brand h1{
+    font-size:28px;
+    font-weight:800;
+    letter-spacing:-.4px;
+    line-height:1.05;
+  }
+  .brand p{
+    margin-top:6px;
+    font-size:12px;
+    opacity:.78;
+    font-weight:500;
+  }
+
+  /* KPI cards no topo (igual da imagem) */
+  .top-kpis{
+    display:flex;
+    gap:12px;
+    align-items:stretch;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  .top-kpi{
+    min-width:140px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:12px;
+    padding:12px 14px;
+    text-align:center;
+    backdrop-filter: blur(6px);
+  }
+  .top-kpi .val{
+    font-size:20px;
+    font-weight:800;
+    letter-spacing:-.3px;
+    line-height:1.1;
+  }
+  .top-kpi .lbl{
+    margin-top:4px;
+    font-size:10px;
+    letter-spacing:1.2px;
+    text-transform:uppercase;
+    opacity:.8;
+    font-weight:700;
+  }
+  .top-kpi .sub{
+    margin-top:4px;
+    font-size:11px;
+    opacity:.9;
+    font-weight:700;
+  }
+
+  .top-kpi.blue .val{color:#93c5fd;}
+  .top-kpi.red .val{color:#fca5a5;}
+  .top-kpi.green .val{color:#86efac;}
+  .top-kpi.orange .val{color:#fdba74;}
+
+  /* ======= CONTAINER ======= */
+  .layout{
+    max-width:1500px;
+    margin:0 auto;
+    padding:18px 22px 40px;
+  }
+
+  /* ======= NAV TABS (Primeira Resposta / Disponibilidade) ======= */
+  .tabs{
+    display:flex;
+    gap:16px;
+    padding:10px 2px 14px;
+    margin-top:-2px;
+  }
+  .tab{
+    font-size:13px;
+    font-weight:700;
+    color:rgba(255,255,255,.65);
+    cursor:pointer;
+    padding:10px 6px;
+    border-bottom:2px solid transparent;
+    transition:.15s;
+  }
+  .tab.active{
+    color:#93c5fd;
+    border-bottom:2px solid #60a5fa;
+  }
+
+  /* wrapper para tabs dentro do header */
+  .topbar-bottom{
+    max-width:1500px;
+    margin:0 auto;
+    margin-top:10px;
+  }
+
+  /* ======= PERIOD CARD ======= */
+  .period-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:16px 18px;
+    margin-bottom:14px;
+  }
+  .period-card .label{
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:#94a3b8;
+    margin-bottom:8px;
+  }
+  .period-actions{
+    display:flex;
+    gap:10px;
+  }
+  .pill-btn{
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--muted);
+    padding:8px 14px;
+    border-radius:10px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .pill-btn.active{
+    background:var(--blue);
+    border-color:var(--blue);
+    color:#fff;
+  }
+
+  /* ======= FILTER ROW (equipes como na imagem) ======= */
+  .filters{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    margin-bottom:14px;
+  }
+
+  .team-pill{
+    border:1px solid var(--border);
+    background:#fff;
+    padding:8px 14px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+    transition:.15s;
+    color:var(--muted);
+  }
+  .team-pill.active{
+    background:#eaf2ff;
+    border-color:#cfe3ff;
+    color:#1d4ed8;
+  }
+
+  .team-pill.admin.active{background:#e6f4ff;color:#0369a1;border-color:#bae6fd;}
+  .team-pill.humberto.active{background:#efe9ff;color:#6d28d9;border-color:#ddd6fe;}
+  .team-pill.luiz.active{background:#fff3e8;color:#c2410c;border-color:#fed7aa;}
+  .team-pill.rebeca.active{background:#eafff2;color:#15803d;border-color:#bbf7d0;}
+
+  .search-wrap{
+    margin-left:auto;
+    position:relative;
+    min-width:240px;
+    flex:1;
+    max-width:340px;
+  }
+  .search-wrap input{
+    width:100%;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:10px 14px 10px 38px;
+    font-size:13px;
+    outline:none;
+    background:#fff;
+    font-weight:600;
+    color:var(--text);
+  }
+  .search-wrap input:focus{
+    border-color:#bfdbfe;
+    box-shadow:0 0 0 3px rgba(59,130,246,.12);
+  }
+  .search-wrap svg{
+    position:absolute;
+    left:14px;
+    top:50%;
+    transform:translateY(-50%);
+    width:16px;
+    height:16px;
+    stroke:#94a3b8;
+    fill:none;
+    stroke-width:2;
+  }
+
+  /* ======= GRID PRINCIPAL ======= */
+  .main-grid{
+    display:grid;
+    grid-template-columns:1fr 380px;
+    gap:16px;
+    align-items:start;
+  }
+
+  /* ======= TABLE CARD ======= */
+  .table-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+
+  .table-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px 18px;
+    border-bottom:1px solid var(--border);
+  }
+  .table-header h3{
+    font-size:14px;
+    font-weight:900;
+    color:#0f172a;
+  }
+  .count-badge{
+    font-size:12px;
+    font-weight:800;
+    color:#334155;
+    background:#f1f5f9;
+    padding:6px 10px;
+    border-radius:10px;
+    border:1px solid #e2e8f0;
+  }
+
+  .table-scroll{
+    max-height:560px;
+    overflow:auto;
+  }
+  .table-scroll::-webkit-scrollbar{width:8px;height:8px;}
+  .table-scroll::-webkit-scrollbar-thumb{background:#dbe6f6;border-radius:20px;}
+  .table-scroll::-webkit-scrollbar-track{background:transparent;}
+
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    background:#f7faff;
+    color:#64748b;
+    font-size:11px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    padding:12px 14px;
+    border-bottom:1px solid var(--border);
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+  }
+  thead th:hover{color:#1e293b;}
+  thead th .sort-arrow{opacity:.5;margin-left:4px;}
+  thead th.sorted .sort-arrow{opacity:1;color:var(--blue);}
+
+  tbody tr{
+    border-bottom:1px solid rgba(226,232,240,.85);
+    transition:.12s;
+  }
+  tbody tr:hover{background:#f8fbff;}
+  tbody tr.above-limit{background:rgba(239,68,68,.05);}
+  tbody tr.above-limit:hover{background:rgba(239,68,68,.09);}
+
+  td{
+    padding:12px 14px;
+    font-size:13px;
+    font-weight:600;
+    color:#0f172a;
+    vertical-align:middle;
+  }
+
+  td.name{
+    font-weight:900;
+    max-width:240px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  td.team{
+    color:#64748b;
+    font-weight:800;
+    font-size:12px;
+  }
+  td.number{
+    text-align:right;
+    font-weight:900;
+    color:#0f172a;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* progress bar */
+  .bar-cell{min-width:170px;}
+  .bar-wrap{display:flex;align-items:center;gap:10px;}
+  .bar-bg{
+    flex:1;
+    height:7px;
+    background:#edf2fb;
+    border-radius:999px;
+    overflow:hidden;
+    border:1px solid #e2e8f0;
+  }
+  .bar-fill{
+    height:100%;
+    border-radius:999px;
+    transition:width .25s;
+  }
+  .bar-num{
+    min-width:42px;
+    text-align:right;
+    font-weight:900;
+    font-size:13px;
+  }
+  .bar-num.ok{color:var(--green);}
+  .bar-num.warn{color:var(--orange);}
+  .bar-num.danger{color:var(--red);}
+
+  /* status */
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:900;
+    border:1px solid transparent;
+    white-space:nowrap;
+  }
+  .pill.disponivel{background:rgba(34,197,94,.10);color:#15803d;border-color:rgba(34,197,94,.20);}
+  .pill.offline{background:rgba(100,116,139,.12);color:#475569;border-color:rgba(100,116,139,.20);}
+  .pill.ativo{background:rgba(245,158,11,.12);color:#b45309;border-color:rgba(245,158,11,.25);}
+
+  /* flag */
+  .pausa-flag{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:rgba(239,68,68,.12);
+    border:1px solid rgba(239,68,68,.25);
+    color:#b91c1c;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:900;
+    animation:blink 1.8s infinite;
+  }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.65}}
+
+  .reincidente-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:rgba(245,158,11,.12);
+    border:1px solid rgba(245,158,11,.25);
+    color:#b45309;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:900;
+  }
+
+  /* ======= SIDE PANEL ======= */
+  .side-panel{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  .panel-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:16px 18px;
+  }
+  .panel-card h3{
+    font-size:13px;
+    font-weight:900;
+    color:#0f172a;
+    margin-bottom:12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .panel-card h3 .badge{
+    background:#f1f5f9;
+    border:1px solid #e2e8f0;
+    color:#334155;
+    font-size:11px;
+    font-weight:900;
+    padding:5px 10px;
+    border-radius:999px;
+  }
+
+  .limit-indicator{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    padding:12px 12px;
+    border-radius:12px;
+    background:rgba(239,68,68,.06);
+    border:1px solid rgba(239,68,68,.16);
+    margin-bottom:12px;
+  }
+  .limit-indicator svg{
+    width:18px;
+    height:18px;
+    flex-shrink:0;
+    margin-top:1px;
+  }
+  .limit-indicator p{
+    font-size:12px;
+    font-weight:700;
+    color:#475569;
+    line-height:1.25;
+  }
+  .limit-indicator p strong{color:#b91c1c;}
+
+  /* team distrib */
+  .team-bars{display:flex;flex-direction:column;gap:10px;}
+  .team-row{display:flex;flex-direction:column;gap:6px;}
+  .team-info{display:flex;justify-content:space-between;font-size:12px;}
+  .team-info .tn{color:#64748b;font-weight:800;}
+  .team-info .tv{font-weight:900;color:#0f172a;}
+  .team-bar{
+    height:8px;
+    border-radius:999px;
+    background:#edf2fb;
+    overflow:hidden;
+    border:1px solid #e2e8f0;
+  }
+  .team-bar-fill{
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg,#93c5fd,#3b82f6);
+  }
+  .team-bar-fill.danger{
+    background:linear-gradient(90deg,#fdba74,#ef4444);
+  }
+
+  /* reincidentes list */
+  .reinc-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    max-height:420px;
+    overflow:auto;
+    padding-right:4px;
+  }
+  .reinc-list::-webkit-scrollbar{width:6px;}
+  .reinc-list::-webkit-scrollbar-thumb{background:#dbe6f6;border-radius:20px;}
+
+  .reinc-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 12px;
+    border-radius:14px;
+    background:#f8fbff;
+    border:1px solid #e6edf7;
+    border-left:5px solid #f59e0b;
+  }
+  .reinc-item.danger{border-left-color:#ef4444;}
+  .reinc-name{
+    font-weight:900;
+    font-size:13px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .reinc-days{
+    margin-top:2px;
+    font-size:12px;
+    font-weight:700;
+    color:#64748b;
+  }
+  .reinc-total{
+    font-weight:900;
+    font-size:14px;
+    min-width:44px;
+    text-align:right;
+    font-variant-numeric: tabular-nums;
+  }
+  .reinc-total.red{color:#dc2626;}
+  .reinc-total.warn{color:#d97706;}
+
+  /* responsive */
+  @media(max-width:1200px){
+    .main-grid{grid-template-columns:1fr;}
+    .search-wrap{max-width:100%;}
+  }
+</style>
+</head>
+
+<body>
+
+<!-- HEADER igual imagem -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <small>HAPVIDA · JR VENDAS CHAT</small>
+      <h1>Central de Performance</h1>
+      <p>Acumulado (abr/26) · Todas as equipes</p>
+    </div>
+
+    <div class="top-kpis" id="topKpis"></div>
+  </div>
+
+  <div class="topbar-bottom">
+    <div class="tabs">
+      <div class="tab active">Primeira Resposta</div>
+      <div class="tab">Disponibilidade</div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- PERÍODO -->
+  <div class="period-card">
+    <div class="label">Período</div>
+    <div class="period-actions">
+      <button class="pill-btn">Por Dia</button>
+      <button class="pill-btn active">Acumulado</button>
+    </div>
+  </div>
+
+  <!-- FILTROS EQUIPES -->
+  <div class="filters">
+    <button class="team-pill active" onclick="setTeam('all', this)">Todas as Equipes</button>
+    <button class="team-pill admin" onclick="setTeam('ADMINISTRATIVO', this)">ADMINISTRATIVO</button>
+    <button class="team-pill humberto" onclick="setTeam('HUMBERTO BANQUERI', this)">BENVE</button>
+    <button class="team-pill luiz" onclick="setTeam('LUIZ ROBERTO', this)">EQUIPE ALFA</button>
+    <button class="team-pill rebeca" onclick="setTeam('REBECA MOURA', this)">EQUIPE FENIX</button>
+
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Buscar agente..." oninput="renderTable()">
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- TABLE -->
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Agentes · Volume de Leads</h3>
+        <span class="count-badge" id="tableCount">0 agentes</span>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortBy('nome')">Agente <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('equipe')">Equipe <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('aberto')" style="text-align:right">Aberto <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('aguardando')" style="text-align:right">Ag. Resp <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('pendente')" style="text-align:right">Pendente <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('total')">Total <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('status')">Status <span class="sort-arrow">↕</span></th>
+              <th>Flag</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SIDE -->
+    <div class="side-panel">
+
+      <div class="panel-card">
+        <h3>Visão Geral <span class="badge">limite 150</span></h3>
+
+        <div class="limit-indicator">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <p>Agentes com total <strong>&gt; 150</strong> leads devem entrar em <strong>PAUSA</strong></p>
+        </div>
+
+        <div id="teamDistrib" class="team-bars"></div>
+      </div>
+
+      <div class="panel-card">
+        <h3>⚠ Reincidentes <span class="badge" id="reincCount">0</span></h3>
+        <p style="font-size:12px;color:#64748b;font-weight:700;margin-bottom:12px;">
+          Agentes que excedem 150 leads ou acumulam alto volume em Ag.Resp.
+        </p>
+        <div class="reinc-list" id="reincList"></div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+const RAW = [
+  {nome:"Giovanna Santana",equipe:"ADMINISTRATIVO",aberto:9,aguardando:194,pendente:20,total:223,status:"Disponível"},
+  {nome:"Tatiana Silva",equipe:"ADMINISTRATIVO",aberto:0,aguardando:73,pendente:26,total:99,status:"Disponível"},
+  {nome:"Amanda Souza",equipe:"ADMINISTRATIVO",aberto:2,aguardando:1,pendente:1,total:4,status:"Offline"},
+  {nome:"Patrícia Sousa Lima",equipe:"ADMINISTRATIVO",aberto:4,aguardando:43,pendente:7,total:54,status:"Offline"},
+  {nome:"Bruno Ignacio",equipe:"ADMINISTRATIVO",aberto:0,aguardando:10,pendente:0,total:10,status:"Almoço/Jantar"},
+  {nome:"ANDREA ANTUNES",equipe:"ADMINISTRATIVO",aberto:13,aguardando:68,pendente:23,total:104,status:"Offline"},
+  {nome:"ANA PAULA A CAMPANA",equipe:"HUMBERTO BANQUERI",aberto:11,aguardando:208,pendente:16,total:235,status:"Preparando Cotação"},
+  {nome:"Suellen Guimaraes",equipe:"HUMBERTO BANQUERI",aberto:11,aguardando:226,pendente:11,total:248,status:"Preparando Cotação"},
+  {nome:"Jaqueline Silva",equipe:"HUMBERTO BANQUERI",aberto:7,aguardando:14,pendente:10,total:31,status:"Offline"},
+  {nome:"Gleire Valerio",equipe:"HUMBERTO BANQUERI",aberto:4,aguardando:256,pendente:21,total:281,status:"Disponível"},
+  {nome:"Larissa Paes",equipe:"HUMBERTO BANQUERI",aberto:1,aguardando:15,pendente:36,total:52,status:"Offline"},
+  {nome:"Isabella Souza",equipe:"HUMBERTO BANQUERI",aberto:3,aguardando:31,pendente:5,total:39,status:"Offline"},
+  {nome:"MOOARA VIEIRA RODRIGUES",equipe:"HUMBERTO BANQUERI",aberto:5,aguardando:13,pendente:7,total:18,status:"Preparando Cotação"},
+  {nome:"Deliane Gonzaga Gomes",equipe:"HUMBERTO BANQUERI",aberto:2,aguardando:64,pendente:36,total:102,status:"Follow up"},
+  {nome:"Luzinete ferreira",equipe:"HUMBERTO BANQUERI",aberto:5,aguardando:126,pendente:24,total:155,status:"Preparando Cotação"},
+  {nome:"Robson Ferrari",equipe:"HUMBERTO BANQUERI",aberto:16,aguardando:169,pendente:7,total:192,status:"Cadastrando venda"},
+  {nome:"Luciana Tripicchio",equipe:"HUMBERTO BANQUERI",aberto:5,aguardando:74,pendente:35,total:114,status:"Feedback"},
+  {nome:"Aline Gunello",equipe:"HUMBERTO BANQUERI",aberto:3,aguardando:17,pendente:22,total:42,status:"Almoço/Jantar"},
+  {nome:"Julia Silva",equipe:"HUMBERTO BANQUERI",aberto:3,aguardando:36,pendente:28,total:67,status:"Preparando Cotação"},
+  {nome:"Mariana Felix",equipe:"HUMBERTO BANQUERI",aberto:12,aguardando:51,pendente:11,total:74,status:"Almoço/Jantar"},
+  {nome:"Aline Ribeiro",equipe:"HUMBERTO BANQUERI",aberto:5,aguardando:28,pendente:23,total:56,status:"Preparando Cotação"},
+  {nome:"Isabella Mattos",equipe:"HUMBERTO BANQUERI",aberto:10,aguardando:30,pendente:6,total:46,status:"Preparando Cotação"},
+  {nome:"Bruna Campassi",equipe:"HUMBERTO BANQUERI",aberto:4,aguardando:46,pendente:14,total:64,status:"Preparando Cotação"},
+  {nome:"Giovanna Barbieri",equipe:"HUMBERTO BANQUERI",aberto:10,aguardando:72,pendente:7,total:82,status:"Follow up"},
+  {nome:"Ana Julia Brito",equipe:"HUMBERTO BANQUERI",aberto:9,aguardando:41,pendente:0,total:50,status:"Almoço/Jantar"},
+  {nome:"Isaque Victor",equipe:"HUMBERTO BANQUERI",aberto:3,aguardando:120,pendente:1,total:124,status:"Preparando Cotação"},
+  {nome:"Renato Jesus",equipe:"LUIZ ROBERTO",aberto:0,aguardando:0,pendente:0,total:0,status:"Offline"},
+  {nome:"Miriam Ferreira",equipe:"LUIZ ROBERTO",aberto:4,aguardando:153,pendente:24,total:181,status:"Almoço/Jantar"},
+  {nome:"Janeila dos Santos Figueiredo",equipe:"LUIZ ROBERTO",aberto:5,aguardando:135,pendente:37,total:177,status:"Disponível"},
+  {nome:"Unildo Ferreira Gois Junior",equipe:"LUIZ ROBERTO",aberto:12,aguardando:27,pendente:94,total:133,status:"Preparando Cotação"},
+  {nome:"Andrezza Machini",equipe:"LUIZ ROBERTO",aberto:4,aguardando:84,pendente:6,total:94,status:"Follow up"},
+  {nome:"Rayane Lopes",equipe:"LUIZ ROBERTO",aberto:1,aguardando:95,pendente:79,total:175,status:"Almoço/Jantar"},
+  {nome:"marcela silva",equipe:"LUIZ ROBERTO",aberto:2,aguardando:78,pendente:105,total:185,status:"Disponível"},
+  {nome:"Raiane Lima",equipe:"LUIZ ROBERTO",aberto:2,aguardando:81,pendente:0,total:83,status:"Preparando Cotação"},
+  {nome:"Sabrina Giolo",equipe:"LUIZ ROBERTO",aberto:4,aguardando:101,pendente:7,total:112,status:"Disponível"},
+  {nome:"Thaisa Almeida",equipe:"LUIZ ROBERTO",aberto:9,aguardando:83,pendente:50,total:142,status:"Follow up"},
+  {nome:"Jady Queiroz",equipe:"LUIZ ROBERTO",aberto:3,aguardando:72,pendente:21,total:96,status:"Cadastrando venda"},
+  {nome:"Sofia Lunga",equipe:"LUIZ ROBERTO",aberto:1,aguardando:49,pendente:22,total:72,status:"Almoço/Jantar"},
+  {nome:"Ligivania Silva",equipe:"LUIZ ROBERTO",aberto:6,aguardando:52,pendente:12,total:70,status:"Follow up"},
+  {nome:"Sonia Lino",equipe:"LUIZ ROBERTO",aberto:7,aguardando:17,pendente:24,total:48,status:"Follow up"},
+  {nome:"Danilo Fogaça",equipe:"LUIZ ROBERTO",aberto:6,aguardando:32,pendente:22,total:60,status:"Follow up"},
+  {nome:"Thami Francisquelli",equipe:"LUIZ ROBERTO",aberto:0,aguardando:20,pendente:9,total:20,status:"Offline"},
+  {nome:"carolina ribeiro",equipe:"LUIZ ROBERTO",aberto:3,aguardando:29,pendente:19,total:32,status:"Preparando Cotação"},
+  {nome:"isabelle vicente schanz isa",equipe:"LUIZ ROBERTO",aberto:0,aguardando:0,pendente:0,total:0,status:"Offline"},
+  {nome:"Raissa burin",equipe:"LUIZ ROBERTO",aberto:3,aguardando:38,pendente:26,total:67,status:"Almoço/Jantar"},
+  {nome:"NATALIA BORGES",equipe:"REBECA MOURA",aberto:16,aguardando:121,pendente:64,total:201,status:"Disponível"},
+  {nome:"Camila Moreira",equipe:"REBECA MOURA",aberto:5,aguardando:99,pendente:36,total:140,status:"Follow up"},
+  {nome:"Ana Beatriz",equipe:"REBECA MOURA",aberto:3,aguardando:76,pendente:3,total:82,status:"Offline"},
+  {nome:"Vitória Oliveira",equipe:"REBECA MOURA",aberto:6,aguardando:79,pendente:58,total:143,status:"Preparando Cotação"},
+  {nome:"Jessica Costa",equipe:"REBECA MOURA",aberto:4,aguardando:31,pendente:67,total:102,status:"Offline"},
+  {nome:"Julia Marques",equipe:"REBECA MOURA",aberto:2,aguardando:158,pendente:5,total:165,status:"Follow up"},
+  {nome:"Daniela Santos dos Reis",equipe:"REBECA MOURA",aberto:4,aguardando:7,pendente:0,total:11,status:"Offline"},
+  {nome:"Gabriela Reis",equipe:"REBECA MOURA",aberto:6,aguardando:46,pendente:26,total:78,status:"Preparando Cotação"},
+  {nome:"Tais Silveira",equipe:"REBECA MOURA",aberto:18,aguardando:66,pendente:4,total:88,status:"Disponível"},
+  {nome:"Felipe Alves de Souza",equipe:"REBECA MOURA",aberto:9,aguardando:152,pendente:27,total:188,status:"Preparando Cotação"},
+  {nome:"Bruno Ferreira",equipe:"REBECA MOURA",aberto:11,aguardando:100,pendente:27,total:138,status:"Disponível"},
+  {nome:"Luan Ribeiro",equipe:"REBECA MOURA",aberto:5,aguardando:35,pendente:10,total:50,status:"Almoço/Jantar"},
+  {nome:"Kamila Kuner",equipe:"REBECA MOURA",aberto:14,aguardando:52,pendente:48,total:114,status:"Disponível"},
+  {nome:"Cristina Lopes",equipe:"REBECA MOURA",aberto:0,aguardando:91,pendente:16,total:107,status:"Disponível"},
+  {nome:"Danielle Muzell",equipe:"REBECA MOURA",aberto:4,aguardando:30,pendente:4,total:34,status:"Preparando Cotação"},
+  {nome:"Fernanda Lopes carraro",equipe:"REBECA MOURA",aberto:6,aguardando:95,pendente:0,total:101,status:"Offline"},
+  {nome:"Cidinha Correa",equipe:"REBECA MOURA",aberto:6,aguardando:24,pendente:3,total:33,status:"Almoço/Jantar"},
+  {nome:"Gustavo Barros",equipe:"REBECA MOURA",aberto:2,aguardando:47,pendente:9,total:49,status:"Almoço/Jantar"},
+  {nome:"Tais Lopes",equipe:"REBECA MOURA",aberto:2,aguardando:29,pendente:0,total:31,status:"Preparando Cotação"},
+  {nome:"ELISAMA GIZZI",equipe:"REBECA MOURA",aberto:10,aguardando:49,pendente:30,total:89,status:"Disponível"},
+  {nome:"THAINA VITORIA MACEDO BERCHELI",equipe:"REBECA MOURA",aberto:5,aguardando:39,pendente:167,total:44,status:"Preparando Cotação"},
+  {nome:"Beatriz Cordeiro",equipe:"REBECA MOURA",aberto:1,aguardando:30,pendente:4,total:35,status:"Preparando Cotação"},
+  {nome:"Paula Jesus",equipe:"REBECA MOURA",aberto:23,aguardando:36,pendente:0,total:59,status:"Disponível"},
+  {nome:"Mikaelly Michelini",equipe:"REBECA MOURA",aberto:4,aguardando:40,pendente:16,total:60,status:"Offline"},
+];
+
+const LIMIT = 150;
+let currentTeam = 'all';
+let sortCol = 'total';
+let sortDir = -1;
+
+// flags
+RAW.forEach(d=>{
+  d.acimaDolimite = d.total > LIMIT;
+  d.reincidente = d.acimaDolimite || (d.aguardando > 100 && d.total > 100);
+});
+
+// KPI TOP (igual imagem)
+function renderTopKPIs(){
+  const totalLeads = RAW.reduce((s,d)=>s+d.total,0);
+
+  const encSemResposta = RAW.reduce((s,d)=>s+d.aguardando,0);
+  const responded2min = RAW.reduce((s,d)=>s+d.aberto,0);
+  const respondedMore2 = RAW.reduce((s,d)=>s+d.pendente,0);
+
+  const pctEnc = totalLeads ? ((encSemResposta/totalLeads)*100).toFixed(1) : "0.0";
+  const pct2 = totalLeads ? ((responded2min/totalLeads)*100).toFixed(1) : "0.0";
+  const pctMore = totalLeads ? ((respondedMore2/totalLeads)*100).toFixed(1) : "0.0";
+
+  document.getElementById("topKpis").innerHTML = `
+    <div class="top-kpi blue">
+      <div class="val">${totalLeads.toLocaleString("pt-BR")}</div>
+      <div class="lbl">Leads Totais</div>
+    </div>
+
+    <div class="top-kpi red">
+      <div class="val">${encSemResposta.toLocaleString("pt-BR")}</div>
+      <div class="lbl">Enc. s/ Resposta</div>
+      <div class="sub">${pctEnc}%</div>
+    </div>
+
+    <div class="top-kpi green">
+      <div class="val">${responded2min.toLocaleString("pt-BR")}</div>
+      <div class="lbl">Respondidos ≤2min</div>
+      <div class="sub">${pct2}%</div>
+    </div>
+
+    <div class="top-kpi orange">
+      <div class="val">${respondedMore2.toLocaleString("pt-BR")}</div>
+      <div class="lbl">Respondidos &gt;2min</div>
+      <div class="sub">${pctMore}%</div>
+    </div>
+  `;
+}
+
+function getBarColor(pct){
+  if(pct>=1) return "linear-gradient(90deg,#fdba74,#ef4444)";
+  if(pct>=0.8) return "linear-gradient(90deg,#fde68a,#f59e0b)";
+  return "linear-gradient(90deg,#bbf7d0,#22c55e)";
+}
+
+function statusPill(s){
+  const lower=s.toLowerCase();
+  if(lower.includes("disponível")) return `<span class="pill disponivel">Disponível</span>`;
+  if(lower.includes("offline")) return `<span class="pill offline">Offline</span>`;
+  return `<span class="pill ativo">${s}</span>`;
+}
+
+function setTeam(team, btn){
+  currentTeam=team;
+  document.querySelectorAll(".team-pill").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderTable();
+  renderTeamDistrib();
+  renderReincidentes();
+}
+
+function sortBy(col){
+  if(sortCol===col) sortDir*=-1;
+  else{ sortCol=col; sortDir=-1; }
+
+  document.querySelectorAll("thead th").forEach(th=>th.classList.remove("sorted"));
+  const thMap={nome:0,equipe:1,aberto:2,aguardando:3,pendente:4,total:5,status:6};
+  document.querySelectorAll("thead th")[thMap[col]]?.classList.add("sorted");
+
+  renderTable();
+}
+
+function renderTable(){
+  const q=document.getElementById("searchInput").value.toLowerCase();
+
+  let data=RAW.filter(d=>{
+    if(q && !d.nome.toLowerCase().includes(q) && !d.equipe.toLowerCase().includes(q)) return false;
+    if(currentTeam!=="all" && d.equipe!==currentTeam) return false;
+    return true;
+  });
+
+  data.sort((a,b)=>{
+    const va=a[sortCol], vb=b[sortCol];
+    if(typeof va==="string") return sortDir*va.localeCompare(vb);
+    return sortDir*(va-vb);
+  });
+
+  document.getElementById("tableCount").textContent =
+    `${data.length} agente${data.length!==1?"s":""}`;
+
+  const tbody=document.getElementById("tableBody");
+  tbody.innerHTML=data.map(d=>{
+    const pct=Math.min(d.total/LIMIT,1.2);
+    const barW=Math.min(pct*100,100);
+    const color=getBarColor(pct);
+
+    const numClass=d.total>LIMIT ? "danger" : d.total>=120 ? "warn" : "ok";
+
+    const flag = d.total>LIMIT
+      ? `<span class="pausa-flag">⏸ PAUSA</span>`
+      : d.reincidente
+        ? `<span class="reincidente-badge">⚠ ATENÇÃO</span>`
+        : "—";
+
+    return `
+      <tr class="${d.acimaDolimite?"above-limit":""}">
+        <td class="name">${d.nome}</td>
+        <td class="team">${d.equipe}</td>
+        <td class="number">${d.aberto}</td>
+        <td class="number">${d.aguardando}</td>
+        <td class="number">${d.pendente}</td>
+        <td class="bar-cell">
+          <div class="bar-wrap">
+            <div class="bar-bg">
+              <div class="bar-fill" style="width:${barW}%;background:${color}"></div>
+            </div>
+            <span class="bar-num ${numClass}">${d.total}</span>
+          </div>
+        </td>
+        <td>${statusPill(d.status)}</td>
+        <td>${flag}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderTeamDistrib(){
+  const teams=[...new Set(RAW.map(d=>d.equipe))];
+
+  const data=teams.map(t=>{
+    const members=RAW.filter(d=>d.equipe===t);
+    const above=members.filter(d=>d.total>LIMIT).length;
+    return {name:t,total:members.length,above};
+  }).sort((a,b)=>b.above-a.above);
+
+  const maxAbove=Math.max(...data.map(d=>d.above),1);
+
+  document.getElementById("teamDistrib").innerHTML=data.map(d=>{
+    const pct = d.total ? ((d.above/d.total)*100).toFixed(0) : "0";
+    const barW = ((d.above/maxAbove)*100).toFixed(0);
+    const danger = d.above>0;
+
+    return `
+      <div class="team-row">
+        <div class="team-info">
+          <span class="tn">${d.name}</span>
+          <span class="tv" style="color:${danger?"#dc2626":"#16a34a"}">${d.above}/${d.total} acima · ${pct}%</span>
+        </div>
+        <div class="team-bar">
+          <div class="team-bar-fill ${danger?"danger":""}" style="width:${barW}%"></div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderReincidentes(){
+  let list=RAW.filter(d=>d.reincidente);
+
+  if(currentTeam!=="all"){
+    list=list.filter(d=>d.equipe===currentTeam);
+  }
+
+  list.sort((a,b)=>b.total-a.total);
+
+  document.getElementById("reincCount").textContent=list.length;
+
+  document.getElementById("reincList").innerHTML=list.map(d=>{
+    const cls=d.acimaDolimite?"danger":"";
+    const numCls=d.acimaDolimite?"red":"warn";
+    const desc = d.aguardando>150 ? "Múltiplos dias acumulado" : d.aguardando>100 ? "Alto volume ag. resp." : "Próximo do limite";
+
+    return `
+      <div class="reinc-item ${cls}">
+        <div style="flex:1;min-width:0;">
+          <div class="reinc-name">${d.nome}</div>
+          <div class="reinc-days">${d.equipe} · ${desc}</div>
+        </div>
+        <div class="reinc-total ${numCls}">${d.total}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+renderTopKPIs();
+renderTeamDistrib();
+renderReincidentes();
+renderTable();
+</script>
+
+</body>
+</html>

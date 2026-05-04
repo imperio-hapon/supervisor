@@ -4,699 +4,400 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard · Controle de Leads</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --surface2: #181825;
-    --border: #252535;
-    --accent: #e63946;
-    --accent2: #f4a261;
-    --ok: #2a9d8f;
-    --warn: #e9c46a;
-    --danger: #e63946;
-    --text: #e8e8f0;
-    --muted: #6b6b88;
+    --header-bg: #1a2340;
+    --header-bg2: #1e2a4a;
+    --bg: #f0f2f7;
+    --surface: #ffffff;
+    --surface2: #f8f9fc;
+    --border: #e2e6ef;
+    --blue: #3b82f6;
+    --orange: #f97316;
+    --green: #22c55e;
+    --red: #ef4444;
+    --text: #1e293b;
+    --text2: #475569;
+    --muted: #94a3b8;
     --limit: 150;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 300;
-    min-height: 100vh;
-    overflow-x: hidden;
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+
+  /* ===== HEADER ===== */
+  .top-header {
+    background: linear-gradient(135deg, var(--header-bg) 0%, var(--header-bg2) 100%);
+    padding: 0 32px;
+    display: flex; align-items: stretch; min-height: 80px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
   }
-
-  /* Noise texture overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.4;
+  .header-brand {
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 16px 32px 16px 0;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    min-width: 210px;
   }
+  .header-brand .eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 2px; color: rgba(255,255,255,0.45); text-transform: uppercase; margin-bottom: 4px; }
+  .header-brand h1 { font-size: 21px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+  .header-brand .subtitle { font-size: 11px; color: rgba(255,255,255,0.38); margin-top: 3px; }
 
-  .layout { position: relative; z-index: 1; max-width: 1440px; margin: 0 auto; padding: 32px 28px; }
+  .header-kpis { display: flex; align-items: center; flex: 1; padding: 0 0 0 0; }
+  .hkpi {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 12px 30px; border-right: 1px solid rgba(255,255,255,0.07); min-width: 130px;
+  }
+  .hkpi-value { font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 2px; }
+  .hkpi-value.blue  { color: #60a5fa; }
+  .hkpi-value.red   { color: #f87171; }
+  .hkpi-value.green { color: #4ade80; }
+  .hkpi-value.orange{ color: #fb923c; }
+  .hkpi-pct { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .hkpi-pct.red    { color: #f87171; }
+  .hkpi-pct.green  { color: #4ade80; }
+  .hkpi-pct.orange { color: #fb923c; }
+  .hkpi-label { font-size: 9px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: rgba(255,255,255,0.3); }
 
-  /* Header */
-  header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 36px; border-bottom: 1px solid var(--border); padding-bottom: 24px; }
-  .header-left h1 { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
-  .header-left h1 span { color: var(--accent); }
-  .header-left p { color: var(--muted); font-size: 13px; margin-top: 4px; font-family: 'IBM Plex Mono', monospace; }
-  .header-right { display: flex; align-items: center; gap: 12px; }
-  .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(42,157,143,0.12); border: 1px solid var(--ok); border-radius: 4px; padding: 5px 10px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--ok); }
-  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: pulse 2s infinite; }
+  .header-actions { display: flex; align-items: center; gap: 10px; padding: 0 0 0 24px; }
+  .live-badge { display: flex; align-items: center; gap: 5px; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); border-radius: 20px; padding: 5px 12px; font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #4ade80; }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-  /* Refresh button */
-  .refresh-btn {
-    display: flex; align-items: center; gap: 6px;
-    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
-    padding: 5px 12px; border-radius: 4px; font-size: 11px; font-family: 'IBM Plex Mono', monospace;
-    cursor: pointer; transition: all .15s;
-  }
-  .refresh-btn:hover { border-color: var(--text); color: var(--text); }
-  .refresh-btn.loading svg { animation: spin 1s linear infinite; }
+  .refresh-btn { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); padding: 7px 14px; border-radius: 8px; font-size: 11px; font-weight: 500; cursor: pointer; transition: all .2s; font-family: 'Inter', sans-serif; }
+  .refresh-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  .refresh-btn.loading svg { animation: spin 0.8s linear infinite; }
   @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-  .refresh-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .refresh-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink:0; }
+  .last-updated { font-size: 10px; color: rgba(255,255,255,0.28); white-space: nowrap; }
 
-  /* Loading state */
-  .loading-state {
-    display: flex; align-items: center; justify-content: center;
-    min-height: 300px; flex-direction: column; gap: 16px;
-  }
-  .loading-spinner {
-    width: 36px; height: 36px; border: 2px solid var(--border);
-    border-top-color: var(--accent); border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  .loading-text { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); }
+  /* ===== NAV ===== */
+  .nav-strip { background: var(--surface); border-bottom: 2px solid var(--border); padding: 0 32px; display: flex; }
+  .nav-tab { padding: 14px 20px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all .15s; }
+  .nav-tab:hover { color: var(--text2); }
+  .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
 
-  /* Error state */
-  .error-state {
-    display: flex; align-items: center; justify-content: center;
-    min-height: 200px; flex-direction: column; gap: 12px;
-    background: rgba(230,57,70,.05); border: 1px solid rgba(230,57,70,.2);
-    border-radius: 8px; padding: 32px;
-  }
-  .error-state p { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--danger); text-align: center; }
-  .error-state button {
-    background: var(--surface); border: 1px solid var(--border); color: var(--text);
-    padding: 7px 16px; border-radius: 4px; font-size: 12px; font-family: 'IBM Plex Mono', monospace;
-    cursor: pointer;
-  }
+  /* ===== LAYOUT ===== */
+  .page-body { max-width: 1440px; margin: 0 auto; padding: 24px 28px 40px; }
 
-  /* Filter bar */
-  .filter-bar { display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap; align-items: center; }
-  .filter-btn {
-    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
-    padding: 7px 16px; border-radius: 4px; font-size: 12px; font-family: 'IBM Plex Mono', monospace;
-    cursor: pointer; transition: all .15s;
-  }
-  .filter-btn:hover { border-color: var(--text); color: var(--text); }
-  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .filter-btn.ok { background: rgba(42,157,143,.15); border-color: var(--ok); color: var(--ok); }
-  .filter-btn.ok.active { background: var(--ok); color: #fff; }
-  .filter-btn.danger { background: rgba(230,57,70,.1); border-color: var(--danger); color: var(--danger); }
-  .filter-btn.danger.active { background: var(--danger); color: #fff; }
+  /* ===== CONTROLS ===== */
+  .controls-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .ctrl-label { font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+  .chip { background: var(--surface); border: 1.5px solid var(--border); color: var(--text2); padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; white-space: nowrap; font-family: 'Inter', sans-serif; }
+  .chip:hover { border-color: var(--blue); color: var(--blue); }
+  .chip.active { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+  .chip.danger.active { background: var(--red); border-color: var(--red); color: #fff; }
+  .chip.green.active  { background: var(--green); border-color: var(--green); color: #fff; }
+  .chip.warn.active   { background: var(--orange); border-color: var(--orange); color: #fff; }
+  .divider-v { width: 1px; height: 22px; background: var(--border); }
   .search-wrap { margin-left: auto; position: relative; }
-  .search-wrap input {
-    background: var(--surface); border: 1px solid var(--border); color: var(--text);
-    padding: 7px 14px 7px 32px; border-radius: 4px; font-size: 12px; width: 220px;
-    font-family: 'DM Sans', sans-serif; outline: none;
-  }
-  .search-wrap input:focus { border-color: var(--muted); }
-  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; }
+  .search-wrap input { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); padding: 8px 14px 8px 34px; border-radius: 8px; font-size: 13px; width: 220px; font-family: 'Inter', sans-serif; outline: none; transition: border-color .15s; }
+  .search-wrap input:focus { border-color: var(--blue); }
+  .search-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; }
 
-  /* KPI Cards row */
-  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
-  .kpi-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 22px;
-    position: relative; overflow: hidden;
-  }
-  .kpi-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; }
-  .kpi-card.red::after { background: var(--danger); }
-  .kpi-card.warn::after { background: var(--warn); }
-  .kpi-card.green::after { background: var(--ok); }
-  .kpi-card.blue::after { background: #4cc9f0; }
-  .kpi-label { font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-  .kpi-value { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; line-height: 1.1; margin: 6px 0 4px; }
-  .kpi-value.red { color: var(--danger); }
-  .kpi-value.warn { color: var(--warn); }
-  .kpi-value.green { color: var(--ok); }
-  .kpi-value.blue { color: #4cc9f0; }
-  .kpi-sub { font-size: 11px; color: var(--muted); }
+  /* ===== MAIN GRID ===== */
+  .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
 
-  /* Main grid */
-  .main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
-
-  /* Table */
-  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  /* ===== TABLE CARD ===== */
+  .table-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 6px rgba(0,0,0,0.05); overflow: hidden; }
   .table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-  .table-header h3 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; }
-  .count-badge { background: var(--border); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--muted); }
+  .table-header h3 { font-size: 14px; font-weight: 700; }
+  .count-badge { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 2px 10px; font-size: 11px; font-weight: 600; color: var(--muted); }
 
   table { width: 100%; border-collapse: collapse; }
-  thead th {
-    background: var(--surface2); padding: 10px 16px; font-size: 10px; text-align: left;
-    font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: .8px;
-    color: var(--muted); white-space: nowrap; cursor: pointer; user-select: none;
-  }
-  thead th:hover { color: var(--text); }
-  thead th .sort-arrow { opacity: .4; margin-left: 4px; }
-  thead th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+  thead th { background: var(--surface2); padding: 10px 16px; font-size: 10px; text-align: left; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); white-space: nowrap; cursor: pointer; user-select: none; border-bottom: 1px solid var(--border); }
+  thead th:hover { color: var(--text2); }
+  thead th.sorted { color: var(--blue); }
+  thead th .sort-arrow { opacity: .35; margin-left: 3px; }
+  thead th.sorted .sort-arrow { opacity: 1; }
 
-  tbody tr { border-bottom: 1px solid rgba(37,37,53,.6); transition: background .1s; cursor: pointer; }
+  tbody tr { border-bottom: 1px solid rgba(226,230,239,0.7); transition: background .1s; }
   tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: rgba(255,255,255,.03); }
-  tbody tr.above-limit { background: rgba(230,57,70,.05); }
-  tbody tr.above-limit:hover { background: rgba(230,57,70,.1); }
+  tbody tr:hover { background: #f8faff; }
+  tbody tr.above-limit { background: rgba(239,68,68,0.04); }
+  tbody tr.above-limit:hover { background: rgba(239,68,68,0.08); }
 
   td { padding: 10px 16px; font-size: 13px; }
-  td.name { font-weight: 500; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  td.team { color: var(--muted); font-size: 11px; font-family: 'IBM Plex Mono', monospace; }
-  td.number { font-family: 'IBM Plex Mono', monospace; font-size: 13px; text-align: right; }
+  td.name { font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  td.team { font-size: 11px; font-weight: 600; }
+  td.number { font-size: 13px; text-align: right; font-weight: 500; color: var(--text2); font-variant-numeric: tabular-nums; }
 
-  /* Progress bar in cell */
-  .bar-cell { min-width: 120px; }
+  .bar-cell { min-width: 130px; }
   .bar-wrap { display: flex; align-items: center; gap: 8px; }
-  .bar-bg { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 2px; transition: width .3s; }
-  .bar-num { font-family: 'IBM Plex Mono', monospace; font-size: 12px; min-width: 34px; text-align: right; }
-  .bar-num.ok { color: var(--ok); }
-  .bar-num.warn { color: var(--warn); }
-  .bar-num.danger { color: var(--danger); font-weight: 600; }
+  .bar-bg { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+  .bar-num { font-size: 12px; min-width: 34px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .bar-num.ok     { color: var(--green); }
+  .bar-num.warn   { color: var(--orange); }
+  .bar-num.danger { color: var(--red); }
 
-  /* Status pill */
-  .pill {
-    display: inline-block; padding: 2px 9px; border-radius: 3px;
-    font-size: 10px; font-family: 'IBM Plex Mono', monospace; letter-spacing: .3px; white-space: nowrap;
-  }
-  .pill.disponivel { background: rgba(42,157,143,.15); color: var(--ok); border: 1px solid rgba(42,157,143,.3); }
-  .pill.offline { background: rgba(107,107,136,.12); color: var(--muted); border: 1px solid var(--border); }
-  .pill.ativo { background: rgba(244,162,97,.12); color: var(--accent2); border: 1px solid rgba(244,162,97,.3); }
-  .pill.pausa { background: rgba(230,57,70,.15); color: var(--danger); border: 1px solid rgba(230,57,70,.3); }
+  .pill { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; letter-spacing: .2px; white-space: nowrap; }
+  .pill.disponivel { background: #dcfce7; color: #15803d; }
+  .pill.offline    { background: #f1f5f9; color: var(--muted); }
+  .pill.ativo      { background: #fff7ed; color: #c2410c; }
 
-  /* PAUSA warning icon */
-  .pausa-flag {
-    display: inline-flex; align-items: center; gap: 4px;
-    background: rgba(230,57,70,.15); border: 1px solid rgba(230,57,70,.5);
-    color: var(--danger); padding: 2px 8px; border-radius: 3px;
-    font-size: 10px; font-family: 'IBM Plex Mono', monospace; font-weight: 600;
-    animation: flagBlink 2s infinite;
-  }
+  .pausa-flag { display: inline-flex; align-items: center; gap: 4px; background: #fef2f2; border: 1px solid #fecaca; color: var(--red); padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; animation: flagBlink 2s infinite; }
   @keyframes flagBlink { 0%,100%{opacity:1} 50%{opacity:.6} }
+  .reincidente-badge { display: inline-flex; align-items: center; gap: 4px; background: #fff7ed; border: 1px solid #fed7aa; color: var(--orange); padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; }
 
-  /* Reincidente badge */
-  .reincidente-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    background: rgba(244,162,97,.15); border: 1px solid rgba(244,162,97,.4);
-    color: var(--accent2); padding: 2px 8px; border-radius: 3px;
-    font-size: 10px; font-family: 'IBM Plex Mono', monospace;
-  }
+  .team-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; flex-shrink: 0; }
 
-  /* Right panel */
+  /* ===== SIDE PANEL ===== */
   .side-panel { display: flex; flex-direction: column; gap: 16px; }
+  .panel-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 6px rgba(0,0,0,0.05); padding: 18px 20px; }
+  .panel-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .panel-card h3 .badge { font-size: 10px; background: var(--bg); border: 1px solid var(--border); padding: 2px 7px; border-radius: 5px; color: var(--muted); font-weight: 600; }
 
-  .panel-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; }
-  .panel-card h3 { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-  .panel-card h3 .badge { font-family: 'IBM Plex Mono', monospace; font-size: 10px; background: var(--border); padding: 2px 7px; border-radius: 3px; color: var(--muted); font-weight: 400; }
+  .limit-indicator { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 16px; padding: 10px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; }
+  .limit-indicator svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
+  .limit-indicator p { font-size: 11px; color: #b91c1c; font-weight: 500; }
+  .limit-indicator p strong { font-weight: 700; }
 
-  /* Mini gauge */
-  .gauge-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 10px; }
-  .gauge-svg { width: 140px; height: 80px; }
-  .gauge-meta { display: flex; justify-content: space-between; width: 100%; margin-top: 4px; }
-  .gauge-meta span { font-size: 10px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+  .team-bars { display: flex; flex-direction: column; gap: 12px; }
+  .team-row { display: flex; flex-direction: column; gap: 5px; }
+  .team-info { display: flex; justify-content: space-between; font-size: 11px; }
+  .team-info .tn { color: var(--text2); font-weight: 600; display: flex; align-items: center; }
+  .team-info .tv { font-weight: 700; }
+  .team-bar { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .team-bar-fill { height: 100%; border-radius: 3px; }
 
-  /* Reincidentes list */
-  .reinc-list { display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; }
+  .reinc-list { display: flex; flex-direction: column; gap: 8px; max-height: 380px; overflow-y: auto; }
   .reinc-list::-webkit-scrollbar { width: 4px; }
   .reinc-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  .reinc-item {
-    display: flex; align-items: center; padding: 9px 12px;
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
-    border-left: 3px solid var(--accent2); gap: 10px;
-  }
-  .reinc-item.danger { border-left-color: var(--danger); }
-  .reinc-name { flex: 1; font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .reinc-total { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; }
-  .reinc-total.red { color: var(--danger); }
-  .reinc-total.warn { color: var(--accent2); }
-  .reinc-days { font-size: 10px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+  .reinc-item { display: flex; align-items: center; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; border-left: 3px solid var(--orange); gap: 10px; }
+  .reinc-item.danger { border-left-color: var(--red); background: #fef9f9; }
+  .reinc-name { flex: 1; font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .reinc-total { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .reinc-total.red  { color: var(--red); }
+  .reinc-total.warn { color: var(--orange); }
+  .reinc-days { font-size: 10px; color: var(--muted); font-weight: 500; }
 
-  /* Team distribution */
-  .team-bars { display: flex; flex-direction: column; gap: 10px; }
-  .team-row { display: flex; flex-direction: column; gap: 4px; }
-  .team-info { display: flex; justify-content: space-between; font-size: 11px; }
-  .team-info .tn { color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
-  .team-info .tv { font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
-  .team-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
-  .team-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #4cc9f0, var(--ok)); }
-  .team-bar-fill.danger { background: linear-gradient(90deg, var(--accent2), var(--danger)); }
+  .loading-state { display: flex; align-items: center; justify-content: center; min-height: 280px; flex-direction: column; gap: 14px; }
+  .loading-spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .loading-text { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .error-state { display: flex; align-items: center; justify-content: center; min-height: 200px; flex-direction: column; gap: 10px; background: #fef2f2; border-radius: 8px; padding: 28px; margin: 12px; }
+  .error-state p { font-size: 12px; color: var(--red); text-align: center; font-weight: 500; }
+  .error-state button { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 7px 18px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 6px; }
 
-  /* Limit line indicator */
-  .limit-indicator { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 10px 12px; background: rgba(230,57,70,.08); border: 1px solid rgba(230,57,70,.25); border-radius: 6px; }
-  .limit-indicator svg { width: 16px; height: 16px; flex-shrink: 0; }
-  .limit-indicator p { font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--muted); }
-  .limit-indicator p strong { color: var(--danger); }
+  .table-scroll { max-height: 540px; overflow-y: auto; }
+  .table-scroll::-webkit-scrollbar { width: 5px; }
+  .table-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-  /* Responsive */
   @media (max-width: 1100px) {
     .main-grid { grid-template-columns: 1fr; }
-    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .top-header { flex-wrap: wrap; padding: 16px; min-height: auto; }
+    .header-kpis { flex-wrap: wrap; }
+    .hkpi { min-width: 110px; padding: 10px 16px; }
   }
-
-  /* Tooltip */
-  .tooltip { position: fixed; background: #1c1c2e; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; font-size: 12px; pointer-events: none; z-index: 999; display: none; max-width: 220px; }
-  .tooltip strong { display: block; font-family: 'Syne', sans-serif; margin-bottom: 4px; }
-  .tooltip span { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
-
-  /* Scrollable table */
-  .table-scroll { max-height: 520px; overflow-y: auto; }
-  .table-scroll::-webkit-scrollbar { width: 5px; }
-  .table-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  /* Last updated */
-  .last-updated { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
 </style>
 </head>
 <body>
-<div class="layout">
 
-  <header>
-    <div class="header-left">
-      <h1>LEAD<span>CTRL</span> · Dashboard de Controle</h1>
-      <p id="headerSubtitle">Carregando dados... · Limite máximo: 150 leads por agente</p>
-    </div>
-    <div class="header-right">
-      <span class="last-updated" id="lastUpdated"></span>
-      <button class="refresh-btn" id="refreshBtn" onclick="loadData()">
-        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        Atualizar
-      </button>
-      <div class="live-badge"><div class="live-dot"></div>LIVE</div>
-    </div>
-  </header>
-
-  <!-- KPIs -->
-  <div class="kpi-row" id="kpiRow">
-    <div class="kpi-card red"><div class="kpi-label">Em Pausa (>150)</div><div class="kpi-value red">—</div><div class="kpi-sub">carregando...</div></div>
-    <div class="kpi-card warn"><div class="kpi-label">Reincidentes</div><div class="kpi-value warn">—</div><div class="kpi-sub">carregando...</div></div>
-    <div class="kpi-card green"><div class="kpi-label">Dentro do Limite</div><div class="kpi-value green">—</div><div class="kpi-sub">carregando...</div></div>
-    <div class="kpi-card blue"><div class="kpi-label">Total Leads (todos)</div><div class="kpi-value blue">—</div><div class="kpi-sub">carregando...</div></div>
+<header class="top-header">
+  <div class="header-brand">
+    <div class="eyebrow">Hapvida · JR Vendas Chat</div>
+    <h1>Central de Performance</h1>
+    <div class="subtitle" id="headerSubtitle">Carregando dados...</div>
   </div>
+  <div class="header-kpis" id="headerKpis">
+    <div class="hkpi"><div class="hkpi-value blue">—</div><div class="hkpi-label">Leads Totais</div></div>
+    <div class="hkpi"><div class="hkpi-value red">—</div><div class="hkpi-pct red">—</div><div class="hkpi-label">Ag. Sem Resposta</div></div>
+    <div class="hkpi"><div class="hkpi-value green">—</div><div class="hkpi-pct green">—</div><div class="hkpi-label">Dentro do Limite</div></div>
+    <div class="hkpi"><div class="hkpi-value orange">—</div><div class="hkpi-pct orange">—</div><div class="hkpi-label">Acima do Limite</div></div>
+  </div>
+  <div class="header-actions">
+    <span class="last-updated" id="lastUpdated"></span>
+    <button class="refresh-btn" id="refreshBtn" onclick="loadData()">
+      <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Atualizar
+    </button>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  </div>
+</header>
 
-  <!-- Filter bar -->
-  <div class="filter-bar">
-    <button class="filter-btn active" onclick="setFilter('all', this)">Todos</button>
-    <button class="filter-btn danger" onclick="setFilter('pausa', this)">🔴 Em Pausa (>150)</button>
-    <button class="filter-btn ok" onclick="setFilter('ok', this)">🟢 Dentro do Limite</button>
-    <button class="filter-btn" onclick="setFilter('reincidente', this)">⚠ Reincidentes</button>
-    <div class="filter-bar" style="gap:6px;margin:0;flex-wrap:nowrap;" id="teamFilters"></div>
+<nav class="nav-strip">
+  <div class="nav-tab active">Carteira de Leads</div>
+  <div class="nav-tab">Disponibilidade</div>
+</nav>
+
+<div class="page-body">
+  <div class="controls-row">
+    <span class="ctrl-label">Filtro</span>
+    <button class="chip active" onclick="setFilter('all', this)">Todos</button>
+    <button class="chip danger" onclick="setFilter('pausa', this)">🔴 Em Pausa (&gt;150)</button>
+    <button class="chip green" onclick="setFilter('ok', this)">🟢 Dentro do Limite</button>
+    <button class="chip warn" onclick="setFilter('reincidente', this)">⚠ Reincidentes</button>
+    <div class="divider-v"></div>
+    <span class="ctrl-label">Equipe</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;" id="teamFilters"></div>
     <div class="search-wrap">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" id="searchInput" placeholder="Buscar agente..." oninput="renderTable()">
     </div>
   </div>
 
-  <!-- Main content -->
   <div class="main-grid">
-    <!-- Table -->
     <div class="table-card">
       <div class="table-header">
         <h3>Agentes · Volume de Leads</h3>
         <span class="count-badge" id="tableCount">0 agentes</span>
       </div>
       <div id="tableContent">
-        <div class="loading-state">
-          <div class="loading-spinner"></div>
-          <div class="loading-text">Buscando dados da planilha...</div>
-        </div>
+        <div class="loading-state"><div class="loading-spinner"></div><div class="loading-text">Buscando dados da planilha...</div></div>
       </div>
     </div>
 
-    <!-- Side panel -->
     <div class="side-panel">
-
-      <!-- Critical gauge -->
       <div class="panel-card">
-        <h3>Visão Geral <span class="badge">limite 150</span></h3>
+        <h3>Visão por Equipe <span class="badge">limite 150</span></h3>
         <div class="limit-indicator">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#e63946" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           <p>Agentes com total <strong>&gt; 150</strong> leads devem entrar em <strong>PAUSA</strong></p>
         </div>
         <div id="teamDistrib" class="team-bars"></div>
       </div>
-
-      <!-- Reincidentes -->
       <div class="panel-card">
         <h3>⚠ Reincidentes <span class="badge" id="reincCount">0</span></h3>
-        <p style="font-size:11px;color:var(--muted);margin-bottom:12px;font-family:'IBM Plex Mono',monospace;">Agentes que excedem 150 leads com alto volume acumulado (Aberto + Ag.Resp. alto)</p>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:12px;font-weight:500;">Agentes acima do limite ou com alto volume acumulado</p>
         <div class="reinc-list" id="reincList"></div>
       </div>
-
     </div>
   </div>
-
 </div>
 
-<div class="tooltip" id="tooltip"></div>
-
 <script>
-// ===== CONFIG =====
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnlwiAP5sVy5NpzqrHObGJcqL6BsyzNoWNM8CC-iBD74TkHRDYVzFHOm14WEBv8mwXmn0N2lgX87pH/pub?output=csv';
 const LIMIT = 150;
+const TEAM_COLORS = ['#3b82f6','#f97316','#22c55e','#ef4444','#8b5cf6','#0ea5e9','#ec4899','#14b8a6','#eab308','#6366f1'];
+const teamColorMap = {};
+function getTeamColor(t) {
+  if (!teamColorMap[t]) teamColorMap[t] = TEAM_COLORS[Object.keys(teamColorMap).length % TEAM_COLORS.length];
+  return teamColorMap[t];
+}
 
-let RAW = [];
-let teams = [];
-let currentFilter = 'all';
-let currentTeam = 'all';
-let sortCol = 'total';
-let sortDir = -1;
+let RAW = [], teams = [], currentFilter = 'all', currentTeam = 'all', sortCol = 'total', sortDir = -1;
 
-// ===== CSV PARSER =====
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
-
-  // Detect header row — find which line has known column names
-  // Expected columns (case-insensitive): Agente/Nome, Equipe, Aberto, Aguardando, Pendente, Total, Status
-  const headerLine = lines[0];
-  const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
-
-  // Map column indices dynamically
-  const colMap = {
-    nome:      findCol(headers, ['agente','nome','operador','atendente','consultor']),
-    equipe:    findCol(headers, ['equipe','time','grupo','supervisão','supervisor','supervisao']),
-    aberto:    findCol(headers, ['aberto','em aberto','open']),
-    aguardando:findCol(headers, ['aguardando','ag. resp','ag.resp','aguard','waiting','em espera']),
-    pendente:  findCol(headers, ['pendente','pendentes','pending']),
-    total:     findCol(headers, ['total','soma','sum']),
-    status:    findCol(headers, ['status','situação','situacao','state']),
-  };
-
-  const result = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cols = splitCSVLine(lines[i]);
-    if (!cols || cols.length < 2) continue;
-
-    const get = (key) => {
-      const idx = colMap[key];
-      return idx !== -1 ? (cols[idx] || '').trim().replace(/^"|"$/g, '') : '';
-    };
-
-    const nome = get('nome');
-    if (!nome) continue; // skip empty rows
-
-    const aberto    = parseInt(get('aberto'))    || 0;
-    const aguardando= parseInt(get('aguardando'))|| 0;
-    const pendente  = parseInt(get('pendente'))  || 0;
-    // If total column not found, compute from the three columns
-    let total = colMap.total !== -1 ? parseInt(get('total')) : NaN;
-    if (isNaN(total)) total = aberto + aguardando + pendente;
-
-    const equipe = get('equipe') || 'SEM EQUIPE';
-    const status = get('status') || 'Disponível';
-
-    result.push({ nome, equipe, aberto, aguardando, pendente, total, status });
-  }
-
-  return result;
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,'').toLowerCase());
+  const fc = (candidates) => { for(const c of candidates){ const i=headers.findIndex(h=>h.includes(c)); if(i!==-1)return i; } return -1; };
+  const colMap = { nome:fc(['agente','nome','operador','atendente','consultor']), equipe:fc(['equipe','time','grupo','supervisão','supervisor','supervisao']), aberto:fc(['aberto','em aberto','open']), aguardando:fc(['aguardando','ag. resp','ag.resp','aguard','waiting']), pendente:fc(['pendente','pendentes','pending']), total:fc(['total','soma','sum']), status:fc(['status','situação','situacao']) };
+  const split = line => { const r=[]; let cur='',q=false; for(const ch of line){ if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(cur);cur='';}else{cur+=ch;} } r.push(cur); return r; };
+  return lines.slice(1).map(l => {
+    const c = split(l);
+    if (!c || c.length < 2) return null;
+    const g = k => colMap[k]!==-1?(c[colMap[k]]||'').trim().replace(/^"|"$/g,''):'';
+    const nome = g('nome'); if (!nome) return null;
+    const aberto=parseInt(g('aberto'))||0, aguardando=parseInt(g('aguardando'))||0, pendente=parseInt(g('pendente'))||0;
+    let total=colMap.total!==-1?parseInt(g('total')):NaN; if(isNaN(total))total=aberto+aguardando+pendente;
+    return { nome, equipe:g('equipe')||'SEM EQUIPE', aberto, aguardando, pendente, total, status:g('status')||'Disponível' };
+  }).filter(Boolean);
 }
 
-function findCol(headers, candidates) {
-  for (const c of candidates) {
-    const idx = headers.findIndex(h => h.includes(c));
-    if (idx !== -1) return idx;
-  }
-  return -1;
-}
-
-function splitCSVLine(line) {
-  // Handle quoted fields with commas
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') { inQuotes = !inQuotes; }
-    else if (ch === ',' && !inQuotes) { result.push(current); current = ''; }
-    else { current += ch; }
-  }
-  result.push(current);
-  return result;
-}
-
-// ===== DATA LOADER =====
 async function loadData() {
-  const refreshBtn = document.getElementById('refreshBtn');
-  refreshBtn.classList.add('loading');
-
-  // Show loading state in table
-  document.getElementById('tableContent').innerHTML = `
-    <div class="loading-state">
-      <div class="loading-spinner"></div>
-      <div class="loading-text">Buscando dados da planilha...</div>
-    </div>`;
-
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('loading');
+  document.getElementById('tableContent').innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><div class="loading-text">Buscando dados da planilha...</div></div>';
   try {
-    // Use a CORS proxy since Google Sheets CSV requires it in some browsers
-    const urls = [
-      CSV_URL,
-      `https://corsproxy.io/?${encodeURIComponent(CSV_URL)}`,
-    ];
-
-    let text = null;
-    let lastErr = null;
-
-    for (const url of urls) {
-      try {
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        text = await res.text();
-        break;
-      } catch (e) {
-        lastErr = e;
-      }
+    let text=null, lastErr=null;
+    for (const url of [CSV_URL, `https://corsproxy.io/?${encodeURIComponent(CSV_URL)}`]) {
+      try { const r=await fetch(url,{cache:'no-store'}); if(!r.ok)throw new Error(`HTTP ${r.status}`); text=await r.text(); break; } catch(e){lastErr=e;}
     }
-
-    if (!text) throw lastErr || new Error('Não foi possível buscar o CSV');
-
+    if (!text) throw lastErr||new Error('Não foi possível buscar o CSV');
     RAW = parseCSV(text);
-
-    if (RAW.length === 0) {
-      throw new Error('Nenhum dado encontrado. Verifique o formato da planilha.');
-    }
-
-    // Mark flags
-    RAW.forEach(d => {
-      d.acimaDolimite = d.total > LIMIT;
-      d.reincidente = d.acimaDolimite || (d.aguardando > 100 && d.total > 100);
-    });
-
-    teams = [...new Set(RAW.map(d => d.equipe))];
-
-    // Update header subtitle with today's date
+    if (!RAW.length) throw new Error('Nenhum dado encontrado. Verifique o formato da planilha.');
+    RAW.forEach(d => { d.acimaDolimite=d.total>LIMIT; d.reincidente=d.acimaDolimite||(d.aguardando>100&&d.total>100); });
+    teams = [...new Set(RAW.map(d=>d.equipe))];
+    teams.forEach(t=>getTeamColor(t));
     const now = new Date();
-    const dateStr = now.toLocaleDateString('pt-BR');
-    document.getElementById('headerSubtitle').textContent =
-      `${dateStr} · Limite máximo: ${LIMIT} leads por agente · ${RAW.length} agentes carregados`;
-
-    // Update last updated
-    document.getElementById('lastUpdated').textContent =
-      `Atualizado: ${now.toLocaleTimeString('pt-BR')}`;
-
-    // Build table HTML
-    document.getElementById('tableContent').innerHTML = `
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th onclick="sortBy('nome')">Agente <span class="sort-arrow">↕</span></th>
-              <th onclick="sortBy('equipe')">Equipe <span class="sort-arrow">↕</span></th>
-              <th onclick="sortBy('aberto')" style="text-align:right">Aberto <span class="sort-arrow">↕</span></th>
-              <th onclick="sortBy('aguardando')" style="text-align:right">Ag. Resp <span class="sort-arrow">↕</span></th>
-              <th onclick="sortBy('pendente')" style="text-align:right">Pendente <span class="sort-arrow">↕</span></th>
-              <th onclick="sortBy('total')">Total <span class="sort-arrow">↕</span></th>
-              <th onclick="sortBy('status')">Status <span class="sort-arrow">↕</span></th>
-              <th>Flag</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>`;
-
-    renderKPIs();
-    renderTeamFilters();
-    renderTeamDistrib();
-    renderReincidentes();
-    renderTable();
-
-  } catch (err) {
-    console.error('Erro ao carregar dados:', err);
-    document.getElementById('tableContent').innerHTML = `
-      <div class="error-state">
-        <p>⚠ Erro ao carregar dados da planilha<br><br>${err.message}</p>
-        <p style="font-size:10px;margin-top:8px;color:var(--muted)">Verifique se a planilha está publicada publicamente</p>
-        <button onclick="loadData()" style="margin-top:12px">Tentar novamente</button>
-      </div>`;
-  } finally {
-    refreshBtn.classList.remove('loading');
-  }
+    document.getElementById('headerSubtitle').textContent = `Acumulado · ${now.toLocaleDateString('pt-BR')} · Todas as equipes`;
+    document.getElementById('lastUpdated').textContent = `Atualizado: ${now.toLocaleTimeString('pt-BR')}`;
+    document.getElementById('tableContent').innerHTML = `<div class="table-scroll"><table><thead><tr>
+      <th onclick="sortBy('nome')">Agente <span class="sort-arrow">↕</span></th>
+      <th onclick="sortBy('equipe')">Equipe <span class="sort-arrow">↕</span></th>
+      <th onclick="sortBy('aberto')" style="text-align:right">Aberto <span class="sort-arrow">↕</span></th>
+      <th onclick="sortBy('aguardando')" style="text-align:right">Ag. Resp <span class="sort-arrow">↕</span></th>
+      <th onclick="sortBy('pendente')" style="text-align:right">Pendente <span class="sort-arrow">↕</span></th>
+      <th onclick="sortBy('total')">Total <span class="sort-arrow">↕</span></th>
+      <th onclick="sortBy('status')">Status <span class="sort-arrow">↕</span></th>
+      <th>Flag</th>
+    </tr></thead><tbody id="tableBody"></tbody></table></div>`;
+    renderHeaderKPIs(); renderTeamFilters(); renderTeamDistrib(); renderReincidentes(); renderTable();
+  } catch(err) {
+    document.getElementById('tableContent').innerHTML = `<div class="error-state"><p>⚠ Erro ao carregar dados<br><br>${err.message}</p><button onclick="loadData()">Tentar novamente</button></div>`;
+  } finally { btn.classList.remove('loading'); }
 }
 
-// ===== RENDER HELPERS =====
-function getBarColor(pct) {
-  if (pct >= 1) return 'var(--danger)';
-  if (pct >= 0.8) return 'var(--warn)';
-  return 'var(--ok)';
+function renderHeaderKPIs() {
+  const above=RAW.filter(d=>d.acimaDolimite), dentro=RAW.filter(d=>!d.acimaDolimite);
+  const total=RAW.reduce((s,d)=>s+d.total,0), semResp=RAW.reduce((s,d)=>s+d.aguardando,0);
+  const pSemResp=total>0?(semResp/total*100).toFixed(1):'0.0';
+  const pAcima=RAW.length>0?(above.length/RAW.length*100).toFixed(1):'0.0';
+  const pDentro=RAW.length>0?(dentro.length/RAW.length*100).toFixed(1):'0.0';
+  document.getElementById('headerKpis').innerHTML = `
+    <div class="hkpi"><div class="hkpi-value blue">${total.toLocaleString('pt-BR')}</div><div class="hkpi-label">Leads Totais</div></div>
+    <div class="hkpi"><div class="hkpi-value red">${semResp.toLocaleString('pt-BR')}</div><div class="hkpi-pct red">${pSemResp}%</div><div class="hkpi-label">Ag. Sem Resposta</div></div>
+    <div class="hkpi"><div class="hkpi-value green">${dentro.length}</div><div class="hkpi-pct green">${pDentro}%</div><div class="hkpi-label">Dentro do Limite</div></div>
+    <div class="hkpi"><div class="hkpi-value orange">${above.length}</div><div class="hkpi-pct orange">${pAcima}%</div><div class="hkpi-label">Acima do Limite</div></div>`;
 }
 
-function statusPill(s) {
-  const lower = (s || '').toLowerCase();
-  if (lower.includes('disponível') || lower.includes('disponivel')) return `<span class="pill disponivel">Disponível</span>`;
-  if (lower.includes('offline')) return `<span class="pill offline">Offline</span>`;
-  return `<span class="pill ativo">${s}</span>`;
-}
-
-// ===== KPIs =====
-function renderKPIs() {
-  const above = RAW.filter(d => d.total > LIMIT);
-  const reinc = RAW.filter(d => d.reincidente);
-  const total = RAW.reduce((s,d) => s + d.total, 0);
-  const kpiRow = document.getElementById('kpiRow');
-  kpiRow.innerHTML = `
-    <div class="kpi-card red">
-      <div class="kpi-label">Em Pausa (>150)</div>
-      <div class="kpi-value red">${above.length}</div>
-      <div class="kpi-sub">agentes acima do limite</div>
-    </div>
-    <div class="kpi-card warn">
-      <div class="kpi-label">Reincidentes</div>
-      <div class="kpi-value warn">${reinc.length}</div>
-      <div class="kpi-sub">alto volume acumulado</div>
-    </div>
-    <div class="kpi-card green">
-      <div class="kpi-label">Dentro do Limite</div>
-      <div class="kpi-value green">${RAW.length - above.length}</div>
-      <div class="kpi-sub">de ${RAW.length} agentes totais</div>
-    </div>
-    <div class="kpi-card blue">
-      <div class="kpi-label">Total Leads (todos)</div>
-      <div class="kpi-value blue">${total.toLocaleString('pt-BR')}</div>
-      <div class="kpi-sub">soma geral · limite ×${RAW.length} = ${(LIMIT*RAW.length).toLocaleString('pt-BR')}</div>
-    </div>
-  `;
-}
-
-// ===== TEAM FILTERS =====
 function renderTeamFilters() {
   const wrap = document.getElementById('teamFilters');
-  const frag = teams.map(t => `<button class="filter-btn" onclick="setTeam('${t.replace(/'/g,"\\'")}', this)">${t.split(' ')[0]}</button>`).join('');
-  wrap.innerHTML = `<button class="filter-btn active" onclick="setTeam('all', this)">Todas equipes</button>` + frag;
+  wrap.innerHTML = `<button class="chip active" onclick="setTeam('all',this)">Todas</button>` +
+    teams.map(t=>`<button class="chip" style="border-color:${getTeamColor(t)}40;color:${getTeamColor(t)}" onclick="setTeam('${t.replace(/'/g,"\\'")}',this)">${t.split(' ')[0]}</button>`).join('');
 }
 
-function setTeam(team, btn) {
-  currentTeam = team;
-  document.querySelectorAll('#teamFilters .filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderTable();
-}
+function setTeam(team,btn){currentTeam=team;document.querySelectorAll('#teamFilters .chip').forEach(b=>{b.classList.remove('active');b.style.background='';});btn.classList.add('active');renderTable();}
+function setFilter(f,btn){currentFilter=f;document.querySelectorAll('.controls-row>.chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTable();}
+function sortBy(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1;}document.querySelectorAll('thead th').forEach(t=>t.classList.remove('sorted'));const m={nome:0,equipe:1,aberto:2,aguardando:3,pendente:4,total:5,status:6};document.querySelectorAll('thead th')[m[col]]?.classList.add('sorted');renderTable();}
 
-function setFilter(f, btn) {
-  currentFilter = f;
-  document.querySelectorAll('.filter-bar > .filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderTable();
-}
+function getBarColor(p){if(p>=1)return'var(--red)';if(p>=0.8)return'var(--orange)';return'var(--green)';}
+function statusPill(s){const l=(s||'').toLowerCase();if(l.includes('disponív')||l.includes('disponiv'))return`<span class="pill disponivel">Disponível</span>`;if(l.includes('offline'))return`<span class="pill offline">Offline</span>`;return`<span class="pill ativo">${s}</span>`;}
 
-function sortBy(col) {
-  if (sortCol === col) sortDir *= -1;
-  else { sortCol = col; sortDir = -1; }
-  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
-  const thMap = {nome:0,equipe:1,aberto:2,aguardando:3,pendente:4,total:5,status:6};
-  document.querySelectorAll('thead th')[thMap[col]]?.classList.add('sorted');
-  renderTable();
-}
-
-// ===== TABLE =====
-function renderTable() {
-  const tbody = document.getElementById('tableBody');
-  if (!tbody) return;
-
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  let data = RAW.filter(d => {
-    if (q && !d.nome.toLowerCase().includes(q) && !d.equipe.toLowerCase().includes(q)) return false;
-    if (currentTeam !== 'all' && d.equipe !== currentTeam) return false;
-    if (currentFilter === 'pausa' && !d.acimaDolimite) return false;
-    if (currentFilter === 'ok' && d.acimaDolimite) return false;
-    if (currentFilter === 'reincidente' && !d.reincidente) return false;
+function renderTable(){
+  const tbody=document.getElementById('tableBody'); if(!tbody)return;
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  let data=RAW.filter(d=>{
+    if(q&&!d.nome.toLowerCase().includes(q)&&!d.equipe.toLowerCase().includes(q))return false;
+    if(currentTeam!=='all'&&d.equipe!==currentTeam)return false;
+    if(currentFilter==='pausa'&&!d.acimaDolimite)return false;
+    if(currentFilter==='ok'&&d.acimaDolimite)return false;
+    if(currentFilter==='reincidente'&&!d.reincidente)return false;
     return true;
   });
-
-  data.sort((a,b) => {
-    const v = col => typeof a[col] === 'string' ? a[col].localeCompare(b[col]) : a[col] - b[col];
-    return sortDir * v(sortCol);
-  });
-
-  document.getElementById('tableCount').textContent = `${data.length} agente${data.length!==1?'s':''}`;
-
-  tbody.innerHTML = data.map(d => {
-    const pct = Math.min(d.total / LIMIT, 1.2);
-    const barW = Math.min(pct * 100, 100);
-    const color = getBarColor(pct);
-    const numClass = d.total > LIMIT ? 'danger' : d.total >= 120 ? 'warn' : 'ok';
-    const flag = d.total > LIMIT
-      ? `<span class="pausa-flag">⏸ PAUSA</span>`
-      : d.reincidente ? `<span class="reincidente-badge">⚠ ATENÇÃO</span>` : '—';
-    return `<tr class="${d.acimaDolimite ? 'above-limit' : ''}">
+  data.sort((a,b)=>sortDir*(typeof a[sortCol]==='string'?a[sortCol].localeCompare(b[sortCol]):a[sortCol]-b[sortCol]));
+  document.getElementById('tableCount').textContent=`${data.length} agente${data.length!==1?'s':''}`;
+  tbody.innerHTML=data.map(d=>{
+    const pct=Math.min(d.total/LIMIT,1.2),barW=Math.min(pct*100,100),color=getBarColor(pct);
+    const nc=d.total>LIMIT?'danger':d.total>=120?'warn':'ok';
+    const flag=d.total>LIMIT?`<span class="pausa-flag">⏸ PAUSA</span>`:d.reincidente?`<span class="reincidente-badge">⚠ ATENÇÃO</span>`:'—';
+    const tc=getTeamColor(d.equipe);
+    return `<tr class="${d.acimaDolimite?'above-limit':''}">
       <td class="name">${d.nome}</td>
-      <td class="team">${d.equipe}</td>
-      <td class="number">${d.aberto}</td>
-      <td class="number">${d.aguardando}</td>
-      <td class="number">${d.pendente}</td>
-      <td class="bar-cell">
-        <div class="bar-wrap">
-          <div class="bar-bg"><div class="bar-fill" style="width:${barW}%;background:${color}"></div></div>
-          <span class="bar-num ${numClass}">${d.total}</span>
-        </div>
-      </td>
-      <td>${statusPill(d.status)}</td>
-      <td>${flag}</td>
-    </tr>`;
+      <td class="team"><span class="team-dot" style="background:${tc}"></span>${d.equipe}</td>
+      <td class="number">${d.aberto}</td><td class="number">${d.aguardando}</td><td class="number">${d.pendente}</td>
+      <td class="bar-cell"><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${barW}%;background:${color}"></div></div><span class="bar-num ${nc}">${d.total}</span></div></td>
+      <td>${statusPill(d.status)}</td><td>${flag}</td></tr>`;
   }).join('');
 }
 
-// ===== TEAM DISTRIBUTION =====
-function renderTeamDistrib() {
-  const wrap = document.getElementById('teamDistrib');
-  const teamData = teams.map(t => {
-    const members = RAW.filter(d => d.equipe === t);
-    const above = members.filter(d => d.acimaDolimite).length;
-    const total = members.length;
-    return { name: t, above, total };
-  }).sort((a,b) => b.above - a.above);
+function renderTeamDistrib(){
+  const wrap=document.getElementById('teamDistrib');
+  const td=teams.map(t=>{const m=RAW.filter(d=>d.equipe===t),a=m.filter(d=>d.acimaDolimite).length;return{name:t,above:a,total:m.length,color:getTeamColor(t)};}).sort((a,b)=>b.above-a.above);
+  const max=Math.max(...td.map(d=>d.above),1);
+  wrap.innerHTML=td.map(d=>`<div class="team-row"><div class="team-info"><span class="tn"><span class="team-dot" style="background:${d.color}"></span>${d.name.split(' ')[0]}</span><span class="tv" style="color:${d.above>0?'var(--red)':'var(--green)'}">${d.above}/${d.total} · ${(d.above/d.total*100).toFixed(0)}%</span></div><div class="team-bar"><div class="team-bar-fill" style="width:${(d.above/max*100).toFixed(0)}%;background:${d.color}"></div></div></div>`).join('');
+}
 
-  const maxAbove = Math.max(...teamData.map(d => d.above), 1);
-  wrap.innerHTML = teamData.map(d => {
-    const pct = (d.above / d.total * 100).toFixed(0);
-    const barW = (d.above / maxAbove * 100).toFixed(0);
-    const isDanger = d.above > 0;
-    return `<div class="team-row">
-      <div class="team-info"><span class="tn">${d.name.split(' ')[0]}</span><span class="tv" style="color:${isDanger?'var(--danger)':'var(--ok)'}">${d.above}/${d.total} acima · ${pct}%</span></div>
-      <div class="team-bar"><div class="team-bar-fill ${isDanger?'danger':''}" style="width:${barW}%"></div></div>
-    </div>`;
+function renderReincidentes(){
+  const list=RAW.filter(d=>d.reincidente).sort((a,b)=>b.total-a.total);
+  document.getElementById('reincCount').textContent=list.length;
+  document.getElementById('reincList').innerHTML=list.map(d=>{
+    const cls=d.acimaDolimite?'danger':'',nc=d.acimaDolimite?'red':'warn';
+    const note=d.aguardando>150?'Volume muito alto':d.aguardando>100?'Alto volume ag. resp.':'Próximo do limite';
+    return `<div class="reinc-item ${cls}"><div style="flex:1;min-width:0"><div class="reinc-name">${d.nome}</div><div class="reinc-days">${d.equipe.split(' ')[0]} · ${note}</div></div><span class="reinc-total ${nc}">${d.total}</span></div>`;
   }).join('');
 }
 
-// ===== REINCIDENTES =====
-function renderReincidentes() {
-  const list = RAW.filter(d => d.reincidente).sort((a,b) => b.total - a.total);
-  document.getElementById('reincCount').textContent = list.length;
-  const wrap = document.getElementById('reincList');
-  wrap.innerHTML = list.map(d => {
-    const cls = d.acimaDolimite ? 'danger' : '';
-    const numCls = d.acimaDolimite ? 'red' : 'warn';
-    const days = d.aguardando > 150 ? 'Múltiplos dias acumulado' : d.aguardando > 100 ? 'Alto volume ag. resp.' : 'Próximo do limite';
-    return `<div class="reinc-item ${cls}">
-      <div style="flex:1;min-width:0">
-        <div class="reinc-name">${d.nome}</div>
-        <div class="reinc-days">${d.equipe.split(' ')[0]} · ${days}</div>
-      </div>
-      <span class="reinc-total ${numCls}">${d.total}</span>
-    </div>`;
-  }).join('');
-}
-
-// ===== AUTO-REFRESH every 5 minutes =====
-setInterval(loadData, 5 * 60 * 1000);
-
-// ===== INIT =====
+setInterval(loadData, 5*60*1000);
 loadData();
 </script>
 </body>

@@ -53,6 +53,44 @@
   .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
+  /* Refresh button */
+  .refresh-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+    padding: 5px 12px; border-radius: 4px; font-size: 11px; font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer; transition: all .15s;
+  }
+  .refresh-btn:hover { border-color: var(--text); color: var(--text); }
+  .refresh-btn.loading svg { animation: spin 1s linear infinite; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  .refresh-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  /* Loading state */
+  .loading-state {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 300px; flex-direction: column; gap: 16px;
+  }
+  .loading-spinner {
+    width: 36px; height: 36px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .loading-text { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); }
+
+  /* Error state */
+  .error-state {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 200px; flex-direction: column; gap: 12px;
+    background: rgba(230,57,70,.05); border: 1px solid rgba(230,57,70,.2);
+    border-radius: 8px; padding: 32px;
+  }
+  .error-state p { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--danger); text-align: center; }
+  .error-state button {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 16px; border-radius: 4px; font-size: 12px; font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer;
+  }
+
   /* Filter bar */
   .filter-bar { display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap; align-items: center; }
   .filter-btn {
@@ -222,6 +260,9 @@
   .table-scroll { max-height: 520px; overflow-y: auto; }
   .table-scroll::-webkit-scrollbar { width: 5px; }
   .table-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* Last updated */
+  .last-updated { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -230,15 +271,25 @@
   <header>
     <div class="header-left">
       <h1>LEAD<span>CTRL</span> · Dashboard de Controle</h1>
-      <p>30/04/2026 · Limite máximo: 150 leads por agente · Planilha: Base_status_chats</p>
+      <p id="headerSubtitle">Carregando dados... · Limite máximo: 150 leads por agente</p>
     </div>
     <div class="header-right">
+      <span class="last-updated" id="lastUpdated"></span>
+      <button class="refresh-btn" id="refreshBtn" onclick="loadData()">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Atualizar
+      </button>
       <div class="live-badge"><div class="live-dot"></div>LIVE</div>
     </div>
   </header>
 
   <!-- KPIs -->
-  <div class="kpi-row" id="kpiRow"></div>
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi-card red"><div class="kpi-label">Em Pausa (>150)</div><div class="kpi-value red">—</div><div class="kpi-sub">carregando...</div></div>
+    <div class="kpi-card warn"><div class="kpi-label">Reincidentes</div><div class="kpi-value warn">—</div><div class="kpi-sub">carregando...</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Dentro do Limite</div><div class="kpi-value green">—</div><div class="kpi-sub">carregando...</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">Total Leads (todos)</div><div class="kpi-value blue">—</div><div class="kpi-sub">carregando...</div></div>
+  </div>
 
   <!-- Filter bar -->
   <div class="filter-bar">
@@ -261,22 +312,11 @@
         <h3>Agentes · Volume de Leads</h3>
         <span class="count-badge" id="tableCount">0 agentes</span>
       </div>
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th onclick="sortBy('nome')">Agente <span class="sort-arrow">↕</span></th>
-              <th onclick="sortBy('equipe')">Equipe <span class="sort-arrow">↕</span></th>
-              <th onclick="sortBy('aberto')" style="text-align:right">Aberto <span class="sort-arrow">↕</span></th>
-              <th onclick="sortBy('aguardando')" style="text-align:right">Ag. Resp <span class="sort-arrow">↕</span></th>
-              <th onclick="sortBy('pendente')" style="text-align:right">Pendente <span class="sort-arrow">↕</span></th>
-              <th onclick="sortBy('total')">Total <span class="sort-arrow">↕</span></th>
-              <th onclick="sortBy('status')">Status <span class="sort-arrow">↕</span></th>
-              <th>Flag</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
+      <div id="tableContent">
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Buscando dados da planilha...</div>
+        </div>
       </div>
     </div>
 
@@ -308,95 +348,189 @@
 <div class="tooltip" id="tooltip"></div>
 
 <script>
-// ===== DATA from Excel =====
-const RAW = [
-  {nome:"Giovanna Santana",equipe:"ADMINISTRATIVO",aberto:9,aguardando:194,pendente:20,total:223,status:"Disponível"},
-  {nome:"Tatiana Silva",equipe:"ADMINISTRATIVO",aberto:0,aguardando:73,pendente:26,total:99,status:"Disponível"},
-  {nome:"Amanda Souza",equipe:"ADMINISTRATIVO",aberto:2,aguardando:1,pendente:1,total:4,status:"Offline"},
-  {nome:"Patrícia Sousa Lima",equipe:"ADMINISTRATIVO",aberto:4,aguardando:43,pendente:7,total:54,status:"Offline"},
-  {nome:"Bruno Ignacio",equipe:"ADMINISTRATIVO",aberto:0,aguardando:10,pendente:0,total:10,status:"Almoço/Jantar"},
-  {nome:"ANDREA ANTUNES",equipe:"ADMINISTRATIVO",aberto:13,aguardando:68,pendente:23,total:104,status:"Offline"},
-  {nome:"ANA PAULA A CAMPANA",equipe:"HUMBERTO BANQUERI",aberto:11,aguardando:208,pendente:16,total:235,status:"Preparando Cotação"},
-  {nome:"Suellen Guimaraes",equipe:"HUMBERTO BANQUERI",aberto:11,aguardando:226,pendente:11,total:248,status:"Preparando Cotação"},
-  {nome:"Jaqueline Silva",equipe:"HUMBERTO BANQUERI",aberto:7,aguardando:14,pendente:10,total:31,status:"Offline"},
-  {nome:"Gleire Valerio",equipe:"HUMBERTO BANQUERI",aberto:4,aguardando:256,pendente:21,total:281,status:"Disponível"},
-  {nome:"Larissa Paes",equipe:"HUMBERTO BANQUERI",aberto:1,aguardando:15,pendente:36,total:52,status:"Offline"},
-  {nome:"Isabella Souza",equipe:"HUMBERTO BANQUERI",aberto:3,aguardando:31,pendente:5,total:39,status:"Offline"},
-  {nome:"MOOARA VIEIRA RODRIGUES",equipe:"HUMBERTO BANQUERI",aberto:5,aguardando:13,pendente:7,total:18,status:"Preparando Cotação"},
-  {nome:"Deliane Gonzaga Gomes",equipe:"HUMBERTO BANQUERI",aberto:2,aguardando:64,pendente:36,total:102,status:"Follow up"},
-  {nome:"Luzinete ferreira",equipe:"HUMBERTO BANQUERI",aberto:5,aguardando:126,pendente:24,total:155,status:"Preparando Cotação"},
-  {nome:"Robson Ferrari",equipe:"HUMBERTO BANQUERI",aberto:16,aguardando:169,pendente:7,total:192,status:"Cadastrando venda"},
-  {nome:"Luciana Tripicchio",equipe:"HUMBERTO BANQUERI",aberto:5,aguardando:74,pendente:35,total:114,status:"Feedback"},
-  {nome:"Aline Gunello",equipe:"HUMBERTO BANQUERI",aberto:3,aguardando:17,pendente:22,total:42,status:"Almoço/Jantar"},
-  {nome:"Julia Silva",equipe:"HUMBERTO BANQUERI",aberto:3,aguardando:36,pendente:28,total:67,status:"Preparando Cotação"},
-  {nome:"Mariana Felix",equipe:"HUMBERTO BANQUERI",aberto:12,aguardando:51,pendente:11,total:74,status:"Almoço/Jantar"},
-  {nome:"Aline Ribeiro",equipe:"HUMBERTO BANQUERI",aberto:5,aguardando:28,pendente:23,total:56,status:"Preparando Cotação"},
-  {nome:"Isabella Mattos",equipe:"HUMBERTO BANQUERI",aberto:10,aguardando:30,pendente:6,total:46,status:"Preparando Cotação"},
-  {nome:"Bruna Campassi",equipe:"HUMBERTO BANQUERI",aberto:4,aguardando:46,pendente:14,total:64,status:"Preparando Cotação"},
-  {nome:"Giovanna Barbieri",equipe:"HUMBERTO BANQUERI",aberto:10,aguardando:72,pendente:7,total:82,status:"Follow up"},
-  {nome:"Ana Julia Brito",equipe:"HUMBERTO BANQUERI",aberto:9,aguardando:41,pendente:0,total:50,status:"Almoço/Jantar"},
-  {nome:"Isaque Victor",equipe:"HUMBERTO BANQUERI",aberto:3,aguardando:120,pendente:1,total:124,status:"Preparando Cotação"},
-  {nome:"Renato Jesus",equipe:"LUIZ ROBERTO",aberto:0,aguardando:0,pendente:0,total:0,status:"Offline"},
-  {nome:"Miriam Ferreira",equipe:"LUIZ ROBERTO",aberto:4,aguardando:153,pendente:24,total:181,status:"Almoço/Jantar"},
-  {nome:"Janeila dos Santos Figueiredo",equipe:"LUIZ ROBERTO",aberto:5,aguardando:135,pendente:37,total:177,status:"Disponível"},
-  {nome:"Unildo Ferreira Gois Junior",equipe:"LUIZ ROBERTO",aberto:12,aguardando:27,pendente:94,total:133,status:"Preparando Cotação"},
-  {nome:"Andrezza Machini",equipe:"LUIZ ROBERTO",aberto:4,aguardando:84,pendente:6,total:94,status:"Follow up"},
-  {nome:"Rayane Lopes",equipe:"LUIZ ROBERTO",aberto:1,aguardando:95,pendente:79,total:175,status:"Almoço/Jantar"},
-  {nome:"marcela silva",equipe:"LUIZ ROBERTO",aberto:2,aguardando:78,pendente:105,total:185,status:"Disponível"},
-  {nome:"Raiane Lima",equipe:"LUIZ ROBERTO",aberto:2,aguardando:81,pendente:0,total:83,status:"Preparando Cotação"},
-  {nome:"Sabrina Giolo",equipe:"LUIZ ROBERTO",aberto:4,aguardando:101,pendente:7,total:112,status:"Disponível"},
-  {nome:"Thaisa Almeida",equipe:"LUIZ ROBERTO",aberto:9,aguardando:83,pendente:50,total:142,status:"Follow up"},
-  {nome:"Jady Queiroz",equipe:"LUIZ ROBERTO",aberto:3,aguardando:72,pendente:21,total:96,status:"Cadastrando venda"},
-  {nome:"Sofia Lunga",equipe:"LUIZ ROBERTO",aberto:1,aguardando:49,pendente:22,total:72,status:"Almoço/Jantar"},
-  {nome:"Ligivania Silva",equipe:"LUIZ ROBERTO",aberto:6,aguardando:52,pendente:12,total:70,status:"Follow up"},
-  {nome:"Sonia Lino",equipe:"LUIZ ROBERTO",aberto:7,aguardando:17,pendente:24,total:48,status:"Follow up"},
-  {nome:"Danilo Fogaça",equipe:"LUIZ ROBERTO",aberto:6,aguardando:32,pendente:22,total:60,status:"Follow up"},
-  {nome:"Thami Francisquelli",equipe:"LUIZ ROBERTO",aberto:0,aguardando:20,pendente:9,total:20,status:"Offline"},
-  {nome:"carolina ribeiro",equipe:"LUIZ ROBERTO",aberto:3,aguardando:29,pendente:19,total:32,status:"Preparando Cotação"},
-  {nome:"isabelle vicente schanz isa",equipe:"LUIZ ROBERTO",aberto:0,aguardando:0,pendente:0,total:0,status:"Offline"},
-  {nome:"Raissa burin",equipe:"LUIZ ROBERTO",aberto:3,aguardando:38,pendente:26,total:67,status:"Almoço/Jantar"},
-  {nome:"NATALIA BORGES",equipe:"REBECA MOURA",aberto:16,aguardando:121,pendente:64,total:201,status:"Disponível"},
-  {nome:"Camila Moreira",equipe:"REBECA MOURA",aberto:5,aguardando:99,pendente:36,total:140,status:"Follow up"},
-  {nome:"Ana Beatriz",equipe:"REBECA MOURA",aberto:3,aguardando:76,pendente:3,total:82,status:"Offline"},
-  {nome:"Vitória Oliveira",equipe:"REBECA MOURA",aberto:6,aguardando:79,pendente:58,total:143,status:"Preparando Cotação"},
-  {nome:"Jessica Costa",equipe:"REBECA MOURA",aberto:4,aguardando:31,pendente:67,total:102,status:"Offline"},
-  {nome:"Julia Marques",equipe:"REBECA MOURA",aberto:2,aguardando:158,pendente:5,total:165,status:"Follow up"},
-  {nome:"Daniela Santos dos Reis",equipe:"REBECA MOURA",aberto:4,aguardando:7,pendente:0,total:11,status:"Offline"},
-  {nome:"Gabriela Reis",equipe:"REBECA MOURA",aberto:6,aguardando:46,pendente:26,total:78,status:"Preparando Cotação"},
-  {nome:"Tais Silveira",equipe:"REBECA MOURA",aberto:18,aguardando:66,pendente:4,total:88,status:"Disponível"},
-  {nome:"Felipe Alves de Souza",equipe:"REBECA MOURA",aberto:9,aguardando:152,pendente:27,total:188,status:"Preparando Cotação"},
-  {nome:"Bruno Ferreira",equipe:"REBECA MOURA",aberto:11,aguardando:100,pendente:27,total:138,status:"Disponível"},
-  {nome:"Luan Ribeiro",equipe:"REBECA MOURA",aberto:5,aguardando:35,pendente:10,total:50,status:"Almoço/Jantar"},
-  {nome:"Kamila Kuner",equipe:"REBECA MOURA",aberto:14,aguardando:52,pendente:48,total:114,status:"Disponível"},
-  {nome:"Cristina Lopes",equipe:"REBECA MOURA",aberto:0,aguardando:91,pendente:16,total:107,status:"Disponível"},
-  {nome:"Danielle Muzell",equipe:"REBECA MOURA",aberto:4,aguardando:30,pendente:4,total:34,status:"Preparando Cotação"},
-  {nome:"Fernanda Lopes carraro",equipe:"REBECA MOURA",aberto:6,aguardando:95,pendente:0,total:101,status:"Offline"},
-  {nome:"Cidinha Correa",equipe:"REBECA MOURA",aberto:6,aguardando:24,pendente:3,total:33,status:"Almoço/Jantar"},
-  {nome:"Gustavo Barros",equipe:"REBECA MOURA",aberto:2,aguardando:47,pendente:9,total:49,status:"Almoço/Jantar"},
-  {nome:"Tais Lopes",equipe:"REBECA MOURA",aberto:2,aguardando:29,pendente:0,total:31,status:"Preparando Cotação"},
-  {nome:"ELISAMA GIZZI",equipe:"REBECA MOURA",aberto:10,aguardando:49,pendente:30,total:89,status:"Disponível"},
-  {nome:"THAINA VITORIA MACEDO BERCHELI",equipe:"REBECA MOURA",aberto:5,aguardando:39,pendente:167,total:44,status:"Preparando Cotação"},
-  {nome:"Beatriz Cordeiro",equipe:"REBECA MOURA",aberto:1,aguardando:30,pendente:4,total:35,status:"Preparando Cotação"},
-  {nome:"Paula Jesus",equipe:"REBECA MOURA",aberto:23,aguardando:36,pendente:0,total:59,status:"Disponível"},
-  {nome:"Mikaelly Michelini",equipe:"REBECA MOURA",aberto:4,aguardando:40,pendente:16,total:60,status:"Offline"},
-];
-
+// ===== CONFIG =====
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnlwiAP5sVy5NpzqrHObGJcqL6BsyzNoWNM8CC-iBD74TkHRDYVzFHOm14WEBv8mwXmn0N2lgX87pH/pub?output=csv';
 const LIMIT = 150;
+
+let RAW = [];
+let teams = [];
 let currentFilter = 'all';
 let currentTeam = 'all';
 let sortCol = 'total';
 let sortDir = -1;
 
-// Teams
-const teams = [...new Set(RAW.map(d => d.equipe))];
+// ===== CSV PARSER =====
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
 
-// Mark reincidente: acima do limite E aguardando > 100 (alto volume acumulado)
-RAW.forEach(d => {
-  d.acimaDolimite = d.total > LIMIT;
-  // Reincidente = acima do limite OU (aguardando > 100 e total > 100)
-  d.reincidente = d.acimaDolimite || (d.aguardando > 100 && d.total > 100);
-});
+  // Detect header row — find which line has known column names
+  // Expected columns (case-insensitive): Agente/Nome, Equipe, Aberto, Aguardando, Pendente, Total, Status
+  const headerLine = lines[0];
+  const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
 
+  // Map column indices dynamically
+  const colMap = {
+    nome:      findCol(headers, ['agente','nome','operador','atendente','consultor']),
+    equipe:    findCol(headers, ['equipe','time','grupo','supervisão','supervisor','supervisao']),
+    aberto:    findCol(headers, ['aberto','em aberto','open']),
+    aguardando:findCol(headers, ['aguardando','ag. resp','ag.resp','aguard','waiting','em espera']),
+    pendente:  findCol(headers, ['pendente','pendentes','pending']),
+    total:     findCol(headers, ['total','soma','sum']),
+    status:    findCol(headers, ['status','situação','situacao','state']),
+  };
+
+  const result = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = splitCSVLine(lines[i]);
+    if (!cols || cols.length < 2) continue;
+
+    const get = (key) => {
+      const idx = colMap[key];
+      return idx !== -1 ? (cols[idx] || '').trim().replace(/^"|"$/g, '') : '';
+    };
+
+    const nome = get('nome');
+    if (!nome) continue; // skip empty rows
+
+    const aberto    = parseInt(get('aberto'))    || 0;
+    const aguardando= parseInt(get('aguardando'))|| 0;
+    const pendente  = parseInt(get('pendente'))  || 0;
+    // If total column not found, compute from the three columns
+    let total = colMap.total !== -1 ? parseInt(get('total')) : NaN;
+    if (isNaN(total)) total = aberto + aguardando + pendente;
+
+    const equipe = get('equipe') || 'SEM EQUIPE';
+    const status = get('status') || 'Disponível';
+
+    result.push({ nome, equipe, aberto, aguardando, pendente, total, status });
+  }
+
+  return result;
+}
+
+function findCol(headers, candidates) {
+  for (const c of candidates) {
+    const idx = headers.findIndex(h => h.includes(c));
+    if (idx !== -1) return idx;
+  }
+  return -1;
+}
+
+function splitCSVLine(line) {
+  // Handle quoted fields with commas
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQuotes = !inQuotes; }
+    else if (ch === ',' && !inQuotes) { result.push(current); current = ''; }
+    else { current += ch; }
+  }
+  result.push(current);
+  return result;
+}
+
+// ===== DATA LOADER =====
+async function loadData() {
+  const refreshBtn = document.getElementById('refreshBtn');
+  refreshBtn.classList.add('loading');
+
+  // Show loading state in table
+  document.getElementById('tableContent').innerHTML = `
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Buscando dados da planilha...</div>
+    </div>`;
+
+  try {
+    // Use a CORS proxy since Google Sheets CSV requires it in some browsers
+    const urls = [
+      CSV_URL,
+      `https://corsproxy.io/?${encodeURIComponent(CSV_URL)}`,
+    ];
+
+    let text = null;
+    let lastErr = null;
+
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        text = await res.text();
+        break;
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+
+    if (!text) throw lastErr || new Error('Não foi possível buscar o CSV');
+
+    RAW = parseCSV(text);
+
+    if (RAW.length === 0) {
+      throw new Error('Nenhum dado encontrado. Verifique o formato da planilha.');
+    }
+
+    // Mark flags
+    RAW.forEach(d => {
+      d.acimaDolimite = d.total > LIMIT;
+      d.reincidente = d.acimaDolimite || (d.aguardando > 100 && d.total > 100);
+    });
+
+    teams = [...new Set(RAW.map(d => d.equipe))];
+
+    // Update header subtitle with today's date
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('pt-BR');
+    document.getElementById('headerSubtitle').textContent =
+      `${dateStr} · Limite máximo: ${LIMIT} leads por agente · ${RAW.length} agentes carregados`;
+
+    // Update last updated
+    document.getElementById('lastUpdated').textContent =
+      `Atualizado: ${now.toLocaleTimeString('pt-BR')}`;
+
+    // Build table HTML
+    document.getElementById('tableContent').innerHTML = `
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortBy('nome')">Agente <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('equipe')">Equipe <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('aberto')" style="text-align:right">Aberto <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('aguardando')" style="text-align:right">Ag. Resp <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('pendente')" style="text-align:right">Pendente <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('total')">Total <span class="sort-arrow">↕</span></th>
+              <th onclick="sortBy('status')">Status <span class="sort-arrow">↕</span></th>
+              <th>Flag</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>`;
+
+    renderKPIs();
+    renderTeamFilters();
+    renderTeamDistrib();
+    renderReincidentes();
+    renderTable();
+
+  } catch (err) {
+    console.error('Erro ao carregar dados:', err);
+    document.getElementById('tableContent').innerHTML = `
+      <div class="error-state">
+        <p>⚠ Erro ao carregar dados da planilha<br><br>${err.message}</p>
+        <p style="font-size:10px;margin-top:8px;color:var(--muted)">Verifique se a planilha está publicada publicamente</p>
+        <button onclick="loadData()" style="margin-top:12px">Tentar novamente</button>
+      </div>`;
+  } finally {
+    refreshBtn.classList.remove('loading');
+  }
+}
+
+// ===== RENDER HELPERS =====
 function getBarColor(pct) {
   if (pct >= 1) return 'var(--danger)';
   if (pct >= 0.8) return 'var(--warn)';
@@ -404,13 +538,13 @@ function getBarColor(pct) {
 }
 
 function statusPill(s) {
-  const lower = s.toLowerCase();
-  if (lower.includes('disponível')) return `<span class="pill disponivel">Disponível</span>`;
+  const lower = (s || '').toLowerCase();
+  if (lower.includes('disponível') || lower.includes('disponivel')) return `<span class="pill disponivel">Disponível</span>`;
   if (lower.includes('offline')) return `<span class="pill offline">Offline</span>`;
   return `<span class="pill ativo">${s}</span>`;
 }
 
-// Render KPIs
+// ===== KPIs =====
 function renderKPIs() {
   const above = RAW.filter(d => d.total > LIMIT);
   const reinc = RAW.filter(d => d.reincidente);
@@ -440,10 +574,10 @@ function renderKPIs() {
   `;
 }
 
-// Team filters
+// ===== TEAM FILTERS =====
 function renderTeamFilters() {
   const wrap = document.getElementById('teamFilters');
-  const frag = teams.map(t => `<button class="filter-btn" onclick="setTeam('${t}', this)">${t.split(' ')[0]}</button>`).join('');
+  const frag = teams.map(t => `<button class="filter-btn" onclick="setTeam('${t.replace(/'/g,"\\'")}', this)">${t.split(' ')[0]}</button>`).join('');
   wrap.innerHTML = `<button class="filter-btn active" onclick="setTeam('all', this)">Todas equipes</button>` + frag;
 }
 
@@ -470,7 +604,11 @@ function sortBy(col) {
   renderTable();
 }
 
+// ===== TABLE =====
 function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  if (!tbody) return;
+
   const q = document.getElementById('searchInput').value.toLowerCase();
   let data = RAW.filter(d => {
     if (q && !d.nome.toLowerCase().includes(q) && !d.equipe.toLowerCase().includes(q)) return false;
@@ -481,7 +619,6 @@ function renderTable() {
     return true;
   });
 
-  // Sort
   data.sort((a,b) => {
     const v = col => typeof a[col] === 'string' ? a[col].localeCompare(b[col]) : a[col] - b[col];
     return sortDir * v(sortCol);
@@ -489,7 +626,6 @@ function renderTable() {
 
   document.getElementById('tableCount').textContent = `${data.length} agente${data.length!==1?'s':''}`;
 
-  const tbody = document.getElementById('tableBody');
   tbody.innerHTML = data.map(d => {
     const pct = Math.min(d.total / LIMIT, 1.2);
     const barW = Math.min(pct * 100, 100);
@@ -516,7 +652,7 @@ function renderTable() {
   }).join('');
 }
 
-// Team distribution panel
+// ===== TEAM DISTRIBUTION =====
 function renderTeamDistrib() {
   const wrap = document.getElementById('teamDistrib');
   const teamData = teams.map(t => {
@@ -538,7 +674,7 @@ function renderTeamDistrib() {
   }).join('');
 }
 
-// Reincidentes panel
+// ===== REINCIDENTES =====
 function renderReincidentes() {
   const list = RAW.filter(d => d.reincidente).sort((a,b) => b.total - a.total);
   document.getElementById('reincCount').textContent = list.length;
@@ -557,12 +693,11 @@ function renderReincidentes() {
   }).join('');
 }
 
-// Init
-renderKPIs();
-renderTeamFilters();
-renderTeamDistrib();
-renderReincidentes();
-renderTable();
+// ===== AUTO-REFRESH every 5 minutes =====
+setInterval(loadData, 5 * 60 * 1000);
+
+// ===== INIT =====
+loadData();
 </script>
 </body>
 </html>

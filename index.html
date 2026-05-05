@@ -67,7 +67,7 @@ iframe {
 
 <button onclick="loadPage('disponivel.html', this)">Disponível / 1º resposta</button>
 
-<button onclick="loadPage('carteira.html', this)">Carteira de Clientes</button>
+<button id="btnCarteira de Clientes" onclick="loadPage('carteira.html', this)">Carteira de Clientes</button>
 
 <button onclick="loadPage('teste.html', this)">Teste</button>
  
@@ -97,6 +97,7 @@ function loadPage(page, element){
 function ocultarBotoes() {
   document.getElementById('btnConversao').style.display = 'none';
   document.getElementById('btnDisparos').style.display = 'none';
+  document.getElementById('btnCarteira de Clientes').style.display = 'none';
   document.getElementById('btnLeads').style.display = 'none';
   document.getElementById('btnQualidade').style.display = 'none';
   document.getElementById('btnAbsenteismo').style.display = 'none';

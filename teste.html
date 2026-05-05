@@ -1,52 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Leads</title>
+
+<style>
+body { font-family: Arial; background:#f5f7fb; padding:20px; }
+h1 { margin-bottom:10px; }
+
+.controls { margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap; }
+button { padding:6px 12px; cursor:pointer; border:1px solid #ccc; background:#fff; }
+input { padding:6px; }
+
+.card { background:#fff; padding:15px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+
+.reinc-item { padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; }
+.reinc-item.danger { background:#ffecec; }
+</style>
+</head>
+
+<body>
+
+<h1>📊 Dashboard de Leads</h1>
+
+<div class="controls">
+  <strong>Mês:</strong>
+  <button onclick="setMes(0)">Jan</button>
+  <button onclick="setMes(1)">Fev</button>
+  <button onclick="setMes(2)">Mar</button>
+  <button onclick="setMes(3)">Abr</button>
+  <button onclick="setMes(4)">Mai</button>
+  <button onclick="setMes(5)">Jun</button>
+
+  <strong>Período:</strong>
+  <input type="date" id="inicio">
+  <input type="date" id="fim">
+  <button onclick="setPeriodo()">Aplicar</button>
+</div>
+
+<div class="card">
+  <h3>⚠ Reincidentes</h3>
+  <div id="reincList"></div>
+</div>
+
 <script>
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnlwiAP5sVy5NpzqrHObGJcqL6BsyzNoWNM8CC-iBD74TkHRDYVzFHOm14WEBv8mwXmn0N2lgX87pH/pub?output=csv';
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnlwiAP5sVy5NpzqrHObGJcqL6BsyzNoWNM8CC-iBD74TkHRDYVzFHOm14WEBv8mwXmn0N2lgX87pH/gviz/tq?tqx=out:json';
 const LIMIT = 150;
 
-let RAW = [], DATA_ORIGINAL = [];
-let filtroMes = null, dataInicio = null, dataFim = null;
+let DATA_ORIGINAL = [];
+let RAW = [];
 
-// ===== PARSE CSV COM DATA =====
-function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  const headers = lines[0].toLowerCase().split(',');
+let filtroMes = null;
+let dataInicio = null;
+let dataFim = null;
 
-  const getIndex = (names) => {
-    for (let n of names) {
-      let i = headers.findIndex(h => h.includes(n));
-      if (i !== -1) return i;
-    }
-    return -1;
-  };
+async function loadData() {
+  try {
+    const res = await fetch(SHEET_URL);
+    const text = await res.text();
 
-  const col = {
-    nome: getIndex(['nome','agente']),
-    equipe: getIndex(['equipe']),
-    total: getIndex(['total']),
-    aguardando: getIndex(['aguardando']),
-    data: getIndex(['data','dia'])
-  };
+    const json = JSON.parse(text.substring(47).slice(0, -2));
+    const rows = json.table.rows;
 
-  return lines.slice(1).map(l => {
-    const c = l.split(',');
+    DATA_ORIGINAL = rows.map(r => {
+      const c = r.c;
+      return {
+        nome: c[0]?.v || '',
+        equipe: c[1]?.v || '',
+        total: parseInt(c[2]?.v) || 0,
+        aguardando: parseInt(c[3]?.v) || 0,
+        data: c[4]?.v ? new Date(c[4].v) : null
+      };
+    });
 
-    let data = col.data !== -1 ? new Date(c[col.data]) : null;
+    RAW = [...DATA_ORIGINAL];
 
-    return {
-      nome: c[col.nome],
-      equipe: c[col.equipe],
-      total: parseInt(c[col.total]) || 0,
-      aguardando: parseInt(c[col.aguardando]) || 0,
-      data: data
-    };
-  });
+    processarReincidentes();
+    renderReincidentes();
+
+  } catch (e) {
+    console.error(e);
+    alert('Erro ao carregar dados da planilha');
+  }
 }
 
-// ===== FILTRO DATA =====
-function aplicarFiltroData() {
+function aplicarFiltro() {
   RAW = DATA_ORIGINAL.filter(d => {
-    if (!d.data) return true;
 
-    if (filtroMes !== null && d.data.getMonth() !== filtroMes) return false;
+    if (filtroMes !== null && d.data) {
+      if (d.data.getMonth() !== filtroMes) return false;
+    }
 
     if (dataInicio && d.data < dataInicio) return false;
     if (dataFim && d.data > dataFim) return false;
@@ -58,12 +102,27 @@ function aplicarFiltroData() {
   renderReincidentes();
 }
 
-// ===== REINCIDENTES REAL =====
+function setMes(m) {
+  filtroMes = m;
+  aplicarFiltro();
+}
+
+function setPeriodo() {
+  const ini = document.getElementById('inicio').value;
+  const fim = document.getElementById('fim').value;
+
+  dataInicio = ini ? new Date(ini) : null;
+  dataFim = fim ? new Date(fim) : null;
+
+  aplicarFiltro();
+}
+
 function processarReincidentes() {
   const mapa = {};
 
   RAW.forEach(d => {
     if (d.total > LIMIT) {
+
       if (!mapa[d.nome]) {
         mapa[d.nome] = {
           dias: new Set(),
@@ -71,13 +130,14 @@ function processarReincidentes() {
         };
       }
 
-      let diaStr = d.data ? d.data.toDateString() : 'sem-data';
-      mapa[d.nome].dias.add(diaStr);
+      let dia = d.data ? d.data.toDateString() : 'sem';
+      mapa[d.nome].dias.add(dia);
 
-      // indicador semanal
-      let hoje = new Date();
-      let diff = (hoje - d.data) / (1000*60*60*24);
-      if (diff <= 7) mapa[d.nome].semana++;
+      if (d.data) {
+        let hoje = new Date();
+        let diff = (hoje - d.data) / (1000*60*60*24);
+        if (diff <= 7) mapa[d.nome].semana++;
+      }
     }
   });
 
@@ -89,7 +149,6 @@ function processarReincidentes() {
   });
 }
 
-// ===== UI REINCIDENTES =====
 function renderReincidentes() {
   const list = RAW.filter(d => d.reincidente)
     .sort((a,b) => b.qtdDias - a.qtdDias);
@@ -97,40 +156,17 @@ function renderReincidentes() {
   document.getElementById('reincList').innerHTML =
     list.map(d => `
       <div class="reinc-item ${d.total > LIMIT ? 'danger':''}">
-        <div style="flex:1">
-          <div class="reinc-name">${d.nome}</div>
-          <div class="reinc-days">
-            ${d.qtdDias} dias como ofensor · ${d.semana}x na semana
-          </div>
+        <div>
+          <strong>${d.nome}</strong><br>
+          ${d.qtdDias} dias como ofensor · ${d.semana}x na semana
         </div>
-        <span class="reinc-total">${d.total}</span>
+        <div><strong>${d.total}</strong></div>
       </div>
     `).join('');
 }
 
-// ===== LOAD =====
-async function loadData() {
-  const res = await fetch(CSV_URL);
-  const text = await res.text();
-
-  DATA_ORIGINAL = parseCSV(text);
-  RAW = [...DATA_ORIGINAL];
-
-  processarReincidentes();
-  renderReincidentes();
-}
-
-// ===== CONTROLES =====
-function setMes(m) {
-  filtroMes = m;
-  aplicarFiltroData();
-}
-
-function setPeriodo() {
-  dataInicio = new Date(document.getElementById('inicio').value);
-  dataFim = new Date(document.getElementById('fim').value);
-  aplicarFiltroData();
-}
-
 loadData();
 </script>
+
+</body>
+</html>

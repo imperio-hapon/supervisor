@@ -1,0 +1,136 @@
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnlwiAP5sVy5NpzqrHObGJcqL6BsyzNoWNM8CC-iBD74TkHRDYVzFHOm14WEBv8mwXmn0N2lgX87pH/pub?output=csv';
+const LIMIT = 150;
+
+let RAW = [], DATA_ORIGINAL = [];
+let filtroMes = null, dataInicio = null, dataFim = null;
+
+// ===== PARSE CSV COM DATA =====
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].toLowerCase().split(',');
+
+  const getIndex = (names) => {
+    for (let n of names) {
+      let i = headers.findIndex(h => h.includes(n));
+      if (i !== -1) return i;
+    }
+    return -1;
+  };
+
+  const col = {
+    nome: getIndex(['nome','agente']),
+    equipe: getIndex(['equipe']),
+    total: getIndex(['total']),
+    aguardando: getIndex(['aguardando']),
+    data: getIndex(['data','dia'])
+  };
+
+  return lines.slice(1).map(l => {
+    const c = l.split(',');
+
+    let data = col.data !== -1 ? new Date(c[col.data]) : null;
+
+    return {
+      nome: c[col.nome],
+      equipe: c[col.equipe],
+      total: parseInt(c[col.total]) || 0,
+      aguardando: parseInt(c[col.aguardando]) || 0,
+      data: data
+    };
+  });
+}
+
+// ===== FILTRO DATA =====
+function aplicarFiltroData() {
+  RAW = DATA_ORIGINAL.filter(d => {
+    if (!d.data) return true;
+
+    if (filtroMes !== null && d.data.getMonth() !== filtroMes) return false;
+
+    if (dataInicio && d.data < dataInicio) return false;
+    if (dataFim && d.data > dataFim) return false;
+
+    return true;
+  });
+
+  processarReincidentes();
+  renderReincidentes();
+}
+
+// ===== REINCIDENTES REAL =====
+function processarReincidentes() {
+  const mapa = {};
+
+  RAW.forEach(d => {
+    if (d.total > LIMIT) {
+      if (!mapa[d.nome]) {
+        mapa[d.nome] = {
+          dias: new Set(),
+          semana: 0
+        };
+      }
+
+      let diaStr = d.data ? d.data.toDateString() : 'sem-data';
+      mapa[d.nome].dias.add(diaStr);
+
+      // indicador semanal
+      let hoje = new Date();
+      let diff = (hoje - d.data) / (1000*60*60*24);
+      if (diff <= 7) mapa[d.nome].semana++;
+    }
+  });
+
+  RAW.forEach(d => {
+    let r = mapa[d.nome];
+    d.reincidente = r && r.dias.size > 1;
+    d.qtdDias = r ? r.dias.size : 0;
+    d.semana = r ? r.semana : 0;
+  });
+}
+
+// ===== UI REINCIDENTES =====
+function renderReincidentes() {
+  const list = RAW.filter(d => d.reincidente)
+    .sort((a,b) => b.qtdDias - a.qtdDias);
+
+  document.getElementById('reincList').innerHTML =
+    list.map(d => `
+      <div class="reinc-item ${d.total > LIMIT ? 'danger':''}">
+        <div style="flex:1">
+          <div class="reinc-name">${d.nome}</div>
+          <div class="reinc-days">
+            ${d.qtdDias} dias como ofensor · ${d.semana}x na semana
+          </div>
+        </div>
+        <span class="reinc-total">${d.total}</span>
+      </div>
+    `).join('');
+}
+
+// ===== LOAD =====
+async function loadData() {
+  const res = await fetch(CSV_URL);
+  const text = await res.text();
+
+  DATA_ORIGINAL = parseCSV(text);
+  RAW = [...DATA_ORIGINAL];
+
+  processarReincidentes();
+  renderReincidentes();
+}
+
+// ===== CONTROLES =====
+function setMes(m) {
+  filtroMes = m;
+  aplicarFiltroData();
+}
+
+function setPeriodo() {
+  dataInicio = new Date(document.getElementById('inicio').value);
+  dataFim = new Date(document.getElementById('fim').value);
+  aplicarFiltroData();
+}
+
+loadData();
+</script>

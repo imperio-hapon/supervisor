@@ -1,1 +1,880 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Central de Performance</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#F0F4F8;color:#1A2332;font-size:14px}
+  :root{
+    --green:#10B981;--green-lt:#D1FAE5;
+    --amber:#F59E0B;--amber-lt:#FEF3C7;
+    --red:#EF4444;  --red-lt:#FEE2E2;
+    --blue:#2563EB; --blue-lt:#DBEAFE;
+    --surface:#fff; --border:#E2E8F0;
+    --text:#1A2332; --sub:#4A5568; --muted:#94A3B8;
+  }
+  /* HEADER */
+  .header{background:linear-gradient(135deg,#1A2332 0%,#2D3F5C 100%);padding:20px 28px 0;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  .header-top{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:18px}
+  .header-label{font-size:9px;letter-spacing:4px;color:#7EB3FF;text-transform:uppercase;font-weight:700;margin-bottom:4px}
+  .header-title{font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px}
+  .header-sub{font-size:11px;color:#8FA3C0;margin-top:3px}
+  .kpi-strip{display:flex;gap:8px;flex-wrap:wrap}
+  .kpi-box{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 14px;text-align:center;min-width:110px}
+  .kpi-val{font-size:20px;font-weight:900;letter-spacing:-.5px}
+  .kpi-label{font-size:9px;color:rgba(255,255,255,.6);margin-top:2px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+  .kpi-sub{font-size:12px;font-weight:700;margin-top:2px}
+  /* TABS */
+  .tabs{display:flex;gap:2px}
+  .tab-btn{background:transparent;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,.5);padding:9px 20px;font-size:13px;cursor:pointer;font-weight:500;transition:all .15s;font-family:inherit}
+  .tab-btn.active{color:#7EB3FF;border-bottom-color:#7EB3FF;font-weight:700}
+  /* PANELS */
+  .main{padding:20px 28px;max-width:1380px}
+  .panel{display:none}.panel.active{display:block}
+  /* FILTER BAR */
+  .filter-bar{background:var(--surface);border-radius:12px;padding:12px 16px;margin-bottom:16px;border:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  .filter-group{display:flex;flex-direction:column;gap:5px}
+  .filter-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase}
+  .filter-bar select{padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:#F8FAFC;outline:none;cursor:pointer;font-family:inherit;min-width:160px}
+  .btn-group{display:flex;gap:4px}
+  .btn-toggle{background:transparent;border:1px solid var(--border);color:var(--sub);border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:400;font-family:inherit;transition:all .15s;white-space:nowrap}
+  .btn-toggle.active{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+  /* EQUIPE CHIP BUTTONS */
+  .equipe-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .equipe-btn{border:2px solid transparent;border-radius:20px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;opacity:.7}
+  .equipe-btn.active{opacity:1;transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.15)}
+  /* CARD */
+  .card{background:var(--surface);border-radius:12px;padding:18px 20px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:16px}
+  .card-title{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
+  /* KPI GRID */
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+  .kpi-inner{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .kpi-inner .val{font-size:22px;font-weight:900;letter-spacing:-.5px}
+  .kpi-inner .lbl{font-size:11px;color:var(--muted);margin-top:2px;font-weight:500}
+  .kpi-inner .sub{font-size:11px;margin-top:2px;font-weight:600}
+  /* TOP10 */
+  .top10-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  .top10-card{background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  .top10-header{padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+  .top10-strip{width:4px;height:18px;border-radius:2px;flex-shrink:0}
+  .top10-title{font-size:13px;font-weight:700}
+  .top10-sub{font-size:10px;color:var(--sub)}
+  .top10-col-head{display:grid;grid-template-columns:28px 1fr 60px 60px;gap:6px;padding:6px 14px;font-size:9px;color:var(--muted);letter-spacing:.7px;text-transform:uppercase;background:#FAFBFD;border-bottom:1px solid var(--border)}
+  .top10-row{display:grid;grid-template-columns:28px 1fr 60px 60px;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid #F0F4F8;transition:background .12s}
+  .top10-row:hover{background:#F7FAFB}
+  .top10-medal{text-align:center;font-size:14px}
+  .top10-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top10-badge{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600}
+  .top10-leads{text-align:right;font-size:11px;color:var(--sub)}
+  .top10-pct{text-align:right;font-size:13px;font-weight:800}
+  /* SEARCH */
+  .search-bar{background:var(--surface);border-radius:12px;padding:12px 16px;margin-bottom:12px;border:1px solid var(--border);display:flex;gap:12px;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  .search-wrap{position:relative;flex:1;max-width:300px}
+  .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px}
+  .search-wrap input{width:100%;padding:7px 10px 7px 28px;border:1px solid var(--border);border-radius:8px;font-size:12px;outline:none;background:#F8FAFC;font-family:inherit}
+  /* TABLE */
+  .table-wrap{background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  table{width:100%;border-collapse:collapse}
+  th{padding:8px 10px;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.7px;text-transform:uppercase;background:#F7F9FC;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap}
+  th:hover{color:var(--blue)}
+  th.sorted{color:var(--blue)}
+  td{padding:9px 10px;border-bottom:1px solid var(--border);transition:background .1s}
+  tr:hover td{background:#F7F9FC}
+  .td-right{text-align:right}
+  .eq-badge{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;white-space:nowrap}
+  .status-badge{font-size:9px;padding:2px 7px;border-radius:6px;font-weight:700;white-space:nowrap}
+  .mini-bar-wrap{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+  .mini-bar-bg{width:48px;height:5px;border-radius:3px;background:#F1F5F9;overflow:hidden}
+  .mini-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+  .pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border);background:#FAFBFD}
+  .pagination span{font-size:11px;color:var(--sub)}
+  .pg-btns{display:flex;gap:4px}
+  .pg-btn{padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);cursor:pointer;font-size:11px;font-family:inherit}
+  .pg-btn:disabled{background:#F1F5F9;color:var(--muted);cursor:default}
+  /* SUP CHIPS INFO */
+  .sup-chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .sup-chip{border-radius:10px;padding:10px 14px;min-width:150px;border:1px solid transparent}
+  .sup-chip-name{font-size:11px;font-weight:700;margin-bottom:4px}
+  .sup-chip-count{font-size:11px}
+  .sup-chip-rates{display:flex;gap:8px;margin-top:4px}
+  .sup-chip-avg{font-size:10px}
+  /* COMPARATIVO EQUIPES */
+  .comp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+  .comp-card{background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .comp-header{padding:10px 12px;font-size:11px;font-weight:800;text-align:center;border-bottom:1px solid var(--border)}
+  .comp-row{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid #F0F4F8;font-size:11px}
+  .comp-row:last-child{border-bottom:none}
+  .comp-lbl{color:var(--muted);font-size:10px}
+  .comp-val{font-weight:700;font-size:13px}
+  .comp-sub{font-size:10px;font-weight:600}
+  .comp-bar-wrap{padding:8px 12px 10px;border-bottom:1px solid #F0F4F8}
+  .comp-bar-track{height:6px;border-radius:3px;background:#F1F5F9;overflow:hidden;margin-top:4px}
+  .comp-bar-fill{height:100%;border-radius:3px;transition:width .4s}
+  @media(max-width:1100px){.comp-grid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.top10-grid{grid-template-columns:1fr}.comp-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.kpi-grid{grid-template-columns:1fr}.header-top{flex-direction:column}.comp-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
 
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-label">HAPVIDA · JR VENDAS CHAT</div>
+      <div class="header-title">Central de Performance</div>
+      <div class="header-sub" id="period-label">Carregando...</div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi-box"><div class="kpi-val" id="h-leads" style="color:#7EB3FF">–</div><div class="kpi-label">Leads Totais</div></div>
+      <div class="kpi-box"><div class="kpi-val" id="h-sem" style="color:#FC8181">–</div><div class="kpi-label">Enc. s/ Resposta</div><div class="kpi-sub" id="h-sem-pct" style="color:#FC8181"></div></div>
+      <div class="kpi-box"><div class="kpi-val" id="h-ate2" style="color:#68D391">–</div><div class="kpi-label">Respondidos ≤2min</div><div class="kpi-sub" id="h-ate2-pct" style="color:#68D391"></div></div>
+      <div class="kpi-box"><div class="kpi-val" id="h-gt2" style="color:#F6AD55">–</div><div class="kpi-label">Respondidos &gt;2min</div><div class="kpi-sub" id="h-gt2-pct" style="color:#F6AD55"></div></div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(0)">Primeira Resposta</button>
+    <button class="tab-btn" onclick="switchTab(1)">Disponibilidade</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- PANEL 0: PRIMEIRA RESPOSTA -->
+<div class="panel active" id="panel-0">
+  <div class="filter-bar">
+    <div class="filter-group">
+      <div class="filter-label">Período</div>
+      <div class="btn-group">
+        <button class="btn-toggle" id="btn-acum-0" onclick="setPeriod('dia',0)">Por Dia</button>
+        <button class="btn-toggle active" id="btn-dia-0" onclick="setPeriod('acum',0)">Acumulado</button>
+      </div>
+    </div>
+    <div class="filter-group" id="date-wrap-0" style="display:none">
+      <div class="filter-label">Data</div>
+      <select id="sel-date-0" onchange="render()"></select>
+    </div>
+  </div>
+
+  <!-- EQUIPE BUTTONS -->
+  <div class="equipe-btns" id="equipe-btns-0"></div>
+
+  <!-- COMPARATIVO (visível só quando Todas as Equipes) -->
+  <div id="pr-comparativo" style="display:none"></div>
+
+  <div class="kpi-grid" id="pr-kpis"></div>
+
+  <!-- TOP 10 -->
+  <div class="top10-grid">
+    <div class="top10-card">
+      <div class="top10-header" style="background:#D1FAE5">
+        <div class="top10-strip" style="background:#10B981"></div>
+        <div class="top10-title">Top 10 Melhores</div>
+        <div class="top10-sub">maior % ≤2min</div>
+      </div>
+      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Leads</div><div style="text-align:right">%≤2min</div></div>
+      <div id="pr-top10-best"></div>
+    </div>
+    <div class="top10-card">
+      <div class="top10-header" style="background:#FEE2E2">
+        <div class="top10-strip" style="background:#EF4444"></div>
+        <div class="top10-title">Top 10 Ofensores</div>
+        <div class="top10-sub">menor % ≤2min</div>
+      </div>
+      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Leads</div><div style="text-align:right">%≤2min</div></div>
+      <div id="pr-top10-worst"></div>
+    </div>
+  </div>
+
+  <!-- SEARCH + TABLE -->
+  <div class="search-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="ag-search" placeholder="Buscar promotor..." oninput="agPage=0;renderAgTable()">
+    </div>
+    <span style="font-size:12px;color:var(--sub)"><b id="ag-count"></b> promotores</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortAg('name')" id="th-name" style="text-align:left">Promotor ↕</th>
+          <th>Equipe</th>
+          <th onclick="sortAg('total_leads')" id="th-total_leads" class="td-right sorted">Total Leads ↓</th>
+          <th onclick="sortAg('ate1')" id="th-ate1" class="td-right">≤1min ↕</th>
+          <th onclick="sortAg('ate2')" id="th-ate2" class="td-right">1-2min ↕</th>
+          <th onclick="sortAg('gt2')" id="th-gt2" class="td-right">&gt;2min ↕</th>
+          <th onclick="sortAg('pctAte2')" id="th-pctAte2" class="td-right">% ≤2min ↕</th>
+          <th class="td-right">Status</th>
+        </tr>
+      </thead>
+      <tbody id="ag-tbody"></tbody>
+    </table>
+    <div class="pagination">
+      <span id="ag-page-info"></span>
+      <div class="pg-btns">
+        <button class="pg-btn" id="ag-pg-first"  onclick="agPage=0;renderAgTable()">«</button>
+        <button class="pg-btn" id="ag-pg-prev"   onclick="agPage=Math.max(0,agPage-1);renderAgTable()">‹</button>
+        <button class="pg-btn" id="ag-pg-next"   onclick="agPage=Math.min(agTotalPages-1,agPage+1);renderAgTable()">›</button>
+        <button class="pg-btn" id="ag-pg-last"   onclick="agPage=agTotalPages-1;renderAgTable()">»</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 1: DISPONIBILIDADE -->
+<div class="panel" id="panel-1">
+  <div class="filter-bar">
+    <div class="filter-group">
+      <div class="filter-label">Período</div>
+      <div class="btn-group">
+        <button class="btn-toggle" id="btn-acum-1" onclick="setPeriod('dia',1)">Por Dia</button>
+        <button class="btn-toggle active" id="btn-dia-1" onclick="setPeriod('acum',1)">Acumulado</button>
+      </div>
+    </div>
+    <div class="filter-group" id="date-wrap-1" style="display:none">
+      <div class="filter-label">Data</div>
+      <select id="sel-date-1" onchange="render()"></select>
+    </div>
+  </div>
+
+  <!-- EQUIPE BUTTONS -->
+  <div class="equipe-btns" id="equipe-btns-1"></div>
+
+  <div class="kpi-grid" id="av-kpis"></div>
+
+  <!-- TOP 10 DISPONIBILIDADE -->
+  <div class="top10-grid">
+    <div class="top10-card">
+      <div class="top10-header" style="background:#D1FAE5">
+        <div class="top10-strip" style="background:#10B981"></div>
+        <div class="top10-title">Top 10 Mais Disponíveis</div>
+        <div class="top10-sub">maior média diária de horas</div>
+      </div>
+      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Total h</div><div style="text-align:right">Média/dia</div></div>
+      <div id="av-top10-best"></div>
+    </div>
+    <div class="top10-card">
+      <div class="top10-header" style="background:#FEE2E2">
+        <div class="top10-strip" style="background:#EF4444"></div>
+        <div class="top10-title">Top 10 Menos Disponíveis</div>
+        <div class="top10-sub">menor média diária de horas</div>
+      </div>
+      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Total h</div><div style="text-align:right">Média/dia</div></div>
+      <div id="av-top10-worst"></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortAv('name')" id="av-th-name" style="text-align:left">Promotor ↕</th>
+          <th>Equipe</th>
+          <th onclick="sortAv('totalH')" id="av-th-totalH" class="td-right">Total Horas ↕</th>
+          <th onclick="sortAv('days')"   id="av-th-days"   class="td-right">Dias ↕</th>
+          <th onclick="sortAv('avgH')"   id="av-th-avgH"   class="td-right sorted">Média Diária ↓</th>
+          <th class="td-right">Status</th>
+        </tr>
+      </thead>
+      <tbody id="av-tbody"></tbody>
+    </table>
+    <div class="pagination">
+      <span id="av-page-info"></span>
+      <div class="pg-btns">
+        <button class="pg-btn" id="av-pg-first" onclick="avPage=0;renderAvTable()">«</button>
+        <button class="pg-btn" id="av-pg-prev"  onclick="avPage=Math.max(0,avPage-1);renderAvTable()">‹</button>
+        <button class="pg-btn" id="av-pg-next"  onclick="avPage=Math.min(avTotalPages-1,avPage+1);renderAvTable()">›</button>
+        <button class="pg-btn" id="av-pg-last"  onclick="avPage=avTotalPages-1;renderAvTable()">»</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ── GOOGLE SHEETS ─────────────────────────────────────────────────────────────
+const SHEET_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vROvS5snM-Nr6L1KRvAhEVyUyyRx6n2bOo7Lq-ZqEuaOBofFUOWqKAgO7LX-o4aJHJuKTR3olNA9Lsj/pub";
+
+// ── RUNTIME DATA ──────────────────────────────────────────────────────────────
+let RAW_BY_DAY = [];
+let RAW_AVAIL  = [];
+let ALL_DATES  = [];
+let ALL_SUPS   = [];
+
+// ── STATE (declared here so init() can reference it) ──────────────────────────
+const state = {
+  dateMode: ['acum','acum'],
+  selDate:  ['',''],
+  selSup:   ['Todos','Todos'],
+};
+let agSortCol='total_leads', agSortDir=-1, agPage=0, agTotalPages=1;
+let avSortCol='avgH',        avSortDir=-1, avPage=0, avTotalPages=1;
+const PAGE = 15;
+
+// ── CSV PARSER ────────────────────────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  return lines.slice(1).map(line => {
+    const fields = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      if (line[i] === '"') { inQ = !inQ; }
+      else if (line[i] === ',' && !inQ) { fields.push(cur); cur = ''; }
+      else { cur += line[i]; }
+    }
+    fields.push(cur);
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (fields[i] || '').trim(); });
+    return obj;
+  });
+}
+
+function csvUrl(sheet) {
+  return SHEET_BASE + '?output=csv&sheet=' + encodeURIComponent(sheet);
+}
+
+// ── LOAD DATA ─────────────────────────────────────────────────────────────────
+async function loadData() {
+  showLoading(true);
+  try {
+    const [prResp, avResp] = await Promise.all([
+      fetch(csvUrl('primeira resposta')),
+      fetch(csvUrl('disponibilidade'))
+    ]);
+    if (!prResp.ok) throw new Error('Falha HTTP ' + prResp.status + ' na aba "primeira resposta"');
+    if (!avResp.ok) throw new Error('Falha HTTP ' + avResp.status + ' na aba "disponibilidade"');
+    const [prText, avText] = await Promise.all([prResp.text(), avResp.text()]);
+
+    // ── PRIMEIRA RESPOSTA → RAW_BY_DAY ────────────────────────────────────────
+    // Expected cols: POWER_BI, SUPERVISOR, date_str, total_leads, ate1, ate2, gt2, sem_resp
+    const prRows = parseCSV(prText);
+    RAW_BY_DAY = prRows.map(r => ({
+      POWER_BI:    (r['POWER_BI']    || r['power_bi']    || '').trim(),
+      SUPERVISOR:  (r['SUPERVISOR']  || r['supervisor']  || '').trim(),
+      date_str:    (r['date_str']    || r['data']        || r['date'] || '').trim(),
+      total_leads: +r['total_leads'] || 0,
+      ate1:        +r['ate1']        || 0,
+      ate2:        +r['ate2']        || 0,
+      gt2:         +r['gt2']         || 0,
+      sem_resp:    +r['sem_resp']    || 0,
+    })).filter(r => r.POWER_BI && r.date_str);
+
+    // ── DISPONIBILIDADE → RAW_AVAIL ───────────────────────────────────────────
+    // Raw sheet cols: Agent Name, Date, HORARIO, Reason, SITUAÇÃO, PF OU PME, SUPERVISOR, TEMPO LOGADO, ...
+    // We aggregate: per (POWER_BI = "Agent Name", SUPERVISOR, date_str = Date)
+    // avail_hours = sum of TEMPO LOGADO (HH:MM:SS) where SITUAÇÃO === 'Disponível'
+    const avRows = parseCSV(avText);
+
+    function hmsToH(v) {
+      if (!v || !v.trim()) return 0;
+      const p = v.trim().split(':');
+      if (p.length === 3) return (+p[0]) + (+p[1])/60 + (+p[2])/3600;
+      if (p.length === 2) return (+p[0]) + (+p[1])/60;
+      return 0;
+    }
+    function fmtDate(v) {
+      if (!v) return '';
+      // Accept DD/MM/YYYY or YYYY-MM-DD or DD/MM/YYYY HH:MM:SS
+      const s = v.trim().split(' ')[0];
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+        const [d,m,y] = s.split('/'); return y+'-'+m+'-'+d;
+      }
+      return s;
+    }
+
+    // Build aggregation map keyed by "POWER_BI|SUPERVISOR|date_str"
+    const avMap = {};
+    avRows.forEach(r => {
+      const agent = (r['Agent Name'] || r['POWER_BI'] || r['power_bi'] || '').trim();
+      const sup   = (r['SUPERVISOR'] || r['supervisor'] || '').trim();
+      const date  = fmtDate(r['Date'] || r['date_str'] || r['data'] || '');
+      const sit   = (r['SITUAÇÃO'] || r['SITUACAO'] || r['situacao'] || '').trim();
+      const tempo = r['TEMPO LOGADO'] || r['tempo_logado'] || r['avail_hours'] || '';
+      if (!agent || !date) return;
+      const key = agent + '|' + sup + '|' + date;
+      if (!avMap[key]) avMap[key] = { POWER_BI: agent, SUPERVISOR: sup, date_str: date, avail_hours: 0 };
+      // Sum hours only for "Disponível" status
+      if (sit.toLowerCase() === 'disponível' || sit.toLowerCase() === 'disponivel') {
+        avMap[key].avail_hours += hmsToH(tempo);
+      }
+    });
+    RAW_AVAIL = Object.values(avMap).filter(r => r.POWER_BI && r.date_str);
+
+    // ── DERIVE DATES & SUPS ───────────────────────────────────────────────────
+    const dateSet = new Set([...RAW_BY_DAY.map(r=>r.date_str), ...RAW_AVAIL.map(r=>r.date_str)]);
+    ALL_DATES = [...dateSet].filter(Boolean).sort();
+    const supSet = new Set([...RAW_BY_DAY.map(r=>r.SUPERVISOR), ...RAW_AVAIL.map(r=>r.SUPERVISOR)]);
+    ALL_SUPS = [...supSet].filter(Boolean).sort();
+
+    showLoading(false);
+    init();
+  } catch(err) {
+    showLoading(false);
+    showError(err.message);
+    console.error(err);
+  }
+}
+
+function showLoading(show) {
+  let el = document.getElementById('loading-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'loading-overlay';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(26,35,50,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;font-family:Segoe UI,sans-serif;gap:14px';
+    document.body.appendChild(el);
+  }
+  if (show) {
+    el.style.display = 'flex';
+    el.innerHTML = '<div style="font-size:34px">⏳</div>'
+      + '<div style="font-size:17px;font-weight:700">Carregando dados da planilha...</div>'
+      + '<div style="font-size:12px;color:#8FA3C0">Conectando ao Google Sheets</div>';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function showError(msg) {
+  let el = document.getElementById('loading-overlay');
+  if (!el) { el = document.createElement('div'); el.id='loading-overlay'; document.body.appendChild(el); }
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(26,35,50,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;font-family:Segoe UI,sans-serif;gap:12px;padding:40px;text-align:center';
+  el.style.display = 'flex';
+  el.innerHTML = '<div style="font-size:36px">⚠️</div>'
+    + '<div style="font-size:18px;font-weight:800;color:#FC8181">Erro ao carregar dados</div>'
+    + '<div style="font-size:13px;color:#CBD5E0;max-width:480px;line-height:1.6">' + msg + '</div>'
+    + '<div style="font-size:11px;color:#94A3B8;margin-top:4px">Verifique se a planilha está publicada e as abas se chamam exatamente:<br>'
+    + '<b style="color:#7EB3FF">primeira resposta</b> &nbsp;e&nbsp; <b style="color:#7EB3FF">disponibilidade</b></div>'
+    + '<button onclick="loadData()" style="margin-top:14px;padding:10px 28px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700">🔄 Tentar novamente</button>';
+}
+
+// ── SUP COLORS ────────────────────────────────────────────────────────────────
+const SUP_C = {
+  'ADMINISTRATIVO':    {bg:'#E8F4F8',tc:'#2C7A9E'},
+  'BENVE':             {bg:'#F0F0FF',tc:'#553C9A'},
+  'EQUIPE ALFA':       {bg:'#FFF5F5',tc:'#C53030'},
+  'EQUIPE FENIX':      {bg:'#FFF8E8',tc:'#975A16'},
+  'EQUIPE GLADIADORES':{bg:'#E8F8EE',tc:'#276749'},
+};
+const medals=['🥇','🥈','🥉'];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let currentTab=0;
+// state, sort vars and PAGE declared above in loader block
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmt(n){return Math.round(n).toLocaleString('pt-BR');}
+function pct(a,b){return b>0?((a/b)*100).toFixed(1)+'%':'–';}
+
+function filterPR(t){
+  const dm=state.dateMode[t],sd=state.selDate[t],sup=state.selSup[t];
+  return RAW_BY_DAY.filter(r=>{
+    if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
+    if(dm==='dia')return r.date_str===sd;
+    return true;
+  });
+}
+function filterAv(t){
+  const dm=state.dateMode[t],sd=state.selDate[t],sup=state.selSup[t];
+  return RAW_AVAIL.filter(r=>{
+    if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
+    if(dm==='dia')return r.date_str===sd;
+    return true;
+  });
+}
+function aggTotals(rows){
+  const t={total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
+  rows.forEach(r=>{t.total_leads+=r.total_leads;t.ate1+=r.ate1;t.ate2+=r.ate2;t.gt2+=r.gt2;t.sem_resp+=r.sem_resp;});
+  return t;
+}
+function aggByAgent(rows){
+  const m={};
+  rows.forEach(r=>{
+    if(!m[r.POWER_BI])m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
+    const a=m[r.POWER_BI];
+    a.total_leads+=r.total_leads;a.ate1+=r.ate1;a.ate2+=r.ate2;a.gt2+=r.gt2;a.sem_resp+=r.sem_resp;
+  });
+  return Object.values(m).map(a=>({...a,pctAte2:a.total_leads>0?(a.ate1+a.ate2)/a.total_leads*100:0}));
+}
+function aggBySup(rows){
+  const m={};
+  rows.forEach(r=>{
+    if(!m[r.SUPERVISOR])m[r.SUPERVISOR]={sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
+    const s=m[r.SUPERVISOR];
+    s.total_leads+=r.total_leads;s.ate1+=r.ate1;s.ate2+=r.ate2;s.gt2+=r.gt2;s.sem_resp+=r.sem_resp;
+  });
+  return Object.values(m);
+}
+function aggAvByAgent(rows){
+  const m={};
+  rows.forEach(r=>{
+    if(!m[r.POWER_BI])m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,totalH:0,days:0};
+    m[r.POWER_BI].totalH+=r.avail_hours;
+    m[r.POWER_BI].days++;
+  });
+  return Object.values(m).map(a=>({...a,avgH:a.days>0?a.totalH/a.days:0}));
+}
+function availStatus(v){
+  if(v>=6)return{label:'Ideal',    color:'#10B981',bg:'#D1FAE5'};
+  if(v>=4)return{label:'Aceitável',color:'#F59E0B',bg:'#FEF3C7'};
+  return        {label:'Crítico',  color:'#EF4444',bg:'#FEE2E2'};
+}
+function agStatus(p){
+  if(p>=80)return{label:'Aceitável',color:'#10B981',bg:'#D1FAE5'};
+  if(p>=50)return{label:'Atenção',  color:'#F59E0B',bg:'#FEF3C7'};
+  return         {label:'Crítico',  color:'#EF4444',bg:'#FEE2E2'};
+}
+function supBadge(sup){
+  const sc=SUP_C[sup]||{bg:'#EEE',tc:'#666'};
+  return `<span class="eq-badge" style="background:${sc.bg};color:${sc.tc}">${sup}</span>`;
+}
+function periodLabel(){
+  const t=currentTab,dm=state.dateMode[t];
+  if(dm==='acum')return'Acumulado (abr/26)';
+  const d=new Date(state.selDate[t]+'T12:00:00');
+  return d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+}
+
+// ── RENDER EQUIPE BUTTONS ─────────────────────────────────────────────────────
+function renderEquipeBtns(t){
+  const container=document.getElementById(`equipe-btns-${t}`);
+  const cur=state.selSup[t];
+  const sups=['Todos',...ALL_SUPS];
+  container.innerHTML=sups.map(s=>{
+    const sc=s==='Todos'?{bg:'#E2E8F0',tc:'#1A2332'}:(SUP_C[s]||{bg:'#EEE',tc:'#666'});
+    const isActive=cur===s;
+    return `<button class="equipe-btn${isActive?' active':''}"
+      style="background:${sc.bg};color:${sc.tc};border-color:${isActive?sc.tc:'transparent'}"
+      onclick="selectEquipe('${s}',${t})">${s==='Todos'?'Todas as Equipes':s}</button>`;
+  }).join('');
+}
+
+function selectEquipe(sup,t){
+  state.selSup[t]=sup;
+  agPage=0;avPage=0;
+  render();
+}
+
+// ── MAIN SWITCHES ─────────────────────────────────────────────────────────────
+function switchTab(i){
+  currentTab=i;
+  document.querySelectorAll('.tab-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+  document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('active',j===i));
+  render();
+}
+function setPeriod(mode,t){
+  state.dateMode[t]=mode;
+  const isDia=mode==='dia';
+  document.getElementById(`btn-acum-${t}`).classList.toggle('active',!isDia);
+  document.getElementById(`btn-dia-${t}`).classList.toggle('active',isDia);
+  document.getElementById(`date-wrap-${t}`).style.display=isDia?'':'none';
+  render();
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function init(){
+  const defaultDate = ALL_DATES.length > 0 ? ALL_DATES[ALL_DATES.length-1] : '';
+  state.selDate = [defaultDate, defaultDate];
+  for(let i=0;i<2;i++){
+    const ds=document.getElementById(`sel-date-${i}`);
+    ds.innerHTML='';
+    [...ALL_DATES].reverse().forEach(d=>{
+      const o=document.createElement('option');
+      o.value=d;
+      const dt=new Date(d+'T12:00:00');
+      o.textContent=dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit',year:'2-digit'});
+      if(d===defaultDate)o.selected=true;
+      ds.appendChild(o);
+    });
+  }
+  render();
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────────
+function render(){
+  const t=currentTab;
+  // sync date from select if visible
+  const dEl=document.getElementById(`sel-date-${t}`);
+  if(dEl&&state.dateMode[t]==='dia')state.selDate[t]=dEl.value||DEFAULT_DATE;
+
+  // update header
+  const prRows0=filterPR(0);
+  const tots0=aggTotals(prRows0);
+  document.getElementById('period-label').textContent=`${periodLabel()} · ${state.selSup[t]==='Todos'?'Todas as equipes':state.selSup[t]}`;
+  document.getElementById('h-leads').textContent=fmt(tots0.total_leads);
+  document.getElementById('h-sem').textContent=fmt(tots0.sem_resp);
+  document.getElementById('h-sem-pct').textContent=pct(tots0.sem_resp,tots0.total_leads);
+  document.getElementById('h-ate2').textContent=fmt(tots0.ate1+tots0.ate2);
+  document.getElementById('h-ate2-pct').textContent=pct(tots0.ate1+tots0.ate2,tots0.total_leads);
+  document.getElementById('h-gt2').textContent=fmt(tots0.gt2);
+  document.getElementById('h-gt2-pct').textContent=pct(tots0.gt2,tots0.total_leads);
+
+  if(t===0) renderPR();
+  if(t===1) renderAvail();
+}
+
+// ── PRIMEIRA RESPOSTA ─────────────────────────────────────────────────────────
+let _agData=[];
+function renderPR(){
+  const prRows=filterPR(0);
+  const tots=aggTotals(prRows);
+  const agData=aggByAgent(prRows);
+  _agData=agData;
+
+  renderEquipeBtns(0);
+
+  const isTodos = state.selSup[0]==='Todos';
+  const compDiv = document.getElementById('pr-comparativo');
+  const kpiDiv  = document.getElementById('pr-kpis');
+
+  if(isTodos){
+    // ── COMPARATIVO: uma coluna por equipe ──────────────────────────────────
+    compDiv.style.display='block';
+    kpiDiv.style.display='none';
+
+    // Compute all-rows for ALL_SUPS (use acum/dia filter but ignore sup filter)
+    const allRows = RAW_BY_DAY.filter(r=>{
+      const dm=state.dateMode[0],sd=state.selDate[0];
+      if(dm==='dia') return r.date_str===sd;
+      return true;
+    });
+
+    // global max leads for bar scaling
+    const supTots = ALL_SUPS.map(s=>{
+      const rows=allRows.filter(r=>r.SUPERVISOR===s);
+      return {sup:s, ...aggTotals(rows)};
+    });
+    const maxLeads = Math.max(...supTots.map(s=>s.total_leads),1);
+
+    compDiv.innerHTML = `<div class="comp-grid">${supTots.map(s=>{
+      const sc=SUP_C[s.sup]||{bg:'#EEF',tc:'#333'};
+      const p2 = s.total_leads>0?((s.ate1+s.ate2)/s.total_leads*100):0;
+      const pGt= s.total_leads>0?(s.gt2/s.total_leads*100):0;
+      const pSr= s.total_leads>0?(s.sem_resp/s.total_leads*100):0;
+      const barW= (s.total_leads/maxLeads*100).toFixed(1);
+      const barColor = p2>=80?'#10B981':p2>=50?'#F59E0B':'#EF4444';
+      // agent count
+      const agCnt = [...new Set(allRows.filter(r=>r.SUPERVISOR===s.sup).map(r=>r.POWER_BI))].length;
+      const avgLd = agCnt>0?(s.total_leads/agCnt).toFixed(0):0;
+      return `<div class="comp-card">
+        <div class="comp-header" style="background:${sc.bg};color:${sc.tc}">${s.sup}</div>
+        <div class="comp-bar-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#94A3B8"><span>Leads</span><span style="font-weight:700;color:#1A2332">${fmt(s.total_leads)}</span></div>
+          <div class="comp-bar-track"><div class="comp-bar-fill" style="width:${barW}%;background:${sc.tc}40"></div></div>
+        </div>
+        <div class="comp-row">
+          <div><div class="comp-lbl">≤ 2min</div><div class="comp-val" style="color:#10B981">${fmt(s.ate1+s.ate2)}</div></div>
+          <div style="text-align:right"><div class="comp-sub" style="color:#10B981">${p2.toFixed(1)}%</div>
+          <div class="comp-bar-track" style="width:60px;margin-top:4px"><div class="comp-bar-fill" style="width:${Math.min(p2,100)}%;background:#10B981"></div></div></div>
+        </div>
+        <div class="comp-row">
+          <div><div class="comp-lbl">&gt; 2min</div><div class="comp-val" style="color:#F59E0B">${fmt(s.gt2)}</div></div>
+          <div style="text-align:right"><div class="comp-sub" style="color:#F59E0B">${pGt.toFixed(1)}%</div>
+          <div class="comp-bar-track" style="width:60px;margin-top:4px"><div class="comp-bar-fill" style="width:${Math.min(pGt,100)}%;background:#F59E0B"></div></div></div>
+        </div>
+        <div class="comp-row">
+          <div><div class="comp-lbl">S/ Resposta</div><div class="comp-val" style="color:#EF4444">${fmt(s.sem_resp)}</div></div>
+          <div style="text-align:right"><div class="comp-sub" style="color:#EF4444">${pSr.toFixed(1)}%</div></div>
+        </div>
+        <div class="comp-row">
+          <div><div class="comp-lbl">Promotores</div><div class="comp-val" style="color:#2563EB">${agCnt}</div></div>
+          <div style="text-align:right"><div class="comp-lbl">Média</div><div class="comp-sub" style="color:#4A5568">${avgLd} leads</div></div>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+
+  } else {
+    // ── KPIs normais para equipe específica ────────────────────────────────
+    compDiv.style.display='none';
+    kpiDiv.style.display='grid';
+    kpiDiv.innerHTML=[
+      {l:'Leads Totais',v:fmt(tots.total_leads),accent:'#2563EB'},
+      {l:'Respondidos ≤2min',v:fmt(tots.ate1+tots.ate2),sub:pct(tots.ate1+tots.ate2,tots.total_leads),accent:'#10B981'},
+      {l:'Respondidos >2min',v:fmt(tots.gt2),sub:pct(tots.gt2,tots.total_leads),accent:'#F59E0B'},
+      {l:'Enc. s/ Resposta',v:fmt(tots.sem_resp),sub:pct(tots.sem_resp,tots.total_leads),accent:'#EF4444'},
+    ].map(k=>`<div class="kpi-inner">
+      <div class="val" style="color:${k.accent}">${k.v}</div>
+      <div class="lbl">${k.l}</div>
+      ${k.sub?`<div class="sub" style="color:${k.accent}">${k.sub}</div>`:''}
+    </div>`).join('');
+  }
+
+  // Top 10
+  const minL=5;
+  const sorted=[...agData].filter(a=>a.total_leads>=minL);
+  const best=[...sorted].sort((a,b)=>b.pctAte2-a.pctAte2).slice(0,10);
+  const worst=[...sorted].sort((a,b)=>a.pctAte2-b.pctAte2).slice(0,10);
+
+  ['best','worst'].forEach(type=>{
+    const data=type==='best'?best:worst;
+    const color=type==='best'?'#10B981':'#EF4444';
+    document.getElementById(`pr-top10-${type}`).innerHTML=data.map((a,i)=>{
+      const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
+      return `<div class="top10-row" style="border-left:3px solid ${i<3?color:'transparent'}">
+        <div class="top10-medal">${medals[i]||`<span style="font-size:11px;color:#94A3B8;font-weight:700">${i+1}</span>`}</div>
+        <div>
+          <div class="top10-name">${a.name}</div>
+          <span class="top10-badge" style="background:${sc.bg};color:${sc.tc}">${a.sup}</span>
+        </div>
+        <div class="top10-leads">${fmt(a.total_leads)}</div>
+        <div class="top10-pct" style="color:${color}">${a.pctAte2.toFixed(1)}%</div>
+      </div>`;
+    }).join('');
+  });
+
+  agPage=0;
+  renderAgTable();
+}
+
+function renderAgTable(){
+  const search=(document.getElementById('ag-search')?.value||'').toLowerCase();
+  let data=[..._agData];
+  if(search)data=data.filter(a=>a.name.toLowerCase().includes(search)||a.sup.toLowerCase().includes(search));
+  data.sort((a,b)=>{
+    if(agSortCol==='name')return a.name.localeCompare(b.name)*agSortDir;
+    return(a[agSortCol]-b[agSortCol])*agSortDir;
+  });
+  agTotalPages=Math.ceil(data.length/PAGE)||1;
+  agPage=Math.min(agPage,agTotalPages-1);
+  document.getElementById('ag-count').textContent=data.length;
+  document.getElementById('ag-page-info').textContent=`Pág. ${agPage+1}/${agTotalPages} · ${data.length} registros`;
+  const paged=data.slice(agPage*PAGE,(agPage+1)*PAGE);
+  document.getElementById('ag-tbody').innerHTML=paged.map(a=>{
+    const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
+    const st=agStatus(a.pctAte2);
+    const p1=a.total_leads>0?(a.ate1/a.total_leads*100).toFixed(0):0;
+    const p2=a.total_leads>0?(a.ate2/a.total_leads*100).toFixed(0):0;
+    const pGt=a.total_leads>0?(a.gt2/a.total_leads*100).toFixed(0):0;
+    return `<tr>
+      <td style="font-weight:700;white-space:nowrap">${a.name}</td>
+      <td>${supBadge(a.sup)}</td>
+      <td class="td-right" style="font-weight:600;color:#4A5568">${fmt(a.total_leads)}</td>
+      <td class="td-right"><div style="color:#10B981;font-weight:700">${fmt(a.ate1)}</div><div style="font-size:9px;color:#94A3B8">${p1}%</div></td>
+      <td class="td-right"><div style="color:#F59E0B;font-weight:700">${fmt(a.ate2)}</div><div style="font-size:9px;color:#94A3B8">${p2}%</div></td>
+      <td class="td-right"><div style="color:#EF4444;font-weight:700">${fmt(a.gt2)}</div><div style="font-size:9px;color:#94A3B8">${pGt}%</div></td>
+      <td>
+        <div class="mini-bar-wrap">
+          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${Math.min(a.pctAte2,100)}%;background:${st.color}"></div></div>
+          <span style="font-size:12px;font-weight:800;color:${st.color};min-width:34px;text-align:right">${a.pctAte2.toFixed(0)}%</span>
+        </div>
+      </td>
+      <td class="td-right"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('ag-pg-first').disabled=agPage===0;
+  document.getElementById('ag-pg-prev').disabled=agPage===0;
+  document.getElementById('ag-pg-next').disabled=agPage>=agTotalPages-1;
+  document.getElementById('ag-pg-last').disabled=agPage>=agTotalPages-1;
+}
+
+function sortAg(col){
+  if(agSortCol===col)agSortDir*=-1;else{agSortCol=col;agSortDir=-1;}
+  document.querySelectorAll('[id^="th-"]').forEach(th=>{
+    th.classList.toggle('sorted',th.id===`th-${col}`);
+    if(th.id===`th-${col}`)th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+' '+(agSortDir===-1?'↓':'↑');
+    else th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+'↕';
+  });
+  agPage=0;renderAgTable();
+}
+
+// ── DISPONIBILIDADE ───────────────────────────────────────────────────────────
+let _avData=[];
+function renderAvail(){
+  const avRows=filterAv(1);
+  const avData=aggAvByAgent(avRows);
+  _avData=avData;
+
+  renderEquipeBtns(1);
+
+  // KPIs
+  const ideal=avData.filter(a=>a.avgH>=6).length;
+  const aceit=avData.filter(a=>a.avgH>=4&&a.avgH<6).length;
+  const crit=avData.filter(a=>a.avgH<4).length;
+  document.getElementById('av-kpis').innerHTML=[
+    {l:'Promotores',v:fmt(avData.length),accent:'#2563EB'},
+    {l:'Ideal (≥6h)',v:fmt(ideal),sub:pct(ideal,avData.length),accent:'#10B981'},
+    {l:'Aceitável (4-6h)',v:fmt(aceit),sub:pct(aceit,avData.length),accent:'#F59E0B'},
+    {l:'Crítico (<4h)',v:fmt(crit),sub:pct(crit,avData.length),accent:'#EF4444'},
+  ].map(k=>`<div class="kpi-inner">
+    <div class="val" style="color:${k.accent}">${k.v}</div>
+    <div class="lbl">${k.l}</div>
+    ${k.sub?`<div class="sub" style="color:${k.accent}">${k.sub}</div>`:''}
+  </div>`).join('');
+
+  // Top 10 disponibilidade
+  const sorted=[...avData].filter(a=>a.days>=1);
+  const best10=[...sorted].sort((a,b)=>b.avgH-a.avgH).slice(0,10);
+  const worst10=[...sorted].sort((a,b)=>a.avgH-b.avgH).slice(0,10);
+
+  ['best','worst'].forEach(type=>{
+    const data=type==='best'?best10:worst10;
+    const color=type==='best'?'#10B981':'#EF4444';
+    document.getElementById(`av-top10-${type}`).innerHTML=data.map((a,i)=>{
+      const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
+      const st=availStatus(a.avgH);
+      return `<div class="top10-row" style="border-left:3px solid ${i<3?color:'transparent'}">
+        <div class="top10-medal">${medals[i]||`<span style="font-size:11px;color:#94A3B8;font-weight:700">${i+1}</span>`}</div>
+        <div>
+          <div class="top10-name">${a.name}</div>
+          <span class="top10-badge" style="background:${sc.bg};color:${sc.tc}">${a.sup}</span>
+        </div>
+        <div class="top10-leads">${a.totalH.toFixed(1)}h</div>
+        <div class="top10-pct" style="color:${st.color}">${a.avgH.toFixed(1)}h</div>
+      </div>`;
+    }).join('');
+  });
+
+  avPage=0;
+  renderAvTable();
+}
+
+function renderAvTable(){
+  let data=[..._avData];
+  data.sort((a,b)=>{
+    if(avSortCol==='name')return a.name.localeCompare(b.name)*avSortDir;
+    return(a[avSortCol]-b[avSortCol])*avSortDir;
+  });
+  avTotalPages=Math.ceil(data.length/PAGE)||1;
+  avPage=Math.min(avPage,avTotalPages-1);
+  document.getElementById('av-page-info').textContent=`Pág. ${avPage+1}/${avTotalPages} · ${data.length} registros`;
+  const paged=data.slice(avPage*PAGE,(avPage+1)*PAGE);
+  document.getElementById('av-tbody').innerHTML=paged.map(a=>{
+    const st=availStatus(a.avgH);
+    return `<tr>
+      <td style="font-weight:700;white-space:nowrap">${a.name}</td>
+      <td>${supBadge(a.sup)}</td>
+      <td class="td-right" style="color:#4A5568">${a.totalH.toFixed(1)}h</td>
+      <td class="td-right" style="color:#4A5568">${a.days}</td>
+      <td>
+        <div class="mini-bar-wrap">
+          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${Math.min((a.avgH/12)*100,100)}%;background:${st.color}"></div></div>
+          <span style="font-size:13px;font-weight:800;color:${st.color};min-width:34px;text-align:right">${a.avgH.toFixed(1)}h</span>
+        </div>
+      </td>
+      <td class="td-right"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('av-pg-first').disabled=avPage===0;
+  document.getElementById('av-pg-prev').disabled=avPage===0;
+  document.getElementById('av-pg-next').disabled=avPage>=avTotalPages-1;
+  document.getElementById('av-pg-last').disabled=avPage>=avTotalPages-1;
+}
+
+function sortAv(col){
+  if(avSortCol===col)avSortDir*=-1;else{avSortCol=col;avSortDir=-1;}
+  document.querySelectorAll('[id^="av-th-"]').forEach(th=>{
+    th.classList.toggle('sorted',th.id===`av-th-${col}`);
+    if(th.id===`av-th-${col}`)th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+' '+(avSortDir===-1?'↓':'↑');
+    else th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+'↕';
+  });
+  avPage=0;renderAvTable();
+}
+</script>
+
+<script>document.addEventListener("DOMContentLoaded", loadData);</script>
+</body>
+</html>

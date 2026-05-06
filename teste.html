@@ -383,51 +383,50 @@ async function loadData() {
     console.log('[Dashboard] disponibilidade header:', avText.split('\n')[0]);
 
     // ── PRIMEIRA RESPOSTA ─────────────────────────────────────────────────────
-    // Colunas: MEDIA, TEMPO, SUPERVISOR, VENDEDOR, Primeira resposta do agente,
-    //          Horário de atribuição, DATA DE ATRIBUIÇÃO, Transferência, ID DA CONVESA, STATUS, TEL
-    // Cada linha = 1 conversa/lead
-    // Mapeamento:
-    //   POWER_BI   = VENDEDOR
-    //   SUPERVISOR = SUPERVISOR
-    //   date_str   = DATA DE ATRIBUIÇÃO (DD/MM/YYYY)
-    //   "Primeira resposta do agente" = tempo em HH:MM:SS ou segundos
-    //     ≤1min  (≤60s)  → ate1
-    //     1-2min (61-120s) → ate2
-    //     >2min  (>120s)  → gt2
-    //     STATUS = "sem resposta" / vazio / sem tempo → sem_resp
-    const { rows: prRows } = parseCSV(prText);
-    console.log('[Dashboard] primeira resposta linhas:', prRows.length);
+    // Fonte: SOMENTE a sheet "primeira resposta" — 1 linha = 1 lead real
+    // Colunas utilizadas:
+    //   VENDEDOR              → nome do agente
+    //   SUPERVISOR            → equipe
+    //   DATA DE ATRIBUIÇÃO    → coluna D — fonte única para filtro de data (DD/MM/YYYY)
+    //   Primeira resposta do agente → tempo HH:MM:SS ou segundos
+    //   STATUS                → "sem resposta" / "expirado" → sem_resp
+    // Linhas sem VENDEDOR ou sem DATA DE ATRIBUIÇÃO são descartadas (linhas auxiliares/vazias)
+    const { headers: prHeaders, rows: prRows } = parseCSV(prText);
+    console.log('[Dashboard] primeira resposta headers:', prHeaders);
+    console.log('[Dashboard] primeira resposta linhas brutas:', prRows.length);
     if (prRows.length > 0) console.log('[Dashboard] primeira resposta linha 1:', JSON.stringify(prRows[0]));
 
-    // Agrupa por VENDEDOR + SUPERVISOR + date_str
-    const prMap = {};
+    // Sem agrupamento: cada linha = 1 registro = 1 lead
+    RAW_BY_DAY = [];
     prRows.forEach(r => {
-      // Suporte a múltiplos nomes de coluna possíveis (Agent Name ou VENDEDOR)
-      const vendedor = (r['Agent Name'] || r['VENDEDOR'] || '').trim();
+      const vendedor = (r['VENDEDOR'] || '').trim();
       const sup      = (r['SUPERVISOR'] || '').trim();
-      // Suporte a múltiplos nomes de coluna de data (Date ou DATA DE ATRIBUIÇÃO)
-      const date     = fmtDate(r['Date'] || r['DATA DE ATRIBUIÇÃO'] || r['DATA DE ATRIBUICAO'] || '');
+      // Coluna D = DATA DE ATRIBUICAO — fonte unica para filtro de data
+      const date     = fmtDate(r['DATA DE ATRIBUIÇÃO'] || r['DATA DE ATRIBUICAO'] || '');
+
+      // Descartar linhas auxiliares/vazias/cabecalhos repetidos
       if (!vendedor || !date) return;
-      const key = vendedor + '|' + sup + '|' + date;
-      if (!prMap[key]) prMap[key] = { POWER_BI: vendedor, SUPERVISOR: sup, date_str: date,
-                                       total_leads: 0, ate1: 0, ate2: 0, gt2: 0, sem_resp: 0 };
-      prMap[key].total_leads++;
-      // Suporte a múltiplos nomes de coluna de tempo de resposta
-      const respRaw = r['Primeira resposta do agente'] || r['Tempo de um status para outro'] || '';
-      const status  = (r['STATUS'] || r['SITUAÇÃO'] || r['SITUACAO'] || '').trim().toLowerCase();
+      if (vendedor.toUpperCase() === 'VENDEDOR' || vendedor.startsWith('=')) return;
+
+      const respRaw = (r['Primeira resposta do agente'] || '').trim();
+      const status  = (r['STATUS'] || '').trim().toLowerCase();
       const secs    = toSeconds(respRaw);
+
+      let ate1 = 0, ate2 = 0, gt2 = 0, sem_resp = 0;
       if (secs === null || respRaw === '' || status === 'sem resposta' || status === 'expirado') {
-        prMap[key].sem_resp++;
+        sem_resp = 1;
       } else if (secs <= 60) {
-        prMap[key].ate1++;
+        ate1 = 1;
       } else if (secs <= 120) {
-        prMap[key].ate2++;
+        ate2 = 1;
       } else {
-        prMap[key].gt2++;
+        gt2 = 1;
       }
+
+      RAW_BY_DAY.push({ POWER_BI: vendedor, SUPERVISOR: sup, date_str: date,
+                        total_leads: 1, ate1, ate2, gt2, sem_resp });
     });
-    RAW_BY_DAY = Object.values(prMap).filter(r => r.POWER_BI && r.date_str);
-    console.log('[Dashboard] RAW_BY_DAY registros:', RAW_BY_DAY.length);
+    console.log('[Dashboard] RAW_BY_DAY registros (deve ser ~193):', RAW_BY_DAY.length);
 
     // ── DISPONIBILIDADE ───────────────────────────────────────────────────────
     // Colunas: Agent Name, Date, HORARIO, Reason, SITUAÇÃO, PF OU PME, SUPERVISOR, TEMPO LOGADO, ...

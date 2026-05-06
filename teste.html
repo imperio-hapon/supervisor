@@ -402,16 +402,19 @@ async function loadData() {
     // Agrupa por VENDEDOR + SUPERVISOR + date_str
     const prMap = {};
     prRows.forEach(r => {
-      const vendedor = (r['VENDEDOR'] || '').trim();
+      // Suporte a múltiplos nomes de coluna possíveis (Agent Name ou VENDEDOR)
+      const vendedor = (r['Agent Name'] || r['VENDEDOR'] || '').trim();
       const sup      = (r['SUPERVISOR'] || '').trim();
-      const date     = fmtDate(r['DATA DE ATRIBUIÇÃO'] || r['DATA DE ATRIBUICAO'] || '');
+      // Suporte a múltiplos nomes de coluna de data (Date ou DATA DE ATRIBUIÇÃO)
+      const date     = fmtDate(r['Date'] || r['DATA DE ATRIBUIÇÃO'] || r['DATA DE ATRIBUICAO'] || '');
       if (!vendedor || !date) return;
       const key = vendedor + '|' + sup + '|' + date;
       if (!prMap[key]) prMap[key] = { POWER_BI: vendedor, SUPERVISOR: sup, date_str: date,
                                        total_leads: 0, ate1: 0, ate2: 0, gt2: 0, sem_resp: 0 };
       prMap[key].total_leads++;
-      const respRaw = r['Primeira resposta do agente'] || '';
-      const status  = (r['STATUS'] || '').trim().toLowerCase();
+      // Suporte a múltiplos nomes de coluna de tempo de resposta
+      const respRaw = r['Primeira resposta do agente'] || r['Tempo de um status para outro'] || '';
+      const status  = (r['STATUS'] || r['SITUAÇÃO'] || r['SITUACAO'] || '').trim().toLowerCase();
       const secs    = toSeconds(respRaw);
       if (secs === null || respRaw === '' || status === 'sem resposta' || status === 'expirado') {
         prMap[key].sem_resp++;

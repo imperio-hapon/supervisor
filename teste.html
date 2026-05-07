@@ -140,6 +140,12 @@
 
 <div class="main">
 
+<!-- PAINEL DE DIAGNÓSTICO -->
+<div id="diag-panel" style="background:#1A2332;border-radius:12px;padding:14px 18px;margin-bottom:16px;border:1px solid #2D3F5C;color:#CBD5E0;font-size:11px">
+  <div style="font-size:10px;font-weight:800;color:#4A6080;letter-spacing:1px;margin-bottom:8px">⚙ DIAGNÓSTICO DE DADOS — <span style="color:#F59E0B;cursor:pointer" onclick="document.getElementById('diag-panel').style.display='none'">ocultar ✕</span></div>
+  <div style="color:#4A6080;font-size:11px">Carregando...</div>
+</div>
+
 <!-- PANEL 0: PRIMEIRA RESPOSTA -->
 <div class="panel active" id="panel-0">
   <div class="filter-bar">
@@ -466,115 +472,172 @@ async function loadData() {
     if (!avResp.ok) throw new Error('HTTP ' + avResp.status + ' na aba "disponibilidade"');
     const [prText, avText] = await Promise.all([prResp.text(), avResp.text()]);
 
-    console.log('[Dashboard] primeira resposta header:', prText.split('\n')[0]);
-    console.log('[Dashboard] disponibilidade header:', avText.split('\n')[0]);
-
     // ── PRIMEIRA RESPOSTA ─────────────────────────────────────────────────────
-    // Fonte: SOMENTE a sheet "primeira resposta" — 1 linha = 1 lead real
-    // Colunas utilizadas:
-    //   VENDEDOR              → nome do agente
-    //   SUPERVISOR            → equipe
-    //   DATA DE ATRIBUIÇÃO    → coluna D — fonte única para filtro de data (DD/MM/YYYY)
-    //   Primeira resposta do agente → tempo HH:MM:SS ou segundos
-    //   STATUS                → "sem resposta" / "expirado" → sem_resp
-    // Linhas sem VENDEDOR ou sem DATA DE ATRIBUIÇÃO são descartadas (linhas auxiliares/vazias)
     const { headers: prHeaders, rows: prRows } = parseCSV(prText);
-    console.log('[Dashboard] primeira resposta headers:', prHeaders);
-    console.log('[Dashboard] primeira resposta linhas brutas:', prRows.length);
-    if (prRows.length > 0) console.log('[Dashboard] primeira resposta linha 1:', JSON.stringify(prRows[0]));
+    console.log('[PR] headers:', JSON.stringify(prHeaders));
+    console.log('[PR] total linhas brutas:', prRows.length);
+    if (prRows.length > 0) console.log('[PR] linha 1:', JSON.stringify(prRows[0]));
 
-    // Sem agrupamento: cada linha = 1 registro = 1 lead
+    // Detecta automaticamente os nomes de colunas com variações de acento/espaço
+    function findCol(row, candidates){
+      for(const c of candidates){
+        const k = Object.keys(row).find(k => k.trim().toLowerCase() === c.toLowerCase());
+        if(k !== undefined && row[k] !== undefined) return k;
+      }
+      // fallback: partial match
+      for(const c of candidates){
+        const k = Object.keys(row).find(k => k.trim().toLowerCase().includes(c.toLowerCase().split(' ')[0]));
+        if(k !== undefined && row[k] !== undefined) return k;
+      }
+      return null;
+    }
+
     RAW_BY_DAY = [];
+    let prSkipped = 0, prNoDate = 0, prNoVendedor = 0, prSemResp = 0, prOk = 0;
+
     prRows.forEach(r => {
-      const vendedor = (r['VENDEDOR'] || '').trim();
-      const sup      = (r['SUPERVISOR'] || '').trim();
-      // Coluna D = DATA DE ATRIBUICAO — fonte unica para filtro de data
-      const date     = fmtDate(r['DATA DE ATRIBUIÇÃO'] || r['DATA DE ATRIBUICAO'] || '');
+      // Detecção robusta de colunas
+      const kVendedor  = findCol(r, ['VENDEDOR','Vendedor','vendedor']);
+      const kSup       = findCol(r, ['SUPERVISOR','Supervisor']);
+      const kData      = findCol(r, ['DATA DE ATRIBUIÇÃO','DATA DE ATRIBUICAO','Data de Atribuição','Data Atribuição','DATA ATRIBUIÇÃO']);
+      const kResposta  = findCol(r, ['Primeira resposta do agente','primeira resposta do agente','PRIMEIRA RESPOSTA DO AGENTE']);
+      const kAtrib     = findCol(r, ['Horário de atribuição','Horario de atribuicao','HORÁRIO DE ATRIBUIÇÃO','HORARIO DE ATRIBUICAO','Hora de atribuição']);
+      const kStatus    = findCol(r, ['STATUS','Status','status']);
 
-      // Descartar linhas auxiliares/vazias/cabecalhos repetidos
-      if (!vendedor || !date) return;
-      if (vendedor.toUpperCase() === 'VENDEDOR' || vendedor.startsWith('=')) return;
+      const vendedor = kVendedor ? (r[kVendedor]||'').trim() : '';
+      const sup      = kSup      ? (r[kSup]     ||'').trim() : '';
+      const date     = fmtDate(kData ? (r[kData]||'') : '');
+      const status   = kStatus   ? (r[kStatus]  ||'').trim().toLowerCase() : '';
 
-      // Calcula tempo de resposta: col E (Primeira resposta do agente) - col F (Horário de atribuição)
-      const dtResposta   = parseDateTimeBR(r['Primeira resposta do agente'] || '');
-      const dtAtribuicao = parseDateTimeBR(r['Horário de atribuição'] || r['Horario de atribuicao'] || '');
-      const status       = (r['STATUS'] || '').trim().toLowerCase();
+      if (!vendedor){ prNoVendedor++; return; }
+      if (!date)    { prNoDate++;     return; }
+      if (vendedor.toUpperCase()==='VENDEDOR'||vendedor.startsWith('=')){ prSkipped++; return; }
+
+      const dtResposta   = kResposta ? parseDateTimeBR(r[kResposta]  || '') : null;
+      const dtAtribuicao = kAtrib    ? parseDateTimeBR(r[kAtrib]     || '') : null;
 
       let secs = null;
       if (dtResposta && dtAtribuicao && dtResposta >= dtAtribuicao) {
         secs = Math.round((dtResposta - dtAtribuicao) / 1000);
       }
 
-      let ate1 = 0, ate2 = 0, gt2 = 0, sem_resp = 0;
-      if (secs === null || status === 'sem resposta' || status === 'expirado') {
-        sem_resp = 1;
-      } else if (secs <= 60) {
-        ate1 = 1;
-      } else if (secs <= 120) {
-        ate2 = 1;
-      } else {
-        gt2 = 1;
-      }
+      let ate1=0,ate2=0,gt2=0,sem_resp=0;
+      // Marca sem resposta SOMENTE se status explícito OU sem data de resposta alguma
+      if (status==='sem resposta'||status==='expirado') {
+        sem_resp=1; prSemResp++;
+      } else if (secs===null) {
+        // sem data de resposta mas não marcado como sem resposta → trata como >2min (lead existente)
+        gt2=1; prOk++;
+      } else if (secs<=60)  { ate1=1; prOk++; }
+      else if (secs<=120)   { ate2=1; prOk++; }
+      else                  { gt2=1;  prOk++; }
 
-      RAW_BY_DAY.push({ POWER_BI: vendedor, SUPERVISOR: sup, date_str: date,
-                        total_leads: 1, ate1, ate2, gt2, sem_resp });
+      RAW_BY_DAY.push({ POWER_BI:vendedor, SUPERVISOR:sup, date_str:date,
+                        total_leads:1, ate1, ate2, gt2, sem_resp });
     });
-    console.log('[Dashboard] RAW_BY_DAY registros (deve ser ~193):', RAW_BY_DAY.length);
+
+    console.log(`[PR] Processados: ok=${prOk} sem_resp=${prSemResp} semVendedor=${prNoVendedor} semData=${prNoDate} pulados=${prSkipped}`);
+    console.log('[PR] RAW_BY_DAY total:', RAW_BY_DAY.length);
 
     // ── DISPONIBILIDADE ───────────────────────────────────────────────────────
-    // Colunas: Agent Name, Date, HORARIO, Reason, SITUAÇÃO, PF OU PME, SUPERVISOR, TEMPO LOGADO, ...
-    // avail_hours = soma de TEMPO LOGADO onde SITUAÇÃO === 'Disponível', por agente+sup+data
-    const { rows: avRows } = parseCSV(avText);
-    console.log('[Dashboard] disponibilidade linhas:', avRows.length);
-    if (avRows.length > 0) console.log('[Dashboard] disponibilidade linha 1:', JSON.stringify(avRows[0]));
+    const { headers: avHeaders, rows: avRows } = parseCSV(avText);
+    console.log('[AV] headers:', JSON.stringify(avHeaders));
+    console.log('[AV] total linhas brutas:', avRows.length);
+    if (avRows.length > 0) console.log('[AV] linha 1:', JSON.stringify(avRows[0]));
 
-    // Estrutura real da planilha Disponibilidade:
+    // Estrutura confirmada pelo usuário:
     // Agent Name | Date (DD/MM/YYYY) | HORARIO | Reason | SITUAÇÃO | PF OU PME | SUPERVISOR | TEMPO LOGADO | Tempo de um status para outro
-    // A disponibilidade é calculada somando "Tempo de um status para outro" onde SITUAÇÃO === 'Disponível'
-    // por agente + supervisor + data (1 dia = 1 registro agrupado)
     const avMap = {};
+    let avDisp=0, avOutros=0, avSemAgent=0;
+
     avRows.forEach(r => {
       const agent = (r['Agent Name'] || '').trim();
-      // SUPERVISOR está na coluna 7 (índice 6)
       const sup   = (r['SUPERVISOR'] || '').trim();
-      // Date vem como DD/MM/YYYY
       const date  = fmtDate(r['Date'] || '');
-      // SITUAÇÃO: filtramos somente 'Disponível'
-      const sit   = (r['SITUAÇÃO'] || r['SITUACAO'] || r['SITUA\u00c7\u00c3O'] || '').trim().toLowerCase();
-      // Tempo real: última coluna "Tempo de um status para outro"
-      const tempo = (r['Tempo de um status para outro'] || r['TEMPO LOGADO'] || '').trim();
 
-      if (!agent || !date) return;
-      // Ignora agente sem supervisor válido
-      if (EQUIPES_REMOVIDAS.includes(sup.toUpperCase())) return;
+      // SITUAÇÃO — testa múltiplas grafias
+      const sitRaw = (
+        r['SITUAÇÃO'] || r['SITUACAO'] || r['Situação'] || r['Situacao'] ||
+        r['SITUA\u00c7\u00c3O'] || ''
+      ).trim();
+      const sitNorm = sitRaw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+
+      // Tempo: prefere "Tempo de um status para outro" (última col), fallback TEMPO LOGADO
+      const tempo = (
+        r['Tempo de um status para outro'] ||
+        r['TEMPO DE UM STATUS PARA OUTRO'] ||
+        r['TEMPO LOGADO'] ||
+        r['Tempo Logado'] || ''
+      ).trim();
+
+      if (!agent){ avSemAgent++; return; }
+      if (!date) return;
 
       const key = agent + '|' + sup + '|' + date;
-      if (!avMap[key]) avMap[key] = { POWER_BI: agent, SUPERVISOR: sup, date_str: date, avail_hours: 0 };
-      // Soma somente registros com situação Disponível
-      const sitNorm = sit.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-      if (sitNorm === 'disponivel' || sitNorm === 'disponível' || sit === 'disponível' || sit === 'disponivel') {
+      if (!avMap[key]) avMap[key] = { POWER_BI:agent, SUPERVISOR:sup, date_str:date, avail_hours:0 };
+
+      if (sitNorm==='disponivel') {
         avMap[key].avail_hours += hmsToH(tempo);
+        avDisp++;
+      } else {
+        avOutros++;
       }
     });
-    RAW_AVAIL = Object.values(avMap).filter(r => r.POWER_BI && r.date_str);
-    console.log('[Dashboard] RAW_AVAIL registros:', RAW_AVAIL.length);
 
-    // ── DATAS E SUPERVISORES ──────────────────────────────────────────────────
-    const dateSet = new Set([...RAW_BY_DAY.map(r=>r.date_str), ...RAW_AVAIL.map(r=>r.date_str)]);
-    ALL_DATES = [...dateSet].filter(Boolean).sort();
+    RAW_AVAIL = Object.values(avMap).filter(r=>r.POWER_BI&&r.date_str);
+    console.log(`[AV] registros Disponível=${avDisp} outros=${avOutros} semAgent=${avSemAgent}`);
+    console.log('[AV] RAW_AVAIL agrupados:', RAW_AVAIL.length);
+
+    // Guarda stats para painel de diagnóstico
+    window._diagPR = { total: prRows.length, ok: prOk, sem_resp: prSemResp, semVendedor: prNoVendedor, semData: prNoDate, pulados: prSkipped, raw: RAW_BY_DAY.length, headers: prHeaders };
+    window._diagAV = { total: avRows.length, disp: avDisp, outros: avOutros, semAgent: avSemAgent, raw: RAW_AVAIL.length, headers: avHeaders };
+
+    // ── SUPERVISORES ─────────────────────────────────────────────────────────
     const supSet = new Set([...RAW_BY_DAY.map(r=>r.SUPERVISOR), ...RAW_AVAIL.map(r=>r.SUPERVISOR)]);
     ALL_SUPS = [...supSet].filter(s=>s && !EQUIPES_REMOVIDAS.includes(s.toUpperCase())).sort();
-
-    console.log('[Dashboard] ALL_DATES:', ALL_DATES);
     console.log('[Dashboard] ALL_SUPS:', ALL_SUPS);
 
     showLoading(false);
     init();
+    renderDiagPanel();
   } catch(err) {
     showLoading(false);
     showError(err.message);
     console.error('[Dashboard] Erro:', err);
   }
+}
+
+function renderDiagPanel(){
+  const pr=window._diagPR||{}, av=window._diagAV||{};
+  const el=document.getElementById('diag-panel');
+  if(!el)return;
+  el.innerHTML=`
+  <div style="display:flex;gap:24px;flex-wrap:wrap">
+    <div>
+      <div style="font-size:10px;font-weight:800;color:#94A3B8;letter-spacing:1px;margin-bottom:8px">📋 PRIMEIRA RESPOSTA — PARSING</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:11px">
+        <span style="color:#94A3B8">Linhas brutas CSV</span><span style="font-weight:700">${pr.total||0}</span>
+        <span style="color:#94A3B8">RAW_BY_DAY (leads)</span><span style="font-weight:700;color:#2563EB">${pr.raw||0}</span>
+        <span style="color:#94A3B8">Respondidos OK</span><span style="font-weight:700;color:#10B981">${pr.ok||0}</span>
+        <span style="color:#94A3B8">Sem resposta/Expirado</span><span style="font-weight:700;color:#EF4444">${pr.sem_resp||0}</span>
+        <span style="color:#94A3B8">Descartados s/ vendedor</span><span style="font-weight:700;color:#F59E0B">${pr.semVendedor||0}</span>
+        <span style="color:#94A3B8">Descartados s/ data</span><span style="font-weight:700;color:#F59E0B">${pr.semData||0}</span>
+        <span style="color:#94A3B8">Pulados (cabeçalho)</span><span style="font-weight:700;color:#94A3B8">${pr.pulados||0}</span>
+      </div>
+      <div style="font-size:9px;color:#94A3B8;margin-top:6px">Colunas detectadas: ${(pr.headers||[]).join(' | ')}</div>
+    </div>
+    <div>
+      <div style="font-size:10px;font-weight:800;color:#94A3B8;letter-spacing:1px;margin-bottom:8px">⏱ DISPONIBILIDADE — PARSING</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:11px">
+        <span style="color:#94A3B8">Linhas brutas CSV</span><span style="font-weight:700">${av.total||0}</span>
+        <span style="color:#94A3B8">Agrupados (agente/dia)</span><span style="font-weight:700;color:#2563EB">${av.raw||0}</span>
+        <span style="color:#94A3B8">Linhas "Disponível"</span><span style="font-weight:700;color:#10B981">${av.disp||0}</span>
+        <span style="color:#94A3B8">Outros status</span><span style="font-weight:700;color:#94A3B8">${av.outros||0}</span>
+        <span style="color:#94A3B8">Descartados s/ agente</span><span style="font-weight:700;color:#F59E0B">${av.semAgent||0}</span>
+      </div>
+      <div style="font-size:9px;color:#94A3B8;margin-top:6px">Colunas detectadas: ${(av.headers||[]).join(' | ')}</div>
+    </div>
+  </div>`;
 }
 
 function showLoading(show) {

@@ -140,12 +140,6 @@
 
 <div class="main">
 
-<!-- PAINEL DE DIAGNÓSTICO -->
-<div id="diag-panel" style="background:#1A2332;border-radius:12px;padding:14px 18px;margin-bottom:16px;border:1px solid #2D3F5C;color:#CBD5E0;font-size:11px">
-  <div style="font-size:10px;font-weight:800;color:#4A6080;letter-spacing:1px;margin-bottom:8px">⚙ DIAGNÓSTICO DE DADOS — <span style="color:#F59E0B;cursor:pointer" onclick="document.getElementById('diag-panel').style.display='none'">ocultar ✕</span></div>
-  <div style="color:#4A6080;font-size:11px">Carregando...</div>
-</div>
-
 <!-- PANEL 0: PRIMEIRA RESPOSTA -->
 <div class="panel active" id="panel-0">
   <div class="filter-bar">
@@ -345,7 +339,7 @@
 // ── GOOGLE SHEETS ─────────────────────────────────────────────────────────────
 const SHEET_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vROvS5snM-Nr6L1KRvAhEVyUyyRx6n2bOo7Lq-ZqEuaOBofFUOWqKAgO7LX-o4aJHJuKTR3olNA9Lsj/pub";
 // Equipes removidas (sem dados)
-const EQUIPES_REMOVIDAS = ['ADM','ADMINISTRATIVO','BENVE'];
+const EQUIPES_REMOVIDAS = ['ADM','BENVE'];
 
 // ── RUNTIME DATA ──────────────────────────────────────────────────────────────
 let RAW_BY_DAY = [];
@@ -593,51 +587,22 @@ async function loadData() {
     window._diagAV = { total: avRows.length, disp: avDisp, outros: avOutros, semAgent: avSemAgent, raw: RAW_AVAIL.length, headers: avHeaders };
 
     // ── SUPERVISORES ─────────────────────────────────────────────────────────
+    // Ordena supervisores pela ordem definida em SUPS_ORDER; desconhecidos vão ao final
     const supSet = new Set([...RAW_BY_DAY.map(r=>r.SUPERVISOR), ...RAW_AVAIL.map(r=>r.SUPERVISOR)]);
-    ALL_SUPS = [...supSet].filter(s=>s && !EQUIPES_REMOVIDAS.includes(s.toUpperCase())).sort();
+    const supArr = [...supSet].filter(s=>s && !EQUIPES_REMOVIDAS.includes(s.toUpperCase()));
+    ALL_SUPS = [
+      ...SUPS_ORDER.filter(s => supArr.some(a => a.toUpperCase()===s.toUpperCase())),
+      ...supArr.filter(s => !SUPS_ORDER.some(o => o.toUpperCase()===s.toUpperCase())),
+    ];
     console.log('[Dashboard] ALL_SUPS:', ALL_SUPS);
 
     showLoading(false);
     init();
-    renderDiagPanel();
   } catch(err) {
     showLoading(false);
     showError(err.message);
     console.error('[Dashboard] Erro:', err);
   }
-}
-
-function renderDiagPanel(){
-  const pr=window._diagPR||{}, av=window._diagAV||{};
-  const el=document.getElementById('diag-panel');
-  if(!el)return;
-  el.innerHTML=`
-  <div style="display:flex;gap:24px;flex-wrap:wrap">
-    <div>
-      <div style="font-size:10px;font-weight:800;color:#94A3B8;letter-spacing:1px;margin-bottom:8px">📋 PRIMEIRA RESPOSTA — PARSING</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:11px">
-        <span style="color:#94A3B8">Linhas brutas CSV</span><span style="font-weight:700">${pr.total||0}</span>
-        <span style="color:#94A3B8">RAW_BY_DAY (leads)</span><span style="font-weight:700;color:#2563EB">${pr.raw||0}</span>
-        <span style="color:#94A3B8">Respondidos OK</span><span style="font-weight:700;color:#10B981">${pr.ok||0}</span>
-        <span style="color:#94A3B8">Sem resposta/Expirado</span><span style="font-weight:700;color:#EF4444">${pr.sem_resp||0}</span>
-        <span style="color:#94A3B8">Descartados s/ vendedor</span><span style="font-weight:700;color:#F59E0B">${pr.semVendedor||0}</span>
-        <span style="color:#94A3B8">Descartados s/ data</span><span style="font-weight:700;color:#F59E0B">${pr.semData||0}</span>
-        <span style="color:#94A3B8">Pulados (cabeçalho)</span><span style="font-weight:700;color:#94A3B8">${pr.pulados||0}</span>
-      </div>
-      <div style="font-size:9px;color:#94A3B8;margin-top:6px">Colunas detectadas: ${(pr.headers||[]).join(' | ')}</div>
-    </div>
-    <div>
-      <div style="font-size:10px;font-weight:800;color:#94A3B8;letter-spacing:1px;margin-bottom:8px">⏱ DISPONIBILIDADE — PARSING</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:11px">
-        <span style="color:#94A3B8">Linhas brutas CSV</span><span style="font-weight:700">${av.total||0}</span>
-        <span style="color:#94A3B8">Agrupados (agente/dia)</span><span style="font-weight:700;color:#2563EB">${av.raw||0}</span>
-        <span style="color:#94A3B8">Linhas "Disponível"</span><span style="font-weight:700;color:#10B981">${av.disp||0}</span>
-        <span style="color:#94A3B8">Outros status</span><span style="font-weight:700;color:#94A3B8">${av.outros||0}</span>
-        <span style="color:#94A3B8">Descartados s/ agente</span><span style="font-weight:700;color:#F59E0B">${av.semAgent||0}</span>
-      </div>
-      <div style="font-size:9px;color:#94A3B8;margin-top:6px">Colunas detectadas: ${(av.headers||[]).join(' | ')}</div>
-    </div>
-  </div>`;
 }
 
 function showLoading(show) {
@@ -667,11 +632,20 @@ function showError(msg) {
     + '<button onclick="loadData()" style="margin-top:14px;padding:10px 28px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700">🔄 Tentar novamente</button>';
 }
 
-// ── SUP COLORS ────────────────────────────────────────────────────────────────
+// ── SUP COLORS & ORDEM ───────────────────────────────────────────────────────
+const SUPS_ORDER = [
+  'HUMBERTO BANQUERI',
+  'LUIZ ROBERTO',
+  'REBECA',
+  'REBECA BENVE',
+  'ADMINISTRATIVO',
+];
 const SUP_C = {
-  'EQUIPE ALFA':       {bg:'#FFF5F5',tc:'#C53030'},
-  'EQUIPE FENIX':      {bg:'#FFF8E8',tc:'#975A16'},
-  'EQUIPE GLADIADORES':{bg:'#E8F8EE',tc:'#276749'},
+  'HUMBERTO BANQUERI': {bg:'#EBF4FF',tc:'#1D4ED8'},
+  'LUIZ ROBERTO':      {bg:'#F3E8FF',tc:'#6B21A8'},
+  'REBECA':            {bg:'#FFF0F6',tc:'#BE185D'},
+  'REBECA BENVE':      {bg:'#FFF8E8',tc:'#975A16'},
+  'ADMINISTRATIVO':    {bg:'#E8F4F8',tc:'#0E7490'},
 };
 const medals=['🥇','🥈','🥉'];
 

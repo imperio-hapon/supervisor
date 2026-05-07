@@ -392,6 +392,18 @@ function toSeconds(v) {
   return null;
 }
 
+// Converte "DD/MM/YYYY HH:MM:SS" → Date object
+function parseDateTimeBR(v) {
+  if (!v || !v.trim()) return null;
+  const s = v.trim();
+  // formato: DD/MM/YYYY HH:MM:SS
+  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1], +m[4], +m[5], +m[6]);
+  // fallback: tentar parse direto
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+
 // ── LOAD DATA ─────────────────────────────────────────────────────────────────
 async function loadData() {
   showLoading(true);
@@ -433,12 +445,18 @@ async function loadData() {
       if (!vendedor || !date) return;
       if (vendedor.toUpperCase() === 'VENDEDOR' || vendedor.startsWith('=')) return;
 
-      const respRaw = (r['Primeira resposta do agente'] || '').trim();
-      const status  = (r['STATUS'] || '').trim().toLowerCase();
-      const secs    = toSeconds(respRaw);
+      // Calcula tempo de resposta: col E (Primeira resposta do agente) - col F (Horário de atribuição)
+      const dtResposta   = parseDateTimeBR(r['Primeira resposta do agente'] || '');
+      const dtAtribuicao = parseDateTimeBR(r['Horário de atribuição'] || r['Horario de atribuicao'] || '');
+      const status       = (r['STATUS'] || '').trim().toLowerCase();
+
+      let secs = null;
+      if (dtResposta && dtAtribuicao && dtResposta >= dtAtribuicao) {
+        secs = Math.round((dtResposta - dtAtribuicao) / 1000);
+      }
 
       let ate1 = 0, ate2 = 0, gt2 = 0, sem_resp = 0;
-      if (secs === null || respRaw === '' || status === 'sem resposta' || status === 'expirado') {
+      if (secs === null || status === 'sem resposta' || status === 'expirado') {
         sem_resp = 1;
       } else if (secs <= 60) {
         ate1 = 1;

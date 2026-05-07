@@ -144,6 +144,10 @@
 <div class="panel active" id="panel-0">
   <div class="filter-bar">
     <div class="filter-group">
+      <div class="filter-label">Mês</div>
+      <select id="sel-month-0" onchange="onMonthChange(0)"></select>
+    </div>
+    <div class="filter-group">
       <div class="filter-label">Período</div>
       <div class="btn-group">
         <button class="btn-toggle active" id="btn-acum-0"  onclick="setPeriod('acum',0)">Acumulado</button>
@@ -242,6 +246,10 @@
 <div class="panel" id="panel-1">
   <div class="filter-bar">
     <div class="filter-group">
+      <div class="filter-label">Mês</div>
+      <select id="sel-month-1" onchange="onMonthChange(1)"></select>
+    </div>
+    <div class="filter-group">
       <div class="filter-label">Período</div>
       <div class="btn-group">
         <button class="btn-toggle active" id="btn-acum-1"  onclick="setPeriod('acum',1)">Acumulado</button>
@@ -338,15 +346,19 @@ let RAW_BY_DAY = [];
 let RAW_AVAIL  = [];
 let ALL_DATES  = [];
 let ALL_SUPS   = [];
+// Months indexed per tab: { '2026-04': ['2026-04-01', ...], ... }
+let MONTHS_PR  = {}; // tab 0
+let MONTHS_AV  = {}; // tab 1
 
 // ── STATE (declarado antes de qualquer função) ────────────────────────────────
 const state = {
-  dateMode: ['acum','acum'],
-  selDate:  ['',''],
-  selDate2: ['',''],
+  dateMode:     ['acum','acum'],
+  selMonth:     ['',''],        // 'YYYY-MM' — mês selecionado por tab
+  selDate:      ['',''],
+  selDate2:     ['',''],
   selRangeFrom: ['',''],
   selRangeTo:   ['',''],
-  selSup:   ['Todos','Todos'],
+  selSup:       ['Todos','Todos'],
 };
 let agSortCol='total_leads', agSortDir=-1, agPage=0, agTotalPages=1;
 let avSortCol='avgH',        avSortDir=-1, avPage=0, avTotalPages=1;
@@ -516,17 +528,31 @@ async function loadData() {
     console.log('[Dashboard] disponibilidade linhas:', avRows.length);
     if (avRows.length > 0) console.log('[Dashboard] disponibilidade linha 1:', JSON.stringify(avRows[0]));
 
+    // Estrutura real da planilha Disponibilidade:
+    // Agent Name | Date (DD/MM/YYYY) | HORARIO | Reason | SITUAÇÃO | PF OU PME | SUPERVISOR | TEMPO LOGADO | Tempo de um status para outro
+    // A disponibilidade é calculada somando "Tempo de um status para outro" onde SITUAÇÃO === 'Disponível'
+    // por agente + supervisor + data (1 dia = 1 registro agrupado)
     const avMap = {};
     avRows.forEach(r => {
       const agent = (r['Agent Name'] || '').trim();
+      // SUPERVISOR está na coluna 7 (índice 6)
       const sup   = (r['SUPERVISOR'] || '').trim();
+      // Date vem como DD/MM/YYYY
       const date  = fmtDate(r['Date'] || '');
-      const sit   = (r['SITUAÇÃO'] || r['SITUACAO'] || '').trim().toLowerCase();
-      const tempo = r['TEMPO LOGADO'] || '';
+      // SITUAÇÃO: filtramos somente 'Disponível'
+      const sit   = (r['SITUAÇÃO'] || r['SITUACAO'] || r['SITUA\u00c7\u00c3O'] || '').trim().toLowerCase();
+      // Tempo real: última coluna "Tempo de um status para outro"
+      const tempo = (r['Tempo de um status para outro'] || r['TEMPO LOGADO'] || '').trim();
+
       if (!agent || !date) return;
+      // Ignora agente sem supervisor válido
+      if (EQUIPES_REMOVIDAS.includes(sup.toUpperCase())) return;
+
       const key = agent + '|' + sup + '|' + date;
       if (!avMap[key]) avMap[key] = { POWER_BI: agent, SUPERVISOR: sup, date_str: date, avail_hours: 0 };
-      if (sit === 'disponível' || sit === 'disponivel') {
+      // Soma somente registros com situação Disponível
+      const sitNorm = sit.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+      if (sitNorm === 'disponivel' || sitNorm === 'disponível' || sit === 'disponível' || sit === 'disponivel') {
         avMap[key].avail_hours += hmsToH(tempo);
       }
     });
@@ -671,10 +697,13 @@ function filterRows(raw, t){
   const dm=state.dateMode[t], sd=state.selDate[t], sd2=state.selDate2[t];
   const rfrom=state.selRangeFrom[t], rto=state.selRangeTo[t];
   const sup=state.selSup[t];
+  const ym=state.selMonth[t]; // 'YYYY-MM' or 'all'
   return raw.filter(r=>{
     // remove equipes zeradas
     if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
     if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
+    // filtro de mês
+    if(ym && ym!=='all' && !r.date_str.startsWith(ym)) return false;
     if(dm==='acum') return true;
     if(dm==='dia')  return r.date_str===sd;
     if(dm==='2dias') return r.date_str===sd||r.date_str===sd2;
@@ -691,7 +720,9 @@ function filterAv(t){ return filterRows(RAW_AVAIL, t); }
 
 function periodLabel(){
   const t=currentTab, dm=state.dateMode[t];
-  if(dm==='acum') return 'Acumulado';
+  const ym=state.selMonth[t];
+  const mLabel=(ym&&ym!=='all')?` [${monthLabel(ym)}]`:'';
+  if(dm==='acum') return 'Acumulado'+mLabel;
   if(dm==='dia'){
     const d=new Date(state.selDate[t]+'T12:00:00');
     return d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
@@ -769,8 +800,9 @@ function setPeriod(mode,t){
 
 // ── POPULATE DATE SELECTS ─────────────────────────────────────────────────────
 function buildDateSelect(el, dates, selected){
+  if (!el) return;
   el.innerHTML='';
-  [...dates].reverse().forEach(d=>{
+  [...dates].slice().reverse().forEach(d=>{
     const o=document.createElement('option');
     o.value=d;
     const dt=new Date(d+'T12:00:00');
@@ -780,26 +812,104 @@ function buildDateSelect(el, dates, selected){
   });
 }
 
+// ── MONTH HELPERS ─────────────────────────────────────────────────────────────
+const MONTH_NAMES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function buildMonthIndex(dates){
+  const idx={};
+  dates.forEach(d=>{
+    const ym=d.slice(0,7);
+    if(!idx[ym])idx[ym]=[];
+    idx[ym].push(d);
+  });
+  return idx;
+}
+
+function monthLabel(ym){
+  if(!ym)return'';
+  const [y,m]=ym.split('-');
+  return MONTH_NAMES[+m-1]+'/'+y.slice(2);
+}
+
+function buildMonthSelect(el, monthIdx, selectedYM){
+  if(!el)return;
+  el.innerHTML='';
+  // option "Todos os meses"
+  const all=document.createElement('option');
+  all.value='all'; all.textContent='Todos os meses';
+  if(selectedYM==='all')all.selected=true;
+  el.appendChild(all);
+  Object.keys(monthIdx).sort().forEach(ym=>{
+    const o=document.createElement('option');
+    o.value=ym;
+    o.textContent=monthLabel(ym);
+    if(ym===selectedYM)o.selected=true;
+    el.appendChild(o);
+  });
+}
+
+function getDatesForMonth(t){
+  const monthIdx = t===0 ? MONTHS_PR : MONTHS_AV;
+  const ym = state.selMonth[t];
+  if(!ym || ym==='all'){
+    // all dates across all months
+    return Object.values(monthIdx).flat().slice().sort();
+  }
+  return (monthIdx[ym]||[]).slice().sort();
+}
+
+function onMonthChange(t){
+  const el=document.getElementById(`sel-month-${t}`);
+  state.selMonth[t]=el.value;
+  const dates=getDatesForMonth(t);
+  const lastDate  = dates.length>0?dates[dates.length-1]:'';
+  const prevDate  = dates.length>1?dates[dates.length-2]:lastDate;
+  const firstDate = dates.length>0?dates[0]:'';
+  state.selDate[t]      = lastDate;
+  state.selDate2[t]     = prevDate;
+  state.selRangeFrom[t] = firstDate;
+  state.selRangeTo[t]   = lastDate;
+  buildDateSelect(document.getElementById(`sel-date-${t}`),       dates, lastDate);
+  buildDateSelect(document.getElementById(`sel-date2-${t}`),      dates, prevDate);
+  buildDateSelect(document.getElementById(`sel-range-from-${t}`), dates, firstDate);
+  buildDateSelect(document.getElementById(`sel-range-to-${t}`),   dates, lastDate);
+  agPage=0; avPage=0;
+  render();
+}
+
 // ── INIT ─────────────────────────────────────────────────────────────────────
 function init(){
-  // Only dates with actual data per tab
-  const prDates=[...new Set(RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())).map(r=>r.date_str))].filter(Boolean).sort();
-  const avDates=[...new Set(RAW_AVAIL.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())).map(r=>r.date_str))].filter(Boolean).sort();
-  const tabDates=[prDates, avDates];
+  const prDates=[...new Set(
+    RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())).map(r=>r.date_str)
+  )].filter(Boolean).sort();
+  const avDates=[...new Set(
+    RAW_AVAIL.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())).map(r=>r.date_str)
+  )].filter(Boolean).sort();
+
+  MONTHS_PR=buildMonthIndex(prDates);
+  MONTHS_AV=buildMonthIndex(avDates);
 
   for(let i=0;i<2;i++){
-    const dates=tabDates[i];
-    const defaultDate=dates.length>0?dates[dates.length-1]:'';
-    const prev=dates.length>1?dates[dates.length-2]:defaultDate;
-    state.selDate[i]=defaultDate;
-    state.selDate2[i]=prev;
-    state.selRangeFrom[i]=dates.length>0?dates[0]:'';
-    state.selRangeTo[i]=defaultDate;
+    const monthIdx=i===0?MONTHS_PR:MONTHS_AV;
+    const yms=Object.keys(monthIdx).sort();
+    const lastYM=yms.length>0?yms[yms.length-1]:'all';
+    state.selMonth[i]=lastYM;
 
-    buildDateSelect(document.getElementById(`sel-date-${i}`),   dates, defaultDate);
-    buildDateSelect(document.getElementById(`sel-date2-${i}`),  dates, prev);
-    buildDateSelect(document.getElementById(`sel-range-from-${i}`), dates, dates[0]||'');
-    buildDateSelect(document.getElementById(`sel-range-to-${i}`),   dates, defaultDate);
+    buildMonthSelect(document.getElementById(`sel-month-${i}`),monthIdx,lastYM);
+
+    const dates=getDatesForMonth(i);
+    const lastDate  = dates.length>0?dates[dates.length-1]:'';
+    const prevDate  = dates.length>1?dates[dates.length-2]:lastDate;
+    const firstDate = dates.length>0?dates[0]:'';
+    state.selDate[i]      = lastDate;
+    state.selDate2[i]     = prevDate;
+    state.selRangeFrom[i] = firstDate;
+    state.selRangeTo[i]   = lastDate;
+
+    buildDateSelect(document.getElementById(`sel-date-${i}`),       dates, lastDate);
+    buildDateSelect(document.getElementById(`sel-date2-${i}`),      dates, prevDate);
+    buildDateSelect(document.getElementById(`sel-range-from-${i}`), dates, firstDate);
+    buildDateSelect(document.getElementById(`sel-range-to-${i}`),   dates, lastDate);
   }
   render();
 }
@@ -809,7 +919,11 @@ function render(){
   const t=currentTab;
   const dm=state.dateMode[t];
 
-  // sync selects → state
+  // sync month select → state
+  const mEl=document.getElementById(`sel-month-${t}`);
+  if(mEl) state.selMonth[t]=mEl.value;
+
+  // sync date selects → state
   const dEl=document.getElementById(`sel-date-${t}`);
   if(dEl&&(dm==='dia'||dm==='sem'||dm==='2dias'))state.selDate[t]=dEl.value||'';
   const d2El=document.getElementById(`sel-date2-${t}`);

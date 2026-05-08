@@ -223,6 +223,7 @@
           <th onclick="sortAg('ate1')" id="th-ate1" class="td-right">≤1min ↕</th>
           <th onclick="sortAg('ate2')" id="th-ate2" class="td-right">1-2min ↕</th>
           <th onclick="sortAg('gt2')" id="th-gt2" class="td-right">&gt;2min ↕</th>
+          <th onclick="sortAg('sem_resp')" id="th-sem_resp" class="td-right">S/ Resposta ↕</th>
           <th onclick="sortAg('pctAte2')" id="th-pctAte2" class="td-right">% ≤2min ↕</th>
           <th onclick="sortAg('fora_horario')" id="th-fora_horario" class="td-right">Fora Horário ↕</th>
           <th class="td-right">Status</th>
@@ -764,6 +765,8 @@ function filterRows(raw, t){
     if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
     if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
     if(ym && ym!=='all' && !r.date_str.startsWith(ym)) return false;
+    // Registros fora do horário SEMPRE passam (para somar ao contador informativo do agente)
+    // mas total_leads=0 garante que não entram nas métricas
     if(dm==='acum') return true;
     if(dm==='dia')  return r.date_str===sd;
     if(dm==='2dias') return r.date_str===sd||r.date_str===sd2;
@@ -1258,26 +1261,28 @@ function renderAgTable(){
   const paged=data.slice(agPage*PAGE,(agPage+1)*PAGE);
   document.getElementById('ag-tbody').innerHTML=paged.map(a=>{
     const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
-    const st=agStatus(a.pctAte2);
-    const p1=a.total_leads>0?(a.ate1/a.total_leads*100).toFixed(0):0;
-    const p2=a.total_leads>0?(a.ate2/a.total_leads*100).toFixed(0):0;
-    const pGt=a.total_leads>0?(a.gt2/a.total_leads*100).toFixed(0):0;
+    const hasLeads = a.total_leads > 0;
+    const st = hasLeads ? agStatus(a.pctAte2) : null;
+    const p1=hasLeads?(a.ate1/a.total_leads*100).toFixed(0):0;
+    const p2=hasLeads?(a.ate2/a.total_leads*100).toFixed(0):0;
+    const pGt=hasLeads?(a.gt2/a.total_leads*100).toFixed(0):0;
     return `<tr>
       <td style="font-weight:700;white-space:nowrap">${a.name}</td>
       <td>${supBadge(a.sup)}</td>
-      <td class="td-right" style="font-weight:600;color:#4A5568">${fmt(a.total_leads)}</td>
-      <td class="td-right"><div style="color:#10B981;font-weight:700">${fmt(a.ate1)}</div><div style="font-size:9px;color:#94A3B8">${p1}%</div></td>
-      <td class="td-right"><div style="color:#F59E0B;font-weight:700">${fmt(a.ate2)}</div><div style="font-size:9px;color:#94A3B8">${p2}%</div></td>
-      <td class="td-right"><div style="color:#EF4444;font-weight:700">${fmt(a.gt2)}</div><div style="font-size:9px;color:#94A3B8">${pGt}%</div></td>
+      <td class="td-right" style="font-weight:600;color:#4A5568">${hasLeads?fmt(a.total_leads):'–'}</td>
+      <td class="td-right"><div style="color:#10B981;font-weight:700">${hasLeads?fmt(a.ate1):'–'}</div>${hasLeads?`<div style="font-size:9px;color:#94A3B8">${p1}%</div>`:''}</td>
+      <td class="td-right"><div style="color:#F59E0B;font-weight:700">${hasLeads?fmt(a.ate2):'–'}</div>${hasLeads?`<div style="font-size:9px;color:#94A3B8">${p2}%</div>`:''}</td>
+      <td class="td-right"><div style="color:#EF4444;font-weight:700">${hasLeads?fmt(a.gt2):'–'}</div>${hasLeads?`<div style="font-size:9px;color:#94A3B8">${pGt}%</div>`:''}</td>
+      <td class="td-right"><div style="color:#6B7280;font-weight:700">${hasLeads?fmt(a.sem_resp):'–'}</div>${hasLeads&&a.sem_resp>0?`<div style="font-size:9px;color:#94A3B8">${(a.sem_resp/a.total_leads*100).toFixed(0)}%</div>`:''}</td>
       <td>
-        <div class="mini-bar-wrap">
+        ${hasLeads?`<div class="mini-bar-wrap">
           <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${Math.min(a.pctAte2,100)}%;background:${st.color}"></div></div>
           <span style="font-size:12px;font-weight:800;color:${st.color};min-width:34px;text-align:right">${a.pctAte2.toFixed(0)}%</span>
-        </div>
+        </div>`:'<span style="color:#94A3B8;font-size:12px">–</span>'}
       </td>
       <td class="td-right" style="color:#D97706;font-weight:700">${a.fora_horario>0?fmt(a.fora_horario):'–'}</td>
-      <td class="td-right"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></td>
-      <td class="td-right"><span class="status-badge" style="background:${a.pctAte2>=80?'#D1FAE5':'#FEE2E2'};color:${a.pctAte2>=80?'#10B981':'#EF4444'}">${a.pctAte2>=80?'✓ Dentro':'✗ Fora'}</span></td>
+      <td class="td-right">${hasLeads?`<span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>`:'<span style="color:#94A3B8;font-size:11px">–</span>'}</td>
+      <td class="td-right">${hasLeads?`<span class="status-badge" style="background:${a.pctAte2>=80?'#D1FAE5':'#FEE2E2'};color:${a.pctAte2>=80?'#10B981':'#EF4444'}">${a.pctAte2>=80?'✓ Dentro':'✗ Fora'}</span>`:'<span style="color:#94A3B8;font-size:11px">–</span>'}</td>
     </tr>`;
   }).join('');
   document.getElementById('ag-pg-first').disabled=agPage===0;

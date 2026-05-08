@@ -1020,10 +1020,92 @@ function renderPR(){
   });
 
   if(isTodos){
-    // ── COMPARATIVO GERAL: uma coluna por equipe ────────────────────────────
     compDiv.style.display='block';
     kpiDiv.style.display='none';
 
+    const dm=state.dateMode[0];
+    const ym=state.selMonth[0];
+
+    // ── MODO SEMANAL: tabela comparativa semanas × equipes ──────────────────
+    if(dm==='sem'){
+      // Coleta todas as semanas com dados no mês selecionado
+      const weekSet={};
+      RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())
+        &&(ym&&ym!=='all'?r.date_str.startsWith(ym):true))
+        .forEach(r=>{
+          const w=getWeekDates(r.date_str);
+          const key=w.from+'_'+w.to;
+          if(!weekSet[key]) weekSet[key]={from:w.from,to:w.to};
+        });
+      const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1);
+      const todayStr=new Date().toISOString().slice(0,10);
+
+      if(!weeks.length){
+        compDiv.innerHTML=`<div class="card"><div class="card-title">Sem dados para o período</div></div>`;
+      } else {
+        const fmtWk=(w)=>{
+          const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
+          return d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
+            +' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+        };
+        compDiv.innerHTML=`<div class="card" style="overflow-x:auto;margin-bottom:16px">
+          <div class="card-title">📅 Comparativo Semanal — Todas as Equipes${ym&&ym!=='all'?' · '+monthLabel(ym):''}</div>
+          <table style="width:100%;border-collapse:collapse;min-width:${200+weeks.length*160}px">
+            <thead>
+              <tr style="background:#F7F9FC">
+                <th style="text-align:left;padding:10px 12px;font-size:10px;color:#94A3B8;font-weight:700;letter-spacing:.7px;text-transform:uppercase;border-bottom:2px solid #E2E8F0;min-width:160px">Equipe</th>
+                ${weeks.map(w=>{
+                  const isCur=todayStr>=w.from&&todayStr<=w.to;
+                  return `<th style="text-align:center;padding:10px 8px;border-bottom:2px solid #E2E8F0;border-left:1px solid #E2E8F0;min-width:155px;background:${isCur?'#F0FDF4':'#F7F9FC'}">
+                    <div style="font-size:11px;font-weight:800;color:#1A2332">${fmtWk(w)}</div>
+                    ${isCur?'<div style="font-size:9px;color:#10B981;font-weight:600">● semana atual</div>':''}
+                  </th>`;
+                }).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${ALL_SUPS.map(sup=>{
+                const sc=SUP_C[sup]||{bg:'#EEE',tc:'#666'};
+                const baseRows=RAW_BY_DAY.filter(r=>r.SUPERVISOR===sup
+                  &&(ym&&ym!=='all'?r.date_str.startsWith(ym):true));
+                const cells=weeks.map((w,wi)=>{
+                  const isCur=todayStr>=w.from&&todayStr<=w.to;
+                  const rows=baseRows.filter(r=>r.date_str>=w.from&&r.date_str<=w.to);
+                  const t=aggTotals(rows);
+                  const lr=t.ate1+t.ate2+t.gt2;
+                  const p2=lr>0?((t.ate1+t.ate2)/lr*100):0;
+                  const st=lr>0?agStatus(p2):null;
+                  // delta vs semana anterior
+                  let delta=null;
+                  if(wi>0){
+                    const pw=weeks[wi-1];
+                    const pr=aggTotals(baseRows.filter(r=>r.date_str>=pw.from&&r.date_str<=pw.to));
+                    const plr=pr.ate1+pr.ate2+pr.gt2;
+                    if(plr>0&&lr>0) delta=p2-((pr.ate1+pr.ate2)/plr*100);
+                  }
+                  return `<td style="text-align:center;padding:10px 8px;border-bottom:1px solid #F0F4F8;border-left:1px solid #F0F4F8;background:${isCur?'#F0FDF4':''}">
+                    ${lr>0?`
+                      <div style="font-size:20px;font-weight:900;color:${st.color}">${p2.toFixed(1)}%</div>
+                      <div style="font-size:10px;color:#94A3B8">${fmt(lr)} leads</div>
+                      <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
+                      ${delta!==null?`<div style="font-size:10px;font-weight:700;color:${delta>=0?'#10B981':'#EF4444'};margin-top:3px">${delta>=0?'▲':'▼'}${Math.abs(delta).toFixed(1)}%</div>`:''}
+                    `:'<span style="color:#CBD5E0;font-size:12px">–</span>'}
+                  </td>`;
+                }).join('');
+                return `<tr onmouseover="this.style.background='#F7FAFB'" onmouseout="this.style.background=''">
+                  <td style="padding:10px 12px;border-bottom:1px solid #F0F4F8">
+                    <span class="eq-badge" style="background:${sc.bg};color:${sc.tc};font-size:11px;padding:4px 8px">${sup}</span>
+                  </td>
+                  ${cells}
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+      }
+
+    } else {
+    // ── ACUMULADO / DIA: cards por equipe ──────────────────────────────────
     const supTots = ALL_SUPS.map(s=>{
       const rows=allRows.filter(r=>r.SUPERVISOR===s);
       return {sup:s, ...aggTotals(rows)};
@@ -1061,6 +1143,7 @@ function renderPR(){
         </div>
       </div>`;
     }).join('')}</div>`;
+    } // fim else acum/dia
 
   } else {
     // ── KPIs + COMPARATIVO SEMANAL para equipe específica ──────────────────

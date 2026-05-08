@@ -2,403 +2,1679 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard · Controle de Leads</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Central de Performance</title>
 <style>
-  :root {
-    --header-bg: #1a2340;
-    --header-bg2: #1e2a4a;
-    --bg: #f0f2f7;
-    --surface: #ffffff;
-    --surface2: #f8f9fc;
-    --border: #e2e6ef;
-    --blue: #3b82f6;
-    --orange: #f97316;
-    --green: #22c55e;
-    --red: #ef4444;
-    --text: #1e293b;
-    --text2: #475569;
-    --muted: #94a3b8;
-    --limit: 150;
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#F0F4F8;color:#1A2332;font-size:14px}
+  :root{
+    --green:#10B981;--green-lt:#D1FAE5;
+    --amber:#F59E0B;--amber-lt:#FEF3C7;
+    --red:#EF4444;  --red-lt:#FEE2E2;
+    --blue:#2563EB; --blue-lt:#DBEAFE;
+    --surface:#fff; --border:#E2E8F0;
+    --text:#1A2332; --sub:#4A5568; --muted:#94A3B8;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
-
-  /* ===== HEADER ===== */
-  .top-header {
-    background: linear-gradient(135deg, var(--header-bg) 0%, var(--header-bg2) 100%);
-    padding: 0 32px;
-    display: flex; align-items: stretch; min-height: 80px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-  }
-  .header-brand {
-    display: flex; flex-direction: column; justify-content: center;
-    padding: 16px 32px 16px 0;
-    border-right: 1px solid rgba(255,255,255,0.1);
-    min-width: 210px;
-  }
-  .header-brand .eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 2px; color: rgba(255,255,255,0.45); text-transform: uppercase; margin-bottom: 4px; }
-  .header-brand h1 { font-size: 21px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
-  .header-brand .subtitle { font-size: 11px; color: rgba(255,255,255,0.38); margin-top: 3px; }
-
-  .header-kpis { display: flex; align-items: center; flex: 1; padding: 0 0 0 0; }
-  .hkpi {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 12px 30px; border-right: 1px solid rgba(255,255,255,0.07); min-width: 130px;
-  }
-  .hkpi-value { font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 2px; }
-  .hkpi-value.blue  { color: #60a5fa; }
-  .hkpi-value.red   { color: #f87171; }
-  .hkpi-value.green { color: #4ade80; }
-  .hkpi-value.orange{ color: #fb923c; }
-  .hkpi-pct { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
-  .hkpi-pct.red    { color: #f87171; }
-  .hkpi-pct.green  { color: #4ade80; }
-  .hkpi-pct.orange { color: #fb923c; }
-  .hkpi-label { font-size: 9px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: rgba(255,255,255,0.3); }
-
-  .header-actions { display: flex; align-items: center; gap: 10px; padding: 0 0 0 24px; }
-  .live-badge { display: flex; align-items: center; gap: 5px; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); border-radius: 20px; padding: 5px 12px; font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #4ade80; }
-  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-  .refresh-btn { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); padding: 7px 14px; border-radius: 8px; font-size: 11px; font-weight: 500; cursor: pointer; transition: all .2s; font-family: 'Inter', sans-serif; }
-  .refresh-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
-  .refresh-btn.loading svg { animation: spin 0.8s linear infinite; }
-  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-  .refresh-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink:0; }
-  .last-updated { font-size: 10px; color: rgba(255,255,255,0.28); white-space: nowrap; }
-
-  /* ===== NAV ===== */
-  .nav-strip { background: var(--surface); border-bottom: 2px solid var(--border); padding: 0 32px; display: flex; }
-  .nav-tab { padding: 14px 20px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all .15s; }
-  .nav-tab:hover { color: var(--text2); }
-  .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
-
-  /* ===== LAYOUT ===== */
-  .page-body { max-width: 1440px; margin: 0 auto; padding: 24px 28px 40px; }
-
-  /* ===== CONTROLS ===== */
-  .controls-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-  .ctrl-label { font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
-  .chip { background: var(--surface); border: 1.5px solid var(--border); color: var(--text2); padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; white-space: nowrap; font-family: 'Inter', sans-serif; }
-  .chip:hover { border-color: var(--blue); color: var(--blue); }
-  .chip.active { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
-  .chip.danger.active { background: var(--red); border-color: var(--red); color: #fff; }
-  .chip.green.active  { background: var(--green); border-color: var(--green); color: #fff; }
-  .chip.warn.active   { background: var(--orange); border-color: var(--orange); color: #fff; }
-  .divider-v { width: 1px; height: 22px; background: var(--border); }
-  .search-wrap { margin-left: auto; position: relative; }
-  .search-wrap input { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); padding: 8px 14px 8px 34px; border-radius: 8px; font-size: 13px; width: 220px; font-family: 'Inter', sans-serif; outline: none; transition: border-color .15s; }
-  .search-wrap input:focus { border-color: var(--blue); }
-  .search-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; }
-
-  /* ===== MAIN GRID ===== */
-  .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
-
-  /* ===== TABLE CARD ===== */
-  .table-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 6px rgba(0,0,0,0.05); overflow: hidden; }
-  .table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-  .table-header h3 { font-size: 14px; font-weight: 700; }
-  .count-badge { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 2px 10px; font-size: 11px; font-weight: 600; color: var(--muted); }
-
-  table { width: 100%; border-collapse: collapse; }
-  thead th { background: var(--surface2); padding: 10px 16px; font-size: 10px; text-align: left; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); white-space: nowrap; cursor: pointer; user-select: none; border-bottom: 1px solid var(--border); }
-  thead th:hover { color: var(--text2); }
-  thead th.sorted { color: var(--blue); }
-  thead th .sort-arrow { opacity: .35; margin-left: 3px; }
-  thead th.sorted .sort-arrow { opacity: 1; }
-
-  tbody tr { border-bottom: 1px solid rgba(226,230,239,0.7); transition: background .1s; }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: #f8faff; }
-  tbody tr.above-limit { background: rgba(239,68,68,0.04); }
-  tbody tr.above-limit:hover { background: rgba(239,68,68,0.08); }
-
-  td { padding: 10px 16px; font-size: 13px; }
-  td.name { font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  td.team { font-size: 11px; font-weight: 600; }
-  td.number { font-size: 13px; text-align: right; font-weight: 500; color: var(--text2); font-variant-numeric: tabular-nums; }
-
-  .bar-cell { min-width: 130px; }
-  .bar-wrap { display: flex; align-items: center; gap: 8px; }
-  .bar-bg { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 3px; transition: width .3s; }
-  .bar-num { font-size: 12px; min-width: 34px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .bar-num.ok     { color: var(--green); }
-  .bar-num.warn   { color: var(--orange); }
-  .bar-num.danger { color: var(--red); }
-
-  .pill { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; letter-spacing: .2px; white-space: nowrap; }
-  .pill.disponivel { background: #dcfce7; color: #15803d; }
-  .pill.offline    { background: #f1f5f9; color: var(--muted); }
-  .pill.ativo      { background: #fff7ed; color: #c2410c; }
-
-  .pausa-flag { display: inline-flex; align-items: center; gap: 4px; background: #fef2f2; border: 1px solid #fecaca; color: var(--red); padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; animation: flagBlink 2s infinite; }
-  @keyframes flagBlink { 0%,100%{opacity:1} 50%{opacity:.6} }
-  .reincidente-badge { display: inline-flex; align-items: center; gap: 4px; background: #fff7ed; border: 1px solid #fed7aa; color: var(--orange); padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; }
-
-  .team-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; flex-shrink: 0; }
-
-  /* ===== SIDE PANEL ===== */
-  .side-panel { display: flex; flex-direction: column; gap: 16px; }
-  .panel-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 6px rgba(0,0,0,0.05); padding: 18px 20px; }
-  .panel-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-  .panel-card h3 .badge { font-size: 10px; background: var(--bg); border: 1px solid var(--border); padding: 2px 7px; border-radius: 5px; color: var(--muted); font-weight: 600; }
-
-  .limit-indicator { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 16px; padding: 10px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; }
-  .limit-indicator svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
-  .limit-indicator p { font-size: 11px; color: #b91c1c; font-weight: 500; }
-  .limit-indicator p strong { font-weight: 700; }
-
-  .team-bars { display: flex; flex-direction: column; gap: 12px; }
-  .team-row { display: flex; flex-direction: column; gap: 5px; }
-  .team-info { display: flex; justify-content: space-between; font-size: 11px; }
-  .team-info .tn { color: var(--text2); font-weight: 600; display: flex; align-items: center; }
-  .team-info .tv { font-weight: 700; }
-  .team-bar { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
-  .team-bar-fill { height: 100%; border-radius: 3px; }
-
-  .reinc-list { display: flex; flex-direction: column; gap: 8px; max-height: 380px; overflow-y: auto; }
-  .reinc-list::-webkit-scrollbar { width: 4px; }
-  .reinc-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  .reinc-item { display: flex; align-items: center; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; border-left: 3px solid var(--orange); gap: 10px; }
-  .reinc-item.danger { border-left-color: var(--red); background: #fef9f9; }
-  .reinc-name { flex: 1; font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .reinc-total { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .reinc-total.red  { color: var(--red); }
-  .reinc-total.warn { color: var(--orange); }
-  .reinc-days { font-size: 10px; color: var(--muted); font-weight: 500; }
-
-  .loading-state { display: flex; align-items: center; justify-content: center; min-height: 280px; flex-direction: column; gap: 14px; }
-  .loading-spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
-  .loading-text { font-size: 12px; color: var(--muted); font-weight: 500; }
-  .error-state { display: flex; align-items: center; justify-content: center; min-height: 200px; flex-direction: column; gap: 10px; background: #fef2f2; border-radius: 8px; padding: 28px; margin: 12px; }
-  .error-state p { font-size: 12px; color: var(--red); text-align: center; font-weight: 500; }
-  .error-state button { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 7px 18px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 6px; }
-
-  .table-scroll { max-height: 540px; overflow-y: auto; }
-  .table-scroll::-webkit-scrollbar { width: 5px; }
-  .table-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  @media (max-width: 1100px) {
-    .main-grid { grid-template-columns: 1fr; }
-    .top-header { flex-wrap: wrap; padding: 16px; min-height: auto; }
-    .header-kpis { flex-wrap: wrap; }
-    .hkpi { min-width: 110px; padding: 10px 16px; }
-  }
+  /* HEADER */
+  .header{background:linear-gradient(135deg,#1A2332 0%,#2D3F5C 100%);padding:20px 28px 0;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  .header-top{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:18px}
+  .header-label{font-size:9px;letter-spacing:4px;color:#7EB3FF;text-transform:uppercase;font-weight:700;margin-bottom:4px}
+  .header-title{font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px}
+  .header-sub{font-size:11px;color:#8FA3C0;margin-top:3px}
+  .kpi-strip{display:flex;gap:8px;flex-wrap:wrap}
+  .kpi-box{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 14px;text-align:center;min-width:110px}
+  .kpi-val{font-size:20px;font-weight:900;letter-spacing:-.5px}
+  .kpi-label{font-size:9px;color:rgba(255,255,255,.6);margin-top:2px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+  .kpi-sub{font-size:12px;font-weight:700;margin-top:2px}
+  /* TABS */
+  .tabs{display:flex;gap:2px}
+  .tab-btn{background:transparent;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,.5);padding:9px 20px;font-size:13px;cursor:pointer;font-weight:500;transition:all .15s;font-family:inherit}
+  .tab-btn.active{color:#7EB3FF;border-bottom-color:#7EB3FF;font-weight:700}
+  /* PANELS */
+  .main{padding:20px 28px;max-width:1380px}
+  .panel{display:none}.panel.active{display:block}
+  /* FILTER BAR */
+  .filter-bar{background:var(--surface);border-radius:12px;padding:12px 16px;margin-bottom:16px;border:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  .filter-group{display:flex;flex-direction:column;gap:5px}
+  .filter-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase}
+  .filter-bar select{padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:#F8FAFC;outline:none;cursor:pointer;font-family:inherit;min-width:160px}
+  .btn-group{display:flex;gap:4px}
+  .btn-toggle{background:transparent;border:1px solid var(--border);color:var(--sub);border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:400;font-family:inherit;transition:all .15s;white-space:nowrap}
+  .btn-toggle.active{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+  /* EQUIPE CHIP BUTTONS */
+  .equipe-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .equipe-btn{border:2px solid transparent;border-radius:20px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;opacity:.7}
+  .equipe-btn.active{opacity:1;transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.15)}
+  /* CARD */
+  .card{background:var(--surface);border-radius:12px;padding:18px 20px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:16px}
+  .card-title{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
+  /* KPI GRID */
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+  .kpi-inner{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .kpi-inner .val{font-size:22px;font-weight:900;letter-spacing:-.5px}
+  .kpi-inner .lbl{font-size:11px;color:var(--muted);margin-top:2px;font-weight:500}
+  .kpi-inner .sub{font-size:11px;margin-top:2px;font-weight:600}
+  /* TOP10 */
+  .top10-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  .top10-card{background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  .top10-header{padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+  .top10-strip{width:4px;height:18px;border-radius:2px;flex-shrink:0}
+  .top10-title{font-size:13px;font-weight:700}
+  .top10-sub{font-size:10px;color:var(--sub)}
+  .top10-col-head{display:grid;grid-template-columns:28px 1fr 60px 60px;gap:6px;padding:6px 14px;font-size:9px;color:var(--muted);letter-spacing:.7px;text-transform:uppercase;background:#FAFBFD;border-bottom:1px solid var(--border)}
+  .top10-row{display:grid;grid-template-columns:28px 1fr 60px 60px;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid #F0F4F8;transition:background .12s}
+  .top10-row:hover{background:#F7FAFB}
+  .top10-medal{text-align:center;font-size:14px}
+  .top10-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top10-badge{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600}
+  .top10-leads{text-align:right;font-size:11px;color:var(--sub)}
+  .top10-pct{text-align:right;font-size:13px;font-weight:800}
+  /* SEARCH */
+  .search-bar{background:var(--surface);border-radius:12px;padding:12px 16px;margin-bottom:12px;border:1px solid var(--border);display:flex;gap:12px;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  .search-wrap{position:relative;flex:1;max-width:300px}
+  .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px}
+  .search-wrap input{width:100%;padding:7px 10px 7px 28px;border:1px solid var(--border);border-radius:8px;font-size:12px;outline:none;background:#F8FAFC;font-family:inherit}
+  /* TABLE */
+  .table-wrap{background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  table{width:100%;border-collapse:collapse}
+  th{padding:8px 10px;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.7px;text-transform:uppercase;background:#F7F9FC;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap}
+  th:hover{color:var(--blue)}
+  th.sorted{color:var(--blue)}
+  td{padding:9px 10px;border-bottom:1px solid var(--border);transition:background .1s}
+  tr:hover td{background:#F7F9FC}
+  .td-right{text-align:right}
+  .eq-badge{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;white-space:nowrap}
+  .status-badge{font-size:9px;padding:2px 7px;border-radius:6px;font-weight:700;white-space:nowrap}
+  .mini-bar-wrap{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+  .mini-bar-bg{width:48px;height:5px;border-radius:3px;background:#F1F5F9;overflow:hidden}
+  .mini-bar-fill{height:100%;border-radius:3px;transition:width .3s}
+  .pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border);background:#FAFBFD}
+  .pagination span{font-size:11px;color:var(--sub)}
+  .pg-btns{display:flex;gap:4px}
+  .pg-btn{padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);cursor:pointer;font-size:11px;font-family:inherit}
+  .pg-btn:disabled{background:#F1F5F9;color:var(--muted);cursor:default}
+  /* SUP CHIPS INFO */
+  .sup-chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .sup-chip{border-radius:10px;padding:10px 14px;min-width:150px;border:1px solid transparent}
+  .sup-chip-name{font-size:11px;font-weight:700;margin-bottom:4px}
+  .sup-chip-count{font-size:11px}
+  .sup-chip-rates{display:flex;gap:8px;margin-top:4px}
+  .sup-chip-avg{font-size:10px}
+  /* COMPARATIVO EQUIPES */
+  .comp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+  .comp-card{background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .comp-header{padding:10px 12px;font-size:11px;font-weight:800;text-align:center;border-bottom:1px solid var(--border)}
+  .comp-row{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid #F0F4F8;font-size:11px}
+  .comp-row:last-child{border-bottom:none}
+  .comp-lbl{color:var(--muted);font-size:10px}
+  .comp-val{font-weight:700;font-size:13px}
+  .comp-sub{font-size:10px;font-weight:600}
+  .comp-bar-wrap{padding:8px 12px 10px;border-bottom:1px solid #F0F4F8}
+  .comp-bar-track{height:6px;border-radius:3px;background:#F1F5F9;overflow:hidden;margin-top:4px}
+  .comp-bar-fill{height:100%;border-radius:3px;transition:width .4s}
+  /* CALENDÁRIO SEMANAL */
+  .week-cal{overflow-x:auto}
+  .week-cal>div{min-width:780px}
+  @media(max-width:1100px){.comp-grid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.top10-grid{grid-template-columns:1fr}.comp-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.kpi-grid{grid-template-columns:1fr}.header-top{flex-direction:column}.comp-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
-<header class="top-header">
-  <div class="header-brand">
-    <div class="eyebrow">Hapvida · JR Vendas Chat</div>
-    <h1>Central de Performance</h1>
-    <div class="subtitle" id="headerSubtitle">Carregando dados...</div>
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-title">Central de Performance</div>
+      <div class="header-sub" id="period-label">Carregando...</div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi-box"><div class="kpi-val" id="h-leads" style="color:#7EB3FF">–</div><div class="kpi-label">Leads Totais</div></div>
+      <div class="kpi-box"><div class="kpi-val" id="h-sem" style="color:#FC8181">–</div><div class="kpi-label">Enc. s/ Resposta</div><div class="kpi-sub" id="h-sem-pct" style="color:#FC8181"></div></div>
+      <div class="kpi-box"><div class="kpi-val" id="h-ate2" style="color:#68D391">–</div><div class="kpi-label">Respondidos ≤2min</div><div class="kpi-sub" id="h-ate2-pct" style="color:#68D391"></div></div>
+      <div class="kpi-box"><div class="kpi-val" id="h-gt2" style="color:#F6AD55">–</div><div class="kpi-label">Respondidos &gt;2min</div><div class="kpi-sub" id="h-gt2-pct" style="color:#F6AD55"></div></div>
+    </div>
   </div>
-  <div class="header-kpis" id="headerKpis">
-    <div class="hkpi"><div class="hkpi-value blue">—</div><div class="hkpi-label">Leads Totais</div></div>
-    <div class="hkpi"><div class="hkpi-value red">—</div><div class="hkpi-pct red">—</div><div class="hkpi-label">Ag. Sem Resposta</div></div>
-    <div class="hkpi"><div class="hkpi-value green">—</div><div class="hkpi-pct green">—</div><div class="hkpi-label">Dentro do Limite</div></div>
-    <div class="hkpi"><div class="hkpi-value orange">—</div><div class="hkpi-pct orange">—</div><div class="hkpi-label">Acima do Limite</div></div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(0)">Primeira Resposta</button>
+    <button class="tab-btn" onclick="switchTab(1)">Disponibilidade</button>
   </div>
-  <div class="header-actions">
-    <span class="last-updated" id="lastUpdated"></span>
-    <button class="refresh-btn" id="refreshBtn" onclick="loadData()">
-      <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-      Atualizar
-    </button>
-    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
-  </div>
-</header>
+</div>
 
-<nav class="nav-strip">
-  <div class="nav-tab active">Carteira de Leads</div>
-  <div class="nav-tab">Disponibilidade</div>
-</nav>
+<div class="main">
 
-<div class="page-body">
-  <div class="controls-row">
-    <span class="ctrl-label">Filtro</span>
-    <button class="chip active" onclick="setFilter('all', this)">Todos</button>
-    <button class="chip danger" onclick="setFilter('pausa', this)">🔴 Em Pausa (&gt;150)</button>
-    <button class="chip green" onclick="setFilter('ok', this)">🟢 Dentro do Limite</button>
-    <button class="chip warn" onclick="setFilter('reincidente', this)">⚠ Reincidentes</button>
-    <div class="divider-v"></div>
-    <span class="ctrl-label">Equipe</span>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;" id="teamFilters"></div>
+<!-- OVERLAY DE CARREGAMENTO -->
+<div id="loading-overlay" style="position:fixed;inset:0;background:rgba(26,35,50,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;font-family:'Segoe UI',sans-serif;gap:14px">
+  <div style="font-size:38px">⏳</div>
+  <div style="font-size:18px;font-weight:700">Carregando dados da planilha...</div>
+  <div style="font-size:13px;color:#8FA3C0">Conectando ao Google Sheets</div>
+</div>
+
+<!-- PANEL 0: PRIMEIRA RESPOSTA -->
+<div class="panel active" id="panel-0">
+  <div class="filter-bar">
+    <div class="filter-group">
+      <div class="filter-label">Mês</div>
+      <select id="sel-month-0" onchange="onMonthChange(0)"></select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Período</div>
+      <div class="btn-group">
+        <button class="btn-toggle active" id="btn-acum-0"  onclick="setPeriod('acum',0)">Acumulado</button>
+        <button class="btn-toggle" id="btn-dia-0"   onclick="setPeriod('dia',0)">Por Dia</button>
+        <button class="btn-toggle" id="btn-sem-0"   onclick="setPeriod('sem',0)">Semanal</button>
+        <button class="btn-toggle" id="btn-2dias-0" onclick="setPeriod('2dias',0)">2 Dias</button>
+        <button class="btn-toggle" id="btn-range-0" onclick="setPeriod('range',0)">Período</button>
+      </div>
+    </div>
+    <div class="filter-group" id="date-wrap-0" style="display:none">
+      <div class="filter-label">Data</div>
+      <select id="sel-date-0" onchange="render()"></select>
+    </div>
+    <div class="filter-group" id="date2-wrap-0" style="display:none">
+      <div class="filter-label">Segunda Data</div>
+      <select id="sel-date2-0" onchange="render()"></select>
+    </div>
+    <div class="filter-group" id="range-wrap-0" style="display:none">
+      <div class="filter-label">De</div>
+      <select id="sel-range-from-0" onchange="render()"></select>
+    </div>
+  </div>
+
+  <!-- EQUIPE BUTTONS -->
+  <div class="equipe-btns" id="equipe-btns-0"></div>
+
+  <!-- COMPARATIVO (visível só quando Todas as Equipes) -->
+  <div id="pr-comparativo" style="display:none"></div>
+
+  <div class="kpi-grid" id="pr-kpis"></div>
+
+  <!-- TOP 10 -->
+  <div class="top10-grid">
+    <div class="top10-card">
+      <div class="top10-header" style="background:#DBEAFE">
+        <div class="top10-strip" style="background:#3B82F6"></div>
+        <div class="top10-title">Top 10 Melhores</div>
+        <div class="top10-sub">maior % ≤2min</div>
+      </div>
+      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Leads</div><div style="text-align:right">%≤2min</div></div>
+      <div id="pr-top10-best"></div>
+    </div>
+    <div class="top10-card">
+      <div class="top10-header" style="background:#FEE2E2">
+        <div class="top10-strip" style="background:#EF4444"></div>
+        <div class="top10-title">Top 10 Ofensores</div>
+        <div class="top10-sub">menor % ≤2min</div>
+      </div>
+      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Leads</div><div style="text-align:right">%≤2min</div></div>
+      <div id="pr-top10-worst"></div>
+    </div>
+  </div>
+
+  <!-- SEARCH + TABLE -->
+  <div class="search-bar">
     <div class="search-wrap">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="searchInput" placeholder="Buscar agente..." oninput="renderTable()">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="ag-search" placeholder="Buscar promotor..." oninput="agPage=0;renderAgTable()">
+    </div>
+    <span style="font-size:12px;color:var(--sub)"><b id="ag-count"></b> promotores</span>
+  </div>
+
+  <!-- Modo normal -->
+  <div id="ag-table-normal">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortAg('name')" id="th-name" style="text-align:left">Promotor ↕</th>
+          <th>Equipe</th>
+          <th onclick="sortAg('total_leads')" id="th-total_leads" class="td-right sorted">Total Leads ↓</th>
+          <th onclick="sortAg('ate1')" id="th-ate1" class="td-right">≤1min ↕</th>
+          <th onclick="sortAg('ate2')" id="th-ate2" class="td-right">1-2min ↕</th>
+          <th onclick="sortAg('gt2')" id="th-gt2" class="td-right">&gt;2min ↕</th>
+          <th onclick="sortAg('sem_resp')" id="th-sem_resp" class="td-right">S/ Resposta ↕</th>
+          <th onclick="sortAg('pctAte2')" id="th-pctAte2" class="td-right">% ≤2min ↕</th>
+          <th class="td-right">Status</th>
+          <th class="td-right">Meta ≤2min</th>
+        </tr>
+      </thead>
+      <tbody id="ag-tbody"></tbody>
+    </table>
+    <div class="pagination">
+      <span id="ag-page-info"></span>
+      <div class="pg-btns">
+        <button class="pg-btn" id="ag-pg-first"  onclick="agPage=0;renderAgTable()">«</button>
+        <button class="pg-btn" id="ag-pg-prev"   onclick="agPage=Math.max(0,agPage-1);renderAgTable()">‹</button>
+        <button class="pg-btn" id="ag-pg-next"   onclick="agPage=Math.min(agTotalPages-1,agPage+1);renderAgTable()">›</button>
+        <button class="pg-btn" id="ag-pg-last"   onclick="agPage=agTotalPages-1;renderAgTable()">»</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- Modo comparativo (semanal / 2 dias) -->
+  <div id="ag-table-comp" style="display:none"></div>
+</div>
+
+<!-- PANEL 1: DISPONIBILIDADE -->
+<div class="panel" id="panel-1">
+  <div class="filter-bar">
+    <div class="filter-group">
+      <div class="filter-label">Mês</div>
+      <select id="sel-month-1" onchange="onMonthChange(1)"></select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Período</div>
+      <div class="btn-group">
+        <button class="btn-toggle active" id="btn-acum-1"  onclick="setPeriod('acum',1)">Acumulado</button>
+        <button class="btn-toggle" id="btn-dia-1"   onclick="setPeriod('dia',1)">Por Dia</button>
+        <button class="btn-toggle" id="btn-sem-1"   onclick="setPeriod('sem',1)">Semanal</button>
+        <button class="btn-toggle" id="btn-2dias-1" onclick="setPeriod('2dias',1)">2 Dias</button>
+        <button class="btn-toggle" id="btn-range-1" onclick="setPeriod('range',1)">Período</button>
+      </div>
+    </div>
+    <div class="filter-group" id="date-wrap-1" style="display:none">
+      <div class="filter-label">Data</div>
+      <select id="sel-date-1" onchange="render()"></select>
+    </div>
+    <div class="filter-group" id="date2-wrap-1" style="display:none">
+      <div class="filter-label">Segunda Data</div>
+      <select id="sel-date2-1" onchange="render()"></select>
+    </div>
+    <div class="filter-group" id="range-wrap-1" style="display:none">
+      <div class="filter-label">De</div>
+      <select id="sel-range-from-1" onchange="render()"></select>
+    </div>
+    <div class="filter-group" id="range-wrap2-1" style="display:none">
+      <div class="filter-label">Até</div>
+      <select id="sel-range-to-1" onchange="render()"></select>
     </div>
   </div>
 
-  <div class="main-grid">
-    <div class="table-card">
-      <div class="table-header">
-        <h3>Agentes · Volume de Leads</h3>
-        <span class="count-badge" id="tableCount">0 agentes</span>
-      </div>
-      <div id="tableContent">
-        <div class="loading-state"><div class="loading-spinner"></div><div class="loading-text">Buscando dados da planilha...</div></div>
-      </div>
-    </div>
+  <!-- EQUIPE BUTTONS -->
+  <div class="equipe-btns" id="equipe-btns-1"></div>
 
-    <div class="side-panel">
-      <div class="panel-card">
-        <h3>Visão por Equipe <span class="badge">limite 150</span></h3>
-        <div class="limit-indicator">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <p>Agentes com total <strong>&gt; 150</strong> leads devem entrar em <strong>PAUSA</strong></p>
-        </div>
-        <div id="teamDistrib" class="team-bars"></div>
+  <!-- COMPARATIVO SEMANAL DISPONIBILIDADE -->
+  <div id="av-comparativo"></div>
+
+  <div class="kpi-grid" id="av-kpis"></div>
+
+  <!-- TOP 10 DISPONIBILIDADE -->
+  <div class="top10-grid">
+    <div class="top10-card">
+      <div class="top10-header" style="background:#D1FAE5">
+        <div class="top10-strip" style="background:#10B981"></div>
+        <div class="top10-title">Top 10 Mais Disponíveis</div>
+        <div class="top10-sub">maior média diária de horas</div>
       </div>
-      <div class="panel-card">
-        <h3>⚠ Reincidentes <span class="badge" id="reincCount">0</span></h3>
-        <p style="font-size:11px;color:var(--muted);margin-bottom:12px;font-weight:500;">Agentes acima do limite ou com alto volume acumulado</p>
-        <div class="reinc-list" id="reincList"></div>
+      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Total h</div><div style="text-align:right">Média/dia</div></div>
+      <div id="av-top10-best"></div>
+    </div>
+    <div class="top10-card">
+      <div class="top10-header" style="background:#FEE2E2">
+        <div class="top10-strip" style="background:#EF4444"></div>
+        <div class="top10-title">Top 10 Menos Disponíveis</div>
+        <div class="top10-sub">menor média diária de horas</div>
+      </div>
+      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Total h</div><div style="text-align:right">Média/dia</div></div>
+      <div id="av-top10-worst"></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortAv('name')" id="av-th-name" style="text-align:left">Promotor ↕</th>
+          <th>Equipe</th>
+          <th onclick="sortAv('totalH')" id="av-th-totalH" class="td-right">Total Horas ↕</th>
+          <th onclick="sortAv('days')"   id="av-th-days"   class="td-right">Dias ↕</th>
+          <th onclick="sortAv('avgH')"   id="av-th-avgH"   class="td-right sorted">Média Diária ↓</th>
+          <th class="td-right">Status</th>
+        </tr>
+      </thead>
+      <tbody id="av-tbody"></tbody>
+    </table>
+    <div class="pagination">
+      <span id="av-page-info"></span>
+      <div class="pg-btns">
+        <button class="pg-btn" id="av-pg-first" onclick="avPage=0;renderAvTable()">«</button>
+        <button class="pg-btn" id="av-pg-prev"  onclick="avPage=Math.max(0,avPage-1);renderAvTable()">‹</button>
+        <button class="pg-btn" id="av-pg-next"  onclick="avPage=Math.min(avTotalPages-1,avPage+1);renderAvTable()">›</button>
+        <button class="pg-btn" id="av-pg-last"  onclick="avPage=avTotalPages-1;renderAvTable()">»</button>
       </div>
     </div>
   </div>
 </div>
 
-<script>
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRnlwiAP5sVy5NpzqrHObGJcqL6BsyzNoWNM8CC-iBD74TkHRDYVzFHOm14WEBv8mwXmn0N2lgX87pH/pub?output=csv';
-const LIMIT = 150;
-const TEAM_COLORS = ['#3b82f6','#f97316','#22c55e','#ef4444','#8b5cf6','#0ea5e9','#ec4899','#14b8a6','#eab308','#6366f1'];
-const teamColorMap = {};
-function getTeamColor(t) {
-  if (!teamColorMap[t]) teamColorMap[t] = TEAM_COLORS[Object.keys(teamColorMap).length % TEAM_COLORS.length];
-  return teamColorMap[t];
-}
+</div><!-- /main -->
 
-let RAW = [], teams = [], currentFilter = 'all', currentTeam = 'all', sortCol = 'total', sortDir = -1;
+<script>
+// ── GOOGLE SHEETS ─────────────────────────────────────────────────────────────
+const SHEET_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vROvS5snM-Nr6L1KRvAhEVyUyyRx6n2bOo7Lq-ZqEuaOBofFUOWqKAgO7LX-o4aJHJuKTR3olNA9Lsj/pub";
+// Equipes removidas (sem dados)
+const EQUIPES_REMOVIDAS = ['ADM','BENVE'];
+
+// ── RUNTIME DATA ──────────────────────────────────────────────────────────────
+let RAW_BY_DAY = [];
+let RAW_AVAIL  = [];
+let ALL_DATES  = [];
+let ALL_SUPS   = [];
+// Months indexed per tab: { '2026-04': ['2026-04-01', ...], ... }
+let MONTHS_PR  = {}; // tab 0
+let MONTHS_AV  = {}; // tab 1
+
+// ── STATE (declarado antes de qualquer função) ────────────────────────────────
+const state = {
+  dateMode:     ['acum','acum'],
+  selMonth:     ['',''],
+  selDate:      ['',''],
+  selDate2:     ['',''],
+  selRangeFrom: ['',''],
+  selRangeTo:   ['',''],
+  selSup:       ['Todos','Todos'],
+};
+let agSortCol='total_leads', agSortDir=-1, agPage=0, agTotalPages=1;
+let avSortCol='avgH',        avSortDir=-1, avPage=0, avTotalPages=1;
+const PAGE = 15;
+
+// ── CSV PARSER ────────────────────────────────────────────────────────────────
+function splitCSVLine(line) {
+  const fields = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQ) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; }
+        else { inQ = false; }
+      } else { cur += ch; }
+    } else {
+      if (ch === '"') { inQ = true; }
+      else if (ch === ',') { fields.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
+    }
+  }
+  fields.push(cur.trim());
+  return fields;
+}
 
 function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,'').toLowerCase());
-  const fc = (candidates) => { for(const c of candidates){ const i=headers.findIndex(h=>h.includes(c)); if(i!==-1)return i; } return -1; };
-  const colMap = { nome:fc(['agente','nome','operador','atendente','consultor']), equipe:fc(['equipe','time','grupo','supervisão','supervisor','supervisao']), aberto:fc(['aberto','em aberto','open']), aguardando:fc(['aguardando','ag. resp','ag.resp','aguard','waiting']), pendente:fc(['pendente','pendentes','pending']), total:fc(['total','soma','sum']), status:fc(['status','situação','situacao']) };
-  const split = line => { const r=[]; let cur='',q=false; for(const ch of line){ if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(cur);cur='';}else{cur+=ch;} } r.push(cur); return r; };
-  return lines.slice(1).map(l => {
-    const c = split(l);
-    if (!c || c.length < 2) return null;
-    const g = k => colMap[k]!==-1?(c[colMap[k]]||'').trim().replace(/^"|"$/g,''):'';
-    const nome = g('nome'); if (!nome) return null;
-    const aberto=parseInt(g('aberto'))||0, aguardando=parseInt(g('aguardando'))||0, pendente=parseInt(g('pendente'))||0;
-    let total=colMap.total!==-1?parseInt(g('total')):NaN; if(isNaN(total))total=aberto+aguardando+pendente;
-    return { nome, equipe:g('equipe')||'SEM EQUIPE', aberto, aguardando, pendente, total, status:g('status')||'Disponível' };
-  }).filter(Boolean);
+  const lines = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') { inQ = !inQ; cur += ch; }
+    else if ((ch === '\n' || (ch === '\r' && text[i+1] === '\n')) && !inQ) {
+      if (ch === '\r') i++;
+      lines.push(cur); cur = '';
+    } else { cur += ch; }
+  }
+  if (cur.trim()) lines.push(cur);
+  if (lines.length < 2) return { headers: [], rows: [] };
+  const headers = splitCSVLine(lines[0]);
+  const rows = lines.slice(1)
+    .filter(l => l.trim())
+    .map(line => {
+      const fields = splitCSVLine(line);
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = (fields[i] || ''); });
+      return obj;
+    });
+  return { headers, rows };
 }
 
+// Converte "DD/MM/YYYY" ou "DD/MM/YYYY HH:MM:SS" ou "YYYY-MM-DD" → "YYYY-MM-DD"
+function fmtDate(v) {
+  if (!v) return '';
+  const s = v.trim().split(' ')[0];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+    const [d, m, y] = s.split('/');
+    return y + '-' + m + '-' + d;
+  }
+  return s;
+}
+
+// Converte "HH:MM:SS" → horas decimais
+function hmsToH(v) {
+  if (!v || !v.trim()) return 0;
+  const p = v.trim().split(':');
+  if (p.length === 3) return (+p[0]) + (+p[1]) / 60 + (+p[2]) / 3600;
+  if (p.length === 2) return (+p[0]) + (+p[1]) / 60;
+  return 0;
+}
+
+// Converte "HH:MM:SS" ou segundos → segundos
+function toSeconds(v) {
+  if (!v || !v.trim()) return null;
+  const s = v.trim();
+  if (/^\d+$/.test(s)) return +s;  // já em segundos
+  const p = s.split(':');
+  if (p.length === 3) return (+p[0]) * 3600 + (+p[1]) * 60 + (+p[2]);
+  if (p.length === 2) return (+p[0]) * 60 + (+p[1]);
+  return null;
+}
+
+// Converte "DD/MM/YYYY HH:MM:SS" → Date object
+function parseDateTimeBR(v) {
+  if (!v || !v.trim()) return null;
+  const s = v.trim();
+  // formato: DD/MM/YYYY HH:MM:SS
+  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1], +m[4], +m[5], +m[6]);
+  // fallback: tentar parse direto
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+
+// ── NORMALIZA SUPERVISOR ──────────────────────────────────────────────────────
+function normSup(s){
+  if(!s) return '';
+  const u = s.trim().toUpperCase();
+  if(u.includes('HUMBERTO'))    return 'HUMBERTO BANQUERI';
+  if(u.includes('LUIZ'))        return 'LUIZ ROBERTO';
+  if(u.includes('BENVE'))       return 'REBECA BENVE';
+  if(u.includes('REBECA'))      return 'REBECA';
+  if(u.includes('ADMIN'))       return 'ADMINISTRATIVO';
+  return s.trim();
+}
+
+// ── LOAD DATA ─────────────────────────────────────────────────────────────────
 async function loadData() {
-  const btn = document.getElementById('refreshBtn');
-  btn.classList.add('loading');
-  document.getElementById('tableContent').innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><div class="loading-text">Buscando dados da planilha...</div></div>';
+  showLoading(true);
   try {
-    let text=null, lastErr=null;
-    for (const url of [CSV_URL, `https://corsproxy.io/?${encodeURIComponent(CSV_URL)}`]) {
-      try { const r=await fetch(url,{cache:'no-store'}); if(!r.ok)throw new Error(`HTTP ${r.status}`); text=await r.text(); break; } catch(e){lastErr=e;}
-    }
-    if (!text) throw lastErr||new Error('Não foi possível buscar o CSV');
-    RAW = parseCSV(text);
-    if (!RAW.length) throw new Error('Nenhum dado encontrado. Verifique o formato da planilha.');
-    RAW.forEach(d => { d.acimaDolimite=d.total>LIMIT; d.reincidente=d.acimaDolimite||(d.aguardando>100&&d.total>100); });
-    teams = [...new Set(RAW.map(d=>d.equipe))];
-    teams.forEach(t=>getTeamColor(t));
-    const now = new Date();
-    document.getElementById('headerSubtitle').textContent = `Acumulado · ${now.toLocaleDateString('pt-BR')} · Todas as equipes`;
-    document.getElementById('lastUpdated').textContent = `Atualizado: ${now.toLocaleTimeString('pt-BR')}`;
-    document.getElementById('tableContent').innerHTML = `<div class="table-scroll"><table><thead><tr>
-      <th onclick="sortBy('nome')">Agente <span class="sort-arrow">↕</span></th>
-      <th onclick="sortBy('equipe')">Equipe <span class="sort-arrow">↕</span></th>
-      <th onclick="sortBy('aberto')" style="text-align:right">Aberto <span class="sort-arrow">↕</span></th>
-      <th onclick="sortBy('aguardando')" style="text-align:right">Ag. Resp <span class="sort-arrow">↕</span></th>
-      <th onclick="sortBy('pendente')" style="text-align:right">Pendente <span class="sort-arrow">↕</span></th>
-      <th onclick="sortBy('total')">Total <span class="sort-arrow">↕</span></th>
-      <th onclick="sortBy('status')">Status <span class="sort-arrow">↕</span></th>
-      <th>Flag</th>
-    </tr></thead><tbody id="tableBody"></tbody></table></div>`;
-    renderHeaderKPIs(); renderTeamFilters(); renderTeamDistrib(); renderReincidentes(); renderTable();
+    const [prResp, avResp] = await Promise.all([
+      fetch(SHEET_BASE + '?output=csv&gid=1476075993&single=true'),
+      fetch(SHEET_BASE + '?output=csv&sheet=' + encodeURIComponent('disponibilidade'))
+    ]);
+    if (!prResp.ok) throw new Error('HTTP ' + prResp.status + ' na aba "primeira resposta"');
+    if (!avResp.ok) throw new Error('HTTP ' + avResp.status + ' na aba "disponibilidade"');
+    const [prText, avText] = await Promise.all([prResp.text(), avResp.text()]);
+
+    // ── PRIMEIRA RESPOSTA ─────────────────────────────────────────────────────
+    // Estrutura real das colunas (confirmada pelo usuário):
+    // A=MEDIA | B=TEMPO | C=SUPERVISOR | D=VENDEDOR | E=Primeira resposta do agente
+    // F=Horário de atribuição | G=DATA DE ATRIBUIÇÃO | H=Transferência | I=ID DA CONVERSA | J=STATUS | K=TEL
+    //
+    // Regra sem_resp: col B = "Sem primeira resposta"  (col A fica vazia)
+    const { headers: prHeaders, rows: prRows } = parseCSV(prText);
+    console.log('[PR] headers:', JSON.stringify(prHeaders));
+    console.log('[PR] total linhas brutas:', prRows.length);
+    if (prRows.length > 0) console.log('[PR] linha 1:', JSON.stringify(prRows[0]));
+
+    // Nomes reais das colunas pelo exemplo da planilha
+    const H_MEDIA   = prHeaders[0]; // MEDIA
+    const H_TEMPO   = prHeaders[1]; // TEMPO
+    const H_SUP     = prHeaders[2]; // SUPERVISOR
+    const H_VEND    = prHeaders[3]; // VENDEDOR
+    const H_RESP    = prHeaders[4]; // Primeira resposta do agente
+    const H_ATRIB   = prHeaders[5]; // Horário de atribuição
+    const H_DATA    = prHeaders[6]; // DATA DE ATRIBUIÇÃO
+    const H_STATUS  = prHeaders[9]; // STATUS
+
+    console.log('[PR] colunas mapeadas:', {H_MEDIA,H_TEMPO,H_SUP,H_VEND,H_RESP,H_ATRIB,H_DATA,H_STATUS});
+
+    RAW_BY_DAY = [];
+    let prSemResp=0, prOk=0, prSkipped=0;
+
+    prRows.forEach(r => {
+      const media    = (r[H_MEDIA]  ||'').trim();
+      const tempo    = (r[H_TEMPO]  ||'').trim();
+      const supRaw   = (r[H_SUP]    ||'').trim();
+      const vendedor = (r[H_VEND]   ||'').trim();
+      const resposta = (r[H_RESP]   ||'').trim();
+      const atrib    = (r[H_ATRIB]  ||'').trim();
+      const dataRaw  = (r[H_DATA]   ||'').trim();
+      const status   = (r[H_STATUS] ||'').trim().toLowerCase();
+
+      // Pula cabeçalhos repetidos ou linhas completamente vazias
+      if(!supRaw && !vendedor && !dataRaw){ prSkipped++; return; }
+      if(vendedor.toUpperCase()==='VENDEDOR'){ prSkipped++; return; }
+
+      const sup  = normSup(supRaw);
+      const date = fmtDate(dataRaw);
+      if(!date){ prSkipped++; return; }
+
+      const tempoNorm = tempo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+
+      // ── REGRA: col B (TEMPO) = "Sem primeira resposta" → sem_resp
+      if(tempoNorm.includes('sem primeira')){
+        RAW_BY_DAY.push({ POWER_BI: vendedor||'(sem agente)', SUPERVISOR:sup,
+          date_str:date, total_leads:1, ate1:0, ate2:0, gt2:0, sem_resp:1, fora_horario:0 });
+        prSemResp++; return;
+      }
+
+      // ── Calcula tempo de primeira resposta
+      const dtResp  = parseDateTimeBR(resposta);
+      const dtAtrib = parseDateTimeBR(atrib);
+      let secs = null;
+      if(dtResp && dtAtrib && dtResp >= dtAtrib){
+        secs = Math.round((dtResp - dtAtrib) / 1000);
+      }
+
+      // Fora do horário: STATUS contém "fora do horario"
+      const statusNorm = status.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+      const foraHorario = statusNorm.includes('fora do horario') ? 1 : 0;
+
+      let ate1=0, ate2=0, gt2=0, sem_resp=0, total_leads=0;
+      if(foraHorario){
+        // Não entra nas métricas — apenas registrado como informativo
+        total_leads=0;
+      } else if(status==='sem resposta'||status==='expirado'||status==='sem primeira resposta'){
+        total_leads=1; sem_resp=1; prSemResp++;
+      } else if(secs===null){
+        total_leads=1; gt2=1; prOk++;
+      } else if(secs<=60)  { total_leads=1; ate1=1; prOk++; }
+      else if(secs<=120)   { total_leads=1; ate2=1; prOk++; }
+      else                 { total_leads=1; gt2=1;  prOk++; }
+
+      RAW_BY_DAY.push({ POWER_BI:vendedor, SUPERVISOR:sup, date_str:date,
+                        total_leads, ate1, ate2, gt2, sem_resp, fora_horario:foraHorario });
+    });
+
+    console.log(`[PR] ok=${prOk} sem_resp=${prSemResp} pulados=${prSkipped} total_raw=${RAW_BY_DAY.length}`);
+
+    // ── DISPONIBILIDADE ───────────────────────────────────────────────────────
+    const { headers: avHeaders, rows: avRows } = parseCSV(avText);
+    console.log('[AV] headers:', JSON.stringify(avHeaders));
+    console.log('[AV] total linhas brutas:', avRows.length);
+    if (avRows.length > 0) console.log('[AV] linha 1:', JSON.stringify(avRows[0]));
+
+    // Estrutura confirmada pelo usuário:
+    // Agent Name | Date (DD/MM/YYYY) | HORARIO | Reason | SITUAÇÃO | PF OU PME | SUPERVISOR | TEMPO LOGADO | Tempo de um status para outro
+    const avMap = {};
+    let avDisp=0, avOutros=0, avSemAgent=0;
+
+    avRows.forEach(r => {
+      const agent = (r['Agent Name'] || '').trim();
+      const sup   = normSup((r['SUPERVISOR'] || '').trim());
+      const date  = fmtDate(r['Date'] || '');
+
+      // SITUAÇÃO — testa múltiplas grafias
+      const sitRaw = (
+        r['SITUAÇÃO'] || r['SITUACAO'] || r['Situação'] || r['Situacao'] ||
+        r['SITUA\u00c7\u00c3O'] || ''
+      ).trim();
+      const sitNorm = sitRaw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+
+      // Tempo: prefere "Tempo de um status para outro" (última col), fallback TEMPO LOGADO
+      const tempo = (
+        r['Tempo de um status para outro'] ||
+        r['TEMPO DE UM STATUS PARA OUTRO'] ||
+        r['TEMPO LOGADO'] ||
+        r['Tempo Logado'] || ''
+      ).trim();
+
+      if (!agent){ avSemAgent++; return; }
+      if (!date) return;
+
+      const key = agent + '|' + sup + '|' + date;
+      if (!avMap[key]) avMap[key] = { POWER_BI:agent, SUPERVISOR:sup, date_str:date, avail_hours:0 };
+
+      if (sitNorm==='disponivel') {
+        avMap[key].avail_hours += hmsToH(tempo);
+        avDisp++;
+      } else {
+        avOutros++;
+      }
+    });
+
+    RAW_AVAIL = Object.values(avMap).filter(r=>r.POWER_BI&&r.date_str);
+    console.log(`[AV] registros Disponível=${avDisp} outros=${avOutros} semAgent=${avSemAgent}`);
+    console.log('[AV] RAW_AVAIL agrupados:', RAW_AVAIL.length);
+
+    // ── SUPERVISORES ─────────────────────────────────────────────────────────
+    // Ordena supervisores pela ordem definida em SUPS_ORDER; desconhecidos vão ao final
+    const supSet = new Set([...RAW_BY_DAY.map(r=>r.SUPERVISOR), ...RAW_AVAIL.map(r=>r.SUPERVISOR)]);
+    const supArr = [...supSet].filter(s=>s && !EQUIPES_REMOVIDAS.includes(s.toUpperCase()));
+    ALL_SUPS = [
+      ...SUPS_ORDER.filter(s => supArr.some(a => a.toUpperCase()===s.toUpperCase())),
+      ...supArr.filter(s => !SUPS_ORDER.some(o => o.toUpperCase()===s.toUpperCase())),
+    ];
+    console.log('[Dashboard] ALL_SUPS:', ALL_SUPS);
+
+    showLoading(false);
+    init();
   } catch(err) {
-    document.getElementById('tableContent').innerHTML = `<div class="error-state"><p>⚠ Erro ao carregar dados<br><br>${err.message}</p><button onclick="loadData()">Tentar novamente</button></div>`;
-  } finally { btn.classList.remove('loading'); }
+    showLoading(false);
+    showError(err.message);
+    console.error('[Dashboard] Erro:', err);
+  }
 }
 
-function renderHeaderKPIs() {
-  const above=RAW.filter(d=>d.acimaDolimite), dentro=RAW.filter(d=>!d.acimaDolimite);
-  const total=RAW.reduce((s,d)=>s+d.total,0), semResp=RAW.reduce((s,d)=>s+d.aguardando,0);
-  const pSemResp=total>0?(semResp/total*100).toFixed(1):'0.0';
-  const pAcima=RAW.length>0?(above.length/RAW.length*100).toFixed(1):'0.0';
-  const pDentro=RAW.length>0?(dentro.length/RAW.length*100).toFixed(1):'0.0';
-  document.getElementById('headerKpis').innerHTML = `
-    <div class="hkpi"><div class="hkpi-value blue">${total.toLocaleString('pt-BR')}</div><div class="hkpi-label">Leads Totais</div></div>
-    <div class="hkpi"><div class="hkpi-value red">${semResp.toLocaleString('pt-BR')}</div><div class="hkpi-pct red">${pSemResp}%</div><div class="hkpi-label">Ag. Sem Resposta</div></div>
-    <div class="hkpi"><div class="hkpi-value green">${dentro.length}</div><div class="hkpi-pct green">${pDentro}%</div><div class="hkpi-label">Dentro do Limite</div></div>
-    <div class="hkpi"><div class="hkpi-value orange">${above.length}</div><div class="hkpi-pct orange">${pAcima}%</div><div class="hkpi-label">Acima do Limite</div></div>`;
+function showLoading(show) {
+  const el = document.getElementById('loading-overlay');
+  if (!el) return;
+  if (show) {
+    el.style.display = 'flex';
+    el.innerHTML = '<div style="font-size:38px">⏳</div>'
+      + '<div style="font-size:18px;font-weight:700">Carregando dados da planilha...</div>'
+      + '<div style="font-size:13px;color:#8FA3C0">Conectando ao Google Sheets</div>';
+  } else {
+    el.style.display = 'none';
+  }
 }
 
-function renderTeamFilters() {
-  const wrap = document.getElementById('teamFilters');
-  wrap.innerHTML = `<button class="chip active" onclick="setTeam('all',this)">Todas</button>` +
-    teams.map(t=>`<button class="chip" style="border-color:${getTeamColor(t)}40;color:${getTeamColor(t)}" onclick="setTeam('${t.replace(/'/g,"\\'")}',this)">${t.split(' ')[0]}</button>`).join('');
+function showError(msg) {
+  const el = document.getElementById('loading-overlay');
+  if (!el) return;
+  el.style.display = 'flex';
+  el.innerHTML = '<div style="font-size:36px">⚠️</div>'
+    + '<div style="font-size:18px;font-weight:800;color:#FC8181">Erro ao carregar dados</div>'
+    + '<div style="font-size:13px;color:#CBD5E0;max-width:500px;line-height:1.6">' + msg + '</div>'
+    + '<button onclick="loadData()" style="margin-top:14px;padding:10px 28px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700">🔄 Tentar novamente</button>';
 }
 
-function setTeam(team,btn){currentTeam=team;document.querySelectorAll('#teamFilters .chip').forEach(b=>{b.classList.remove('active');b.style.background='';});btn.classList.add('active');renderTable();}
-function setFilter(f,btn){currentFilter=f;document.querySelectorAll('.controls-row>.chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTable();}
-function sortBy(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1;}document.querySelectorAll('thead th').forEach(t=>t.classList.remove('sorted'));const m={nome:0,equipe:1,aberto:2,aguardando:3,pendente:4,total:5,status:6};document.querySelectorAll('thead th')[m[col]]?.classList.add('sorted');renderTable();}
+// ── SUP COLORS & ORDEM ───────────────────────────────────────────────────────
+const SUPS_ORDER = [
+  'HUMBERTO BANQUERI',
+  'LUIZ ROBERTO',
+  'REBECA',
+  'REBECA BENVE',
+  'ADMINISTRATIVO',
+];
+const SUP_C = {
+  'HUMBERTO BANQUERI': {bg:'#EBF4FF',tc:'#1D4ED8'},
+  'LUIZ ROBERTO':      {bg:'#F3E8FF',tc:'#6B21A8'},
+  'REBECA':            {bg:'#FFF0F6',tc:'#BE185D'},
+  'REBECA BENVE':      {bg:'#FFF8E8',tc:'#975A16'},
+  'ADMINISTRATIVO':    {bg:'#E8F4F8',tc:'#0E7490'},
+};
+const medals=['🥇','🥈','🥉'];
 
-function getBarColor(p){if(p>=1)return'var(--red)';if(p>=0.8)return'var(--orange)';return'var(--green)';}
-function statusPill(s){const l=(s||'').toLowerCase();if(l.includes('disponív')||l.includes('disponiv'))return`<span class="pill disponivel">Disponível</span>`;if(l.includes('offline'))return`<span class="pill offline">Offline</span>`;return`<span class="pill ativo">${s}</span>`;}
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let currentTab=0;
+// state, sort vars e PAGE declarados acima no bloco loader
 
-function renderTable(){
-  const tbody=document.getElementById('tableBody'); if(!tbody)return;
-  const q=document.getElementById('searchInput').value.toLowerCase();
-  let data=RAW.filter(d=>{
-    if(q&&!d.nome.toLowerCase().includes(q)&&!d.equipe.toLowerCase().includes(q))return false;
-    if(currentTeam!=='all'&&d.equipe!==currentTeam)return false;
-    if(currentFilter==='pausa'&&!d.acimaDolimite)return false;
-    if(currentFilter==='ok'&&d.acimaDolimite)return false;
-    if(currentFilter==='reincidente'&&!d.reincidente)return false;
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmt(n){return Math.round(n).toLocaleString('pt-BR');}
+function pct(a,b){return b>0?((a/b)*100).toFixed(1)+'%':'–';}
+
+function filterPR(t){
+  const dm=state.dateMode[t],sd=state.selDate[t],sup=state.selSup[t];
+  return RAW_BY_DAY.filter(r=>{
+    if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
+    if(dm==='dia')return r.date_str===sd;
     return true;
   });
-  data.sort((a,b)=>sortDir*(typeof a[sortCol]==='string'?a[sortCol].localeCompare(b[sortCol]):a[sortCol]-b[sortCol]));
-  document.getElementById('tableCount').textContent=`${data.length} agente${data.length!==1?'s':''}`;
-  tbody.innerHTML=data.map(d=>{
-    const pct=Math.min(d.total/LIMIT,1.2),barW=Math.min(pct*100,100),color=getBarColor(pct);
-    const nc=d.total>LIMIT?'danger':d.total>=120?'warn':'ok';
-    const flag=d.total>LIMIT?`<span class="pausa-flag">⏸ PAUSA</span>`:d.reincidente?`<span class="reincidente-badge">⚠ ATENÇÃO</span>`:'—';
-    const tc=getTeamColor(d.equipe);
-    return `<tr class="${d.acimaDolimite?'above-limit':''}">
-      <td class="name">${d.nome}</td>
-      <td class="team"><span class="team-dot" style="background:${tc}"></span>${d.equipe}</td>
-      <td class="number">${d.aberto}</td><td class="number">${d.aguardando}</td><td class="number">${d.pendente}</td>
-      <td class="bar-cell"><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${barW}%;background:${color}"></div></div><span class="bar-num ${nc}">${d.total}</span></div></td>
-      <td>${statusPill(d.status)}</td><td>${flag}</td></tr>`;
+}
+function filterAv(t){
+  const dm=state.dateMode[t],sd=state.selDate[t],sup=state.selSup[t];
+  return RAW_AVAIL.filter(r=>{
+    if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
+    if(dm==='dia')return r.date_str===sd;
+    return true;
+  });
+}
+function aggTotals(rows){
+  const t={total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0,fora_horario:0};
+  rows.forEach(r=>{t.total_leads+=r.total_leads;t.ate1+=r.ate1;t.ate2+=r.ate2;t.gt2+=r.gt2;t.sem_resp+=r.sem_resp;t.fora_horario+=(r.fora_horario||0);});
+  return t;
+}
+function aggByAgent(rows){
+  const m={};
+  rows.forEach(r=>{
+    if(!m[r.POWER_BI])m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0,fora_horario:0};
+    const a=m[r.POWER_BI];
+    a.total_leads+=r.total_leads;a.ate1+=r.ate1;a.ate2+=r.ate2;a.gt2+=r.gt2;a.sem_resp+=r.sem_resp;a.fora_horario+=(r.fora_horario||0);
+  });
+  return Object.values(m).map(a=>({...a,pctAte2:a.total_leads>0?(a.ate1+a.ate2)/a.total_leads*100:0}));
+}
+function aggBySup(rows){
+  const m={};
+  rows.forEach(r=>{
+    if(!m[r.SUPERVISOR])m[r.SUPERVISOR]={sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
+    const s=m[r.SUPERVISOR];
+    s.total_leads+=r.total_leads;s.ate1+=r.ate1;s.ate2+=r.ate2;s.gt2+=r.gt2;s.sem_resp+=r.sem_resp;
+  });
+  return Object.values(m);
+}
+function aggAvByAgent(rows){
+  const m={};
+  rows.forEach(r=>{
+    if(!m[r.POWER_BI])m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,totalH:0,days:0};
+    m[r.POWER_BI].totalH+=r.avail_hours;
+    m[r.POWER_BI].days++;
+  });
+  return Object.values(m).map(a=>({...a,avgH:a.days>0?a.totalH/a.days:0}));
+}
+function availStatus(v){
+  if(v>=6)return{label:'Ideal',    color:'#10B981',bg:'#D1FAE5'};
+  if(v>=4)return{label:'Aceitável',color:'#F59E0B',bg:'#FEF3C7'};
+  return        {label:'Crítico',  color:'#EF4444',bg:'#FEE2E2'};
+}
+function agStatus(p){
+  if(p>=80)return{label:'Bom',     color:'#10B981',bg:'#D1FAE5'};
+  if(p>=51)return{label:'Atenção', color:'#F59E0B',bg:'#FEF3C7'};
+  return         {label:'Crítico', color:'#EF4444',bg:'#FEE2E2'};
+}
+function supBadge(sup){
+  const sc=SUP_C[sup]||{bg:'#EEE',tc:'#666'};
+  return `<span class="eq-badge" style="background:${sc.bg};color:${sc.tc}">${sup}</span>`;
+}
+
+// ── WEEK HELPER ───────────────────────────────────────────────────────────────
+function getWeekDates(dateStr){
+  const d=new Date(dateStr+'T12:00:00');
+  const day=d.getDay(); // 0=Sun
+  const mon=new Date(d); mon.setDate(d.getDate()-(day===0?6:day-1));
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  const fmt2=dt=>dt.toISOString().slice(0,10);
+  return {from:fmt2(mon),to:fmt2(sun)};
+}
+
+function filterRows(raw, t){
+  const dm=state.dateMode[t], sd=state.selDate[t], sd2=state.selDate2[t];
+  const rfrom=state.selRangeFrom[t], rto=state.selRangeTo[t];
+  const sup=state.selSup[t];
+  const ym=state.selMonth[t];
+  return raw.filter(r=>{
+    if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
+    if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
+    if(ym && ym!=='all' && !r.date_str.startsWith(ym)) return false;
+    // Registros fora do horário SEMPRE passam (para somar ao contador informativo do agente)
+    // mas total_leads=0 garante que não entram nas métricas
+    if(dm==='acum') return true;
+    if(dm==='dia')  return r.date_str===sd;
+    if(dm==='2dias') return r.date_str===sd||r.date_str===sd2;
+    if(dm==='sem'){
+      const w=getWeekDates(sd);
+      return r.date_str>=w.from&&r.date_str<=w.to;
+    }
+    if(dm==='range') return r.date_str>=rfrom&&r.date_str<=rto;
+    return true;
+  });
+}
+function filterPR(t){ return filterRows(RAW_BY_DAY, t); }
+function filterAv(t){ return filterRows(RAW_AVAIL, t); }
+
+function periodLabel(){
+  const t=currentTab, dm=state.dateMode[t];
+  const ym=state.selMonth[t];
+  const mLabel=(ym&&ym!=='all')?` [${monthLabel(ym)}]`:'';
+  if(dm==='acum') return 'Acumulado'+mLabel;
+  if(dm==='dia'){
+    const d=new Date(state.selDate[t]+'T12:00:00');
+    return d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+  }
+  if(dm==='2dias'){
+    const d1=new Date(state.selDate[t]+'T12:00:00');
+    const d2=new Date(state.selDate2[t]+'T12:00:00');
+    return d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
+      +' vs '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  }
+  if(dm==='sem'){
+    const w=getWeekDates(state.selDate[t]);
+    const d1=new Date(w.from+'T12:00:00'), d2=new Date(w.to+'T12:00:00');
+    return 'Semana: '+d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
+      +' a '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  }
+  if(dm==='range'){
+    const d1=new Date(state.selRangeFrom[t]+'T12:00:00');
+    const d2=new Date(state.selRangeTo[t]+'T12:00:00');
+    return d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
+      +' a '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  }
+  return '';
+}
+
+// ── RENDER EQUIPE BUTTONS ─────────────────────────────────────────────────────
+function renderEquipeBtns(t){
+  const container=document.getElementById(`equipe-btns-${t}`);
+  const cur=state.selSup[t];
+  const sups=['Todos',...ALL_SUPS];
+  container.innerHTML=sups.map(s=>{
+    const sc=s==='Todos'?{bg:'#E2E8F0',tc:'#1A2332'}:(SUP_C[s]||{bg:'#EEE',tc:'#666'});
+    const isActive=cur===s;
+    return `<button class="equipe-btn${isActive?' active':''}"
+      style="background:${sc.bg};color:${sc.tc};border-color:${isActive?sc.tc:'transparent'}"
+      onclick="selectEquipe('${s}',${t})">${s==='Todos'?'Todas as Equipes':s}</button>`;
   }).join('');
+
+  // Mostra/oculta botões de comparativo (Semanal, 2 Dias, Período) conforme seleção
+  if(t===0){
+    const isTodos = cur==='Todos';
+    ['btn-sem-0','btn-2dias-0','btn-range-0'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.style.display=isTodos?'':'none';
+    });
+    // Se equipe específica e modo comparativo ativo, volta para acumulado
+    if(!isTodos && ['sem','2dias','range'].includes(state.dateMode[0])){
+      setPeriod('acum',0);
+    }
+  }
 }
 
-function renderTeamDistrib(){
-  const wrap=document.getElementById('teamDistrib');
-  const td=teams.map(t=>{const m=RAW.filter(d=>d.equipe===t),a=m.filter(d=>d.acimaDolimite).length;return{name:t,above:a,total:m.length,color:getTeamColor(t)};}).sort((a,b)=>b.above-a.above);
-  const max=Math.max(...td.map(d=>d.above),1);
-  wrap.innerHTML=td.map(d=>`<div class="team-row"><div class="team-info"><span class="tn"><span class="team-dot" style="background:${d.color}"></span>${d.name.split(' ')[0]}</span><span class="tv" style="color:${d.above>0?'var(--red)':'var(--green)'}">${d.above}/${d.total} · ${(d.above/d.total*100).toFixed(0)}%</span></div><div class="team-bar"><div class="team-bar-fill" style="width:${(d.above/max*100).toFixed(0)}%;background:${d.color}"></div></div></div>`).join('');
+function selectEquipe(sup,t){
+  state.selSup[t]=sup;
+  agPage=0;avPage=0;
+  render();
 }
 
-function renderReincidentes(){
-  const list=RAW.filter(d=>d.reincidente).sort((a,b)=>b.total-a.total);
-  document.getElementById('reincCount').textContent=list.length;
-  document.getElementById('reincList').innerHTML=list.map(d=>{
-    const cls=d.acimaDolimite?'danger':'',nc=d.acimaDolimite?'red':'warn';
-    const note=d.aguardando>150?'Volume muito alto':d.aguardando>100?'Alto volume ag. resp.':'Próximo do limite';
-    return `<div class="reinc-item ${cls}"><div style="flex:1;min-width:0"><div class="reinc-name">${d.nome}</div><div class="reinc-days">${d.equipe.split(' ')[0]} · ${note}</div></div><span class="reinc-total ${nc}">${d.total}</span></div>`;
+// ── MAIN SWITCHES ─────────────────────────────────────────────────────────────
+function switchTab(i){
+  currentTab=i;
+  document.querySelectorAll('.tab-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+  document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('active',j===i));
+  render();
+}
+
+function setPeriod(mode,t){
+  state.dateMode[t]=mode;
+  const modes=['acum','dia','sem','2dias','range'];
+  modes.forEach(m=>{
+    const el=document.getElementById(`btn-${m}-${t}`);
+    if(el) el.classList.toggle('active',m===mode);
+  });
+  // show/hide date pickers
+  document.getElementById(`date-wrap-${t}`).style.display=
+    (mode==='dia'||mode==='sem')?'':'none';
+  document.getElementById(`date2-wrap-${t}`).style.display=
+    mode==='2dias'?'':'none';
+  // For 2dias also show primary date picker
+  if(mode==='2dias'){
+    document.getElementById(`date-wrap-${t}`).style.display='';
+  }
+  const rangeShow=mode==='range';
+  document.getElementById(`range-wrap-${t}`).style.display=rangeShow?'':'none';
+  document.getElementById(`range-wrap2-${t}`).style.display=rangeShow?'':'none';
+  render();
+}
+
+// ── POPULATE DATE SELECTS ─────────────────────────────────────────────────────
+function buildDateSelect(el, dates, selected){
+  if (!el) return;
+  el.innerHTML='';
+  [...dates].slice().reverse().forEach(d=>{
+    const o=document.createElement('option');
+    o.value=d;
+    const dt=new Date(d+'T12:00:00');
+    o.textContent=dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit',year:'2-digit'});
+    if(d===selected)o.selected=true;
+    el.appendChild(o);
+  });
+}
+
+// ── MONTH HELPERS ─────────────────────────────────────────────────────────────
+const MONTH_NAMES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function buildMonthIndex(dates){
+  const idx={};
+  dates.forEach(d=>{
+    const ym=d.slice(0,7);
+    if(!idx[ym])idx[ym]=[];
+    idx[ym].push(d);
+  });
+  return idx;
+}
+
+function monthLabel(ym){
+  if(!ym)return'';
+  const [y,m]=ym.split('-');
+  return MONTH_NAMES[+m-1]+'/'+y.slice(2);
+}
+
+function buildMonthSelect(el, monthIdx, selectedYM){
+  if(!el)return;
+  el.innerHTML='';
+  // option "Todos os meses"
+  const all=document.createElement('option');
+  all.value='all'; all.textContent='Todos os meses';
+  if(selectedYM==='all')all.selected=true;
+  el.appendChild(all);
+  Object.keys(monthIdx).sort().forEach(ym=>{
+    const o=document.createElement('option');
+    o.value=ym;
+    o.textContent=monthLabel(ym);
+    if(ym===selectedYM)o.selected=true;
+    el.appendChild(o);
+  });
+}
+
+function getDatesForMonth(t){
+  const monthIdx = t===0 ? MONTHS_PR : MONTHS_AV;
+  const ym = state.selMonth[t];
+  if(!ym || ym==='all'){
+    // all dates across all months
+    return Object.values(monthIdx).flat().slice().sort();
+  }
+  return (monthIdx[ym]||[]).slice().sort();
+}
+
+function onMonthChange(t){
+  const el=document.getElementById(`sel-month-${t}`);
+  state.selMonth[t]=el.value;
+  const dates=getDatesForMonth(t);
+  const lastDate  = dates.length>0?dates[dates.length-1]:'';
+  const prevDate  = dates.length>1?dates[dates.length-2]:lastDate;
+  const firstDate = dates.length>0?dates[0]:'';
+  state.selDate[t]      = lastDate;
+  state.selDate2[t]     = prevDate;
+  state.selRangeFrom[t] = firstDate;
+  state.selRangeTo[t]   = lastDate;
+  buildDateSelect(document.getElementById(`sel-date-${t}`),       dates, lastDate);
+  buildDateSelect(document.getElementById(`sel-date2-${t}`),      dates, prevDate);
+  buildDateSelect(document.getElementById(`sel-range-from-${t}`), dates, firstDate);
+  buildDateSelect(document.getElementById(`sel-range-to-${t}`),   dates, lastDate);
+  agPage=0; avPage=0;
+  render();
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function init(){
+  const prDates=[...new Set(
+    RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())).map(r=>r.date_str)
+  )].filter(Boolean).sort();
+  const avDates=[...new Set(
+    RAW_AVAIL.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())).map(r=>r.date_str)
+  )].filter(Boolean).sort();
+
+  MONTHS_PR=buildMonthIndex(prDates);
+  MONTHS_AV=buildMonthIndex(avDates);
+
+  for(let i=0;i<2;i++){
+    const monthIdx=i===0?MONTHS_PR:MONTHS_AV;
+    const yms=Object.keys(monthIdx).sort();
+    const lastYM=yms.length>0?yms[yms.length-1]:'all';
+    state.selMonth[i]=lastYM;
+
+    buildMonthSelect(document.getElementById(`sel-month-${i}`),monthIdx,lastYM);
+
+    const dates=getDatesForMonth(i);
+    const lastDate  = dates.length>0?dates[dates.length-1]:'';
+    const prevDate  = dates.length>1?dates[dates.length-2]:lastDate;
+    const firstDate = dates.length>0?dates[0]:'';
+    state.selDate[i]      = lastDate;
+    state.selDate2[i]     = prevDate;
+    state.selRangeFrom[i] = firstDate;
+    state.selRangeTo[i]   = lastDate;
+
+    buildDateSelect(document.getElementById(`sel-date-${i}`),       dates, lastDate);
+    buildDateSelect(document.getElementById(`sel-date2-${i}`),      dates, prevDate);
+    buildDateSelect(document.getElementById(`sel-range-from-${i}`), dates, firstDate);
+    buildDateSelect(document.getElementById(`sel-range-to-${i}`),   dates, lastDate);
+  }
+  render();
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────────
+function render(){
+  const t=currentTab;
+  const dm=state.dateMode[t];
+
+  // sync month select → state
+  const mEl=document.getElementById(`sel-month-${t}`);
+  if(mEl) state.selMonth[t]=mEl.value;
+
+  // sync date selects → state
+  const dEl=document.getElementById(`sel-date-${t}`);
+  if(dEl&&(dm==='dia'||dm==='sem'||dm==='2dias'))state.selDate[t]=dEl.value||'';
+  const d2El=document.getElementById(`sel-date2-${t}`);
+  if(d2El&&dm==='2dias')state.selDate2[t]=d2El.value||'';
+  const rfEl=document.getElementById(`sel-range-from-${t}`);
+  if(rfEl&&dm==='range')state.selRangeFrom[t]=rfEl.value||'';
+  const rtEl=document.getElementById(`sel-range-to-${t}`);
+  if(rtEl&&dm==='range')state.selRangeTo[t]=rtEl.value||'';
+
+  // update header
+  const prRows0=filterPR(0);
+  const tots0=aggTotals(prRows0);
+  document.getElementById('period-label').textContent=`${periodLabel()} · ${state.selSup[t]==='Todos'?'Todas as equipes':state.selSup[t]}`;
+  document.getElementById('h-leads').textContent=fmt(tots0.total_leads);
+  document.getElementById('h-sem').textContent=fmt(tots0.sem_resp);
+  document.getElementById('h-sem-pct').textContent=pct(tots0.sem_resp,tots0.total_leads);
+  document.getElementById('h-ate2').textContent=fmt(tots0.ate1+tots0.ate2);
+  document.getElementById('h-ate2-pct').textContent=pct(tots0.ate1+tots0.ate2,tots0.total_leads);
+  document.getElementById('h-gt2').textContent=fmt(tots0.gt2);
+  document.getElementById('h-gt2-pct').textContent=pct(tots0.gt2,tots0.total_leads);
+
+  if(t===0) renderPR();
+  if(t===1) renderAvail();
+}
+
+// ── PRIMEIRA RESPOSTA ─────────────────────────────────────────────────────────
+let _agData=[];
+function renderPR(){
+  const prRows=filterPR(0);
+  const tots=aggTotals(prRows);
+  const agData=aggByAgent(prRows);
+  _agData=agData;
+
+  renderEquipeBtns(0);
+
+  const isTodos = state.selSup[0]==='Todos';
+  const compDiv = document.getElementById('pr-comparativo');
+  const kpiDiv  = document.getElementById('pr-kpis');
+
+  // allRows: filtrado por período e mês (sem filtro de supervisor) — para comparativo entre equipes
+  const allRows = RAW_BY_DAY.filter(r=>{
+    if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
+    const ym=state.selMonth[0];
+    if(ym && ym!=='all' && !r.date_str.startsWith(ym)) return false;
+    const dm=state.dateMode[0], sd=state.selDate[0], sd2=state.selDate2[0];
+    const rfrom=state.selRangeFrom[0], rto=state.selRangeTo[0];
+    if(dm==='dia')  return r.date_str===sd;
+    if(dm==='2dias')return r.date_str===sd||r.date_str===sd2;
+    if(dm==='sem'){const w=getWeekDates(sd);return r.date_str>=w.from&&r.date_str<=w.to;}
+    if(dm==='range')return r.date_str>=rfrom&&r.date_str<=rto;
+    return true;
+  });
+
+  if(isTodos){
+    compDiv.style.display='block';
+    kpiDiv.style.display='none';
+
+    const dm=state.dateMode[0];
+
+    // ── MODOS COMPARATIVOS: semanal, 2 dias, período ────────────────────────
+    // Cada "fatia" é exibida lado a lado por equipe — comparação, não soma
+    if(dm==='sem'||dm==='2dias'||dm==='range'){
+
+      // Monta as fatias a comparar
+      let slices=[];
+      if(dm==='sem'){
+        // Semanas dentro do mês selecionado (ou últimas 5)
+        const ym=state.selMonth[0];
+        const weekSet={};
+        RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())&&r.date_str)
+          .forEach(r=>{
+            if(ym&&ym!=='all'&&!r.date_str.startsWith(ym)) return;
+            const w=getWeekDates(r.date_str);
+            const key=w.from+'_'+w.to;
+            if(!weekSet[key]) weekSet[key]={label:'',from:w.from,to:w.to};
+          });
+        const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1);
+        const toShow=(ym&&ym!=='all')?weeks:weeks.slice(-5);
+        slices=toShow.map((w,i)=>{
+          const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
+          const isCur=new Date().toISOString().slice(0,10)>=w.from&&new Date().toISOString().slice(0,10)<=w.to;
+          return {
+            label: d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),
+            tag: isCur?'Semana Atual':`Sem ${i+1}`,
+            filter: r=>r.date_str>=w.from&&r.date_str<=w.to,
+          };
+        });
+      } else if(dm==='2dias'){
+        const sd=state.selDate[0], sd2=state.selDate2[0];
+        const fmt2=d=>new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+        slices=[
+          {label:fmt2(sd),  tag:'Dia 1', filter:r=>r.date_str===sd},
+          {label:fmt2(sd2), tag:'Dia 2', filter:r=>r.date_str===sd2},
+        ];
+      } else if(dm==='range'){
+        const from=state.selRangeFrom[0], to=state.selRangeTo[0];
+        const d1=new Date(from+'T12:00:00'),d2=new Date(to+'T12:00:00');
+        // Divide o range em até 4 partes iguais por semana
+        const weekSet={};
+        RAW_BY_DAY.filter(r=>r.date_str>=from&&r.date_str<=to&&!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase()))
+          .forEach(r=>{const w=getWeekDates(r.date_str);const key=w.from+'_'+w.to;if(!weekSet[key])weekSet[key]={from:w.from,to:w.to};});
+        const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1);
+        slices=weeks.map((w,i)=>{
+          const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
+          return {
+            label: d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),
+            tag:`Sem ${i+1}`,
+            filter:r=>r.date_str>=w.from&&r.date_str<=w.to,
+          };
+        });
+      }
+
+      if(slices.length===0){
+        compDiv.innerHTML=`<div class="card"><div class="card-title">Sem dados para comparar no período selecionado</div></div>`;
+      } else {
+        const ym=state.selMonth[0];
+        // Tabela comparativa: linhas = equipes, colunas = fatias
+        const cols=slices.length;
+        compDiv.innerHTML=`<div class="card" style="overflow-x:auto">
+          <div class="card-title">📊 Comparativo ${dm==='2dias'?'— 2 Dias':dm==='sem'?'Semanal':'— Período'} · Todas as Equipes</div>
+          <table style="width:100%;border-collapse:collapse;min-width:${300+cols*160}px">
+            <thead>
+              <tr style="background:#F7F9FC">
+                <th style="text-align:left;padding:8px 12px;font-size:10px;color:#94A3B8;font-weight:700;letter-spacing:.7px;text-transform:uppercase;border-bottom:2px solid #E2E8F0;min-width:160px">Equipe</th>
+                ${slices.map((s,i)=>`<th style="text-align:center;padding:8px 12px;border-bottom:2px solid #E2E8F0;min-width:160px">
+                  <div style="font-size:11px;font-weight:800;color:#1A2332">${s.label}</div>
+                  <div style="font-size:9px;color:#94A3B8;font-weight:600">${s.tag}</div>
+                </th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${ALL_SUPS.map(sup=>{
+                const sc=SUP_C[sup]||{bg:'#EEE',tc:'#666'};
+                const baseRows=RAW_BY_DAY.filter(r=>r.SUPERVISOR===sup&&!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())&&(ym&&ym!=='all'?r.date_str.startsWith(ym):true));
+                const cells=slices.map((sl,i)=>{
+                  const rows=baseRows.filter(sl.filter);
+                  const t=aggTotals(rows);
+                  const p2=t.total_leads>0?((t.ate1+t.ate2)/t.total_leads*100):0;
+                  const st=t.total_leads>0?agStatus(p2):null;
+                  const prev=i>0?aggTotals(baseRows.filter(slices[i-1].filter)):null;
+                  const prevP2=prev&&prev.total_leads>0?((prev.ate1+prev.ate2)/prev.total_leads*100):null;
+                  const delta=prevP2!==null?(p2-prevP2):null;
+                  const deltaStr=delta!==null?(delta>=0?`▲ ${delta.toFixed(1)}%`:`▼ ${Math.abs(delta).toFixed(1)}%`):'';
+                  const deltaColor=delta===null?'#94A3B8':delta>=0?'#10B981':'#EF4444';
+                  return `<td style="text-align:center;padding:10px 8px;border-bottom:1px solid #F0F4F8;border-left:1px solid #F0F4F8">
+                    ${t.total_leads>0?`
+                      <div style="font-size:18px;font-weight:900;color:${st.color}">${p2.toFixed(1)}%</div>
+                      <div style="font-size:10px;color:#94A3B8;margin:2px 0">${fmt(t.total_leads)} leads</div>
+                      <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
+                      ${delta!==null?`<div style="font-size:10px;font-weight:700;color:${deltaColor};margin-top:4px">${deltaStr}</div>`:''}
+                    `:`<div style="color:#CBD5E0;font-size:12px">sem dados</div>`}
+                  </td>`;
+                }).join('');
+                return `<tr style="transition:background .1s" onmouseover="this.style.background='#F7FAFB'" onmouseout="this.style.background=''">
+                  <td style="padding:10px 12px;border-bottom:1px solid #F0F4F8">
+                    <span class="eq-badge" style="background:${sc.bg};color:${sc.tc};font-size:11px;padding:4px 8px">${sup}</span>
+                  </td>
+                  ${cells}
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+      }
+
+    } else {
+      // ── ACUMULADO / DIA: cards por equipe (comportamento original) ──────────
+      const maxLeads = Math.max(...ALL_SUPS.map(s=>{ const r=aggTotals(allRows.filter(x=>x.SUPERVISOR===s)); return r.ate1+r.ate2+r.gt2; }),1);
+      compDiv.innerHTML = `<div class="comp-grid">${ALL_SUPS.map(s=>{
+        const rows=allRows.filter(r=>r.SUPERVISOR===s);
+        const st2=aggTotals(rows);
+        const leadsResp = st2.ate1+st2.ate2+st2.gt2;
+        const sc=SUP_C[s]||{bg:'#EEF',tc:'#333'};
+        const p2 = leadsResp>0?((st2.ate1+st2.ate2)/leadsResp*100):0;
+        const pGt= leadsResp>0?(st2.gt2/leadsResp*100):0;
+        const barW=(leadsResp/maxLeads*100).toFixed(1);
+        const stag=agStatus(p2);
+        const agCnt=[...new Set(rows.map(r=>r.POWER_BI).filter(n=>n&&n!=='(sem agente)'))].length;
+        const agWithin=aggByAgent(rows).filter(a=>a.pctAte2>=80&&a.name!=='(sem agente)').length;
+        return `<div class="comp-card">
+          <div class="comp-header" style="background:${sc.bg};color:${sc.tc}">${s}</div>
+          <div class="comp-bar-wrap">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#94A3B8"><span>Leads</span><span style="font-weight:700;color:#1A2332">${fmt(leadsResp)}</span></div>
+            <div class="comp-bar-track"><div class="comp-bar-fill" style="width:${barW}%;background:${sc.tc}40"></div></div>
+          </div>
+          <div class="comp-row">
+            <div><div class="comp-lbl">≤ 2min</div><div class="comp-val" style="color:${stag.color}">${fmt(st2.ate1+st2.ate2)}</div></div>
+            <div style="text-align:right"><div class="comp-sub" style="color:${stag.color}">${p2.toFixed(1)}%</div>
+            <span class="status-badge" style="background:${stag.bg};color:${stag.color}">${stag.label}</span></div>
+          </div>
+          <div class="comp-row">
+            <div><div class="comp-lbl">&gt; 2min</div><div class="comp-val" style="color:#F59E0B">${fmt(st2.gt2)}</div></div>
+            <div style="text-align:right"><div class="comp-sub" style="color:#F59E0B">${pGt.toFixed(1)}%</div></div>
+          </div>
+          <div class="comp-row">
+            <div><div class="comp-lbl">Promotores</div><div class="comp-val" style="color:#2563EB">${agCnt}</div></div>
+            <div style="text-align:right"><div class="comp-lbl">Dentro meta</div><div class="comp-sub" style="color:#10B981">${agWithin}</div></div>
+          </div>
+        </div>`;
+      }).join('')}</div>`;
+    }
+
+  } else {
+    // ── KPIs + COMPARATIVO SEMANAL para equipe específica ──────────────────
+    compDiv.style.display='block';
+    kpiDiv.style.display='grid';
+    kpiDiv.innerHTML=[
+      {l:'Leads Totais',v:fmt(tots.total_leads),accent:'#2563EB'},
+      {l:'Respondidos ≤2min',v:fmt(tots.ate1+tots.ate2),sub:pct(tots.ate1+tots.ate2,tots.total_leads),accent:'#10B981'},
+      {l:'Respondidos >2min',v:fmt(tots.gt2),sub:pct(tots.gt2,tots.total_leads),accent:'#F59E0B'},
+      {l:'Enc. s/ Resposta',v:fmt(tots.sem_resp),sub:pct(tots.sem_resp,tots.total_leads),accent:'#EF4444'},
+    ].map(k=>`<div class="kpi-inner">
+      <div class="val" style="color:${k.accent}">${k.v}</div>
+      <div class="lbl">${k.l}</div>
+      ${k.sub?`<div class="sub" style="color:${k.accent}">${k.sub}</div>`:''}
+    </div>`).join('');
+
+    // ── Comparativo semanal — restrito ao mês selecionado ──────────────────
+    const sup=state.selSup[0];
+    const selYM=state.selMonth[0]; // 'YYYY-MM' ou 'all'
+
+    // Pega todas as linhas do supervisor (sem filtro de mês/período — para ter dados de semanas)
+    const supAllRows=RAW_BY_DAY.filter(r=>r.SUPERVISOR===sup&&r.date_str);
+
+    // Monta semanas dentro do mês selecionado (ou últimas 5 semanas se 'all')
+    const weekSet={};
+    supAllRows.forEach(r=>{
+      // Se mês selecionado, só inclui datas daquele mês
+      if(selYM&&selYM!=='all'&&!r.date_str.startsWith(selYM)) return;
+      const w=getWeekDates(r.date_str);
+      const key=w.from+'_'+w.to;
+      if(!weekSet[key]) weekSet[key]={from:w.from,to:w.to,rows:[]};
+      weekSet[key].rows.push(r);
+    });
+    const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1);
+    // Se 'all', limita às últimas 5 semanas; se mês específico, mostra todas do mês
+    const weeksToShow=(selYM&&selYM!=='all')?weeks:weeks.slice(-5);
+
+    // Hoje para marcar semana atual
+    const todayStr=new Date().toISOString().slice(0,10);
+
+    if(weeksToShow.length>0){
+      const monthTitle=selYM&&selYM!=='all'
+        ?`${monthLabel(selYM)}`
+        :'Últimas semanas';
+
+      compDiv.innerHTML=`<div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="card-title" style="margin-bottom:0">📅 Comparativo Semanal — ${sup} <span style="color:#94A3B8;font-weight:400">${monthTitle}</span></div>
+        </div>
+        <!-- CALENDÁRIO SEMANAL -->
+        <div class="week-cal"><div style="display:flex;flex-direction:column;gap:8px">
+          <!-- Header dias da semana -->
+          <div style="display:grid;grid-template-columns:140px repeat(7,1fr) 80px 80px 80px 70px;gap:4px;font-size:9px;font-weight:700;color:#94A3B8;letter-spacing:.7px;text-transform:uppercase;padding:0 4px">
+            <div>Semana</div>
+            <div style="text-align:center">SEG</div>
+            <div style="text-align:center">TER</div>
+            <div style="text-align:center">QUA</div>
+            <div style="text-align:center">QUI</div>
+            <div style="text-align:center">SEX</div>
+            <div style="text-align:center">SÁB</div>
+            <div style="text-align:center">DOM</div>
+            <div style="text-align:center">Leads</div>
+            <div style="text-align:center">≤2min</div>
+            <div style="text-align:center">%</div>
+            <div style="text-align:center">Status</div>
+          </div>
+          ${weeksToShow.map((w,wi)=>{
+            const t2=aggTotals(w.rows);
+            const p2=t2.total_leads>0?((t2.ate1+t2.ate2)/t2.total_leads*100):0;
+            const st=agStatus(p2);
+            const isCurrent=todayStr>=w.from&&todayStr<=w.to;
+            const agTotal=[...new Set(w.rows.map(r=>r.POWER_BI))].length;
+            const agWithin=aggByAgent(w.rows).filter(a=>a.pctAte2>=80).length;
+            const d1=new Date(w.from+'T12:00:00'), d2=new Date(w.to+'T12:00:00');
+            const weekLabel=d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
+              +' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+
+            // Gera os 7 dias da semana (seg a dom)
+            const dayCells=[];
+            for(let d=0;d<7;d++){
+              const dt=new Date(w.from+'T12:00:00');
+              dt.setDate(dt.getDate()+d);
+              const ds=dt.toISOString().slice(0,10);
+              // Verifica se está no mês selecionado
+              const inMonth=!selYM||selYM==='all'||ds.startsWith(selYM);
+              const dayRows=w.rows.filter(r=>r.date_str===ds);
+              const dayTots=aggTotals(dayRows);
+              const dayP2=dayTots.total_leads>0?((dayTots.ate1+dayTots.ate2)/dayTots.total_leads*100):0;
+              const daySt=dayTots.total_leads>0?agStatus(dayP2):null;
+              const isToday=ds===todayStr;
+              const dayNum=dt.toLocaleDateString('pt-BR',{day:'2-digit'});
+              // Cor de fundo da célula
+              let cellBg='#F8FAFC', cellBorder='transparent';
+              if(!inMonth){ cellBg='#F0F0F0'; }
+              else if(isToday){ cellBg='#DBEAFE'; cellBorder='#2563EB'; }
+              else if(daySt){ cellBg=daySt.bg; cellBorder=daySt.color+'66'; }
+              dayCells.push(`<div style="text-align:center;background:${cellBg};border:1px solid ${cellBorder};border-radius:6px;padding:4px 2px;min-height:38px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <div style="font-size:11px;font-weight:700;color:${isToday?'#2563EB':'#4A5568'}">${dayNum}</div>
+                ${inMonth&&dayTots.total_leads>0
+                  ?`<div style="font-size:9px;font-weight:700;color:${daySt.color}">${dayP2.toFixed(0)}%</div>`
+                  :(inMonth?`<div style="font-size:9px;color:#CBD5E0">–</div>`:`<div style="font-size:9px;color:#D1D5DB">—</div>`)
+                }
+              </div>`);
+            }
+
+            return `<div style="display:grid;grid-template-columns:140px repeat(7,1fr) 80px 80px 80px 70px;gap:4px;align-items:center;background:${isCurrent?'#F0FDF4':'#FAFBFD'};border:1px solid ${isCurrent?st.color+'66':st.color+'22'};border-radius:8px;padding:6px 4px">
+              <div>
+                <div style="font-size:10px;font-weight:700;color:#4A5568">${weekLabel}</div>
+                ${isCurrent?`<div style="font-size:9px;color:#10B981;font-weight:600">● semana atual</div>`:''}
+                <div style="font-size:9px;color:#94A3B8">${agWithin}/${agTotal} na meta</div>
+              </div>
+              ${dayCells.join('')}
+              <div style="text-align:center;font-size:13px;font-weight:700;color:#4A5568">${fmt(t2.total_leads)}</div>
+              <div style="text-align:center;font-size:13px;font-weight:700;color:#10B981">${fmt(t2.ate1+t2.ate2)}</div>
+              <div style="text-align:center;font-size:15px;font-weight:900;color:${st.color}">${p2.toFixed(1)}%</div>
+              <div style="text-align:center"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></div>
+            </div>`;
+          }).join('')}
+        </div></div><!-- /week-cal -->
+      </div>`;
+    } else {
+      compDiv.innerHTML='';
+    }
+  }
+
+  // Top 10
+  const minL=5;
+  const sorted=[...agData].filter(a=>a.total_leads>=minL);
+  const best=[...sorted].sort((a,b)=>b.pctAte2-a.pctAte2).slice(0,10);
+  const worst=[...sorted].sort((a,b)=>a.pctAte2-b.pctAte2).slice(0,10);
+
+  ['best','worst'].forEach(type=>{
+    const data=type==='best'?best:worst;
+    const color=type==='best'?'#3B82F6':'#EF4444';
+    document.getElementById(`pr-top10-${type}`).innerHTML=data.map((a,i)=>{
+      const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
+      return `<div class="top10-row" style="border-left:3px solid ${i<3?color:'transparent'}">
+        <div class="top10-medal">${medals[i]||`<span style="font-size:11px;color:#94A3B8;font-weight:700">${i+1}</span>`}</div>
+        <div>
+          <div class="top10-name">${a.name}</div>
+          <span class="top10-badge" style="background:${sc.bg};color:${sc.tc}">${a.sup}</span>
+        </div>
+        <div class="top10-leads">${fmt(a.total_leads)}</div>
+        <div class="top10-pct" style="color:${color}">${a.pctAte2.toFixed(1)}%</div>
+      </div>`;
+    }).join('');
+  });
+
+  agPage=0;
+  renderAgTable();
+}
+
+function renderAgTable(){
+  const dm = state.dateMode[0];
+  const isComp = (dm==='sem' || dm==='2dias') && state.selSup[0]==='Todos';
+
+  const normalDiv = document.getElementById('ag-table-normal');
+  const compDiv   = document.getElementById('ag-table-comp');
+  if(normalDiv) normalDiv.style.display = isComp ? 'none' : '';
+  if(compDiv)   compDiv.style.display   = isComp ? '' : 'none';
+
+  if(isComp){
+    renderAgTableComp();
+  } else {
+    renderAgTableNormal();
+  }
+}
+
+function renderAgTableNormal(){
+  const search=(document.getElementById('ag-search')?.value||'').toLowerCase();
+  let data=[..._agData];
+  if(search)data=data.filter(a=>a.name.toLowerCase().includes(search)||a.sup.toLowerCase().includes(search));
+  data.sort((a,b)=>{
+    if(agSortCol==='name')return a.name.localeCompare(b.name)*agSortDir;
+    return(a[agSortCol]-b[agSortCol])*agSortDir;
+  });
+  agTotalPages=Math.ceil(data.length/PAGE)||1;
+  agPage=Math.min(agPage,agTotalPages-1);
+  document.getElementById('ag-count').textContent=data.length;
+  document.getElementById('ag-page-info').textContent=`Pág. ${agPage+1}/${agTotalPages} · ${data.length} registros`;
+  const paged=data.slice(agPage*PAGE,(agPage+1)*PAGE);
+  document.getElementById('ag-tbody').innerHTML=paged.map(a=>{
+    const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
+    const hasLeads = a.total_leads > 0;
+    const st = hasLeads ? agStatus(a.pctAte2) : null;
+    const p1=hasLeads?(a.ate1/a.total_leads*100).toFixed(0):0;
+    const p2=hasLeads?(a.ate2/a.total_leads*100).toFixed(0):0;
+    const pGt=hasLeads?(a.gt2/a.total_leads*100).toFixed(0):0;
+    return `<tr>
+      <td style="font-weight:700;white-space:nowrap">${a.name}</td>
+      <td>${supBadge(a.sup)}</td>
+      <td class="td-right" style="font-weight:600;color:#4A5568">${hasLeads?fmt(a.total_leads):'–'}</td>
+      <td class="td-right"><div style="color:#10B981;font-weight:700">${hasLeads?fmt(a.ate1):'–'}</div>${hasLeads?`<div style="font-size:9px;color:#94A3B8">${p1}%</div>`:''}</td>
+      <td class="td-right"><div style="color:#F59E0B;font-weight:700">${hasLeads?fmt(a.ate2):'–'}</div>${hasLeads?`<div style="font-size:9px;color:#94A3B8">${p2}%</div>`:''}</td>
+      <td class="td-right"><div style="color:#EF4444;font-weight:700">${hasLeads?fmt(a.gt2):'–'}</div>${hasLeads?`<div style="font-size:9px;color:#94A3B8">${pGt}%</div>`:''}</td>
+      <td class="td-right"><div style="color:#6B7280;font-weight:700">${hasLeads?fmt(a.sem_resp):'–'}</div>${hasLeads&&a.sem_resp>0?`<div style="font-size:9px;color:#94A3B8">${(a.sem_resp/a.total_leads*100).toFixed(0)}%</div>`:''}</td>
+      <td>
+        ${hasLeads?`<div class="mini-bar-wrap">
+          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${Math.min(a.pctAte2,100)}%;background:${st.color}"></div></div>
+          <span style="font-size:12px;font-weight:800;color:${st.color};min-width:34px;text-align:right">${a.pctAte2.toFixed(0)}%</span>
+        </div>`:'<span style="color:#94A3B8;font-size:12px">–</span>'}
+      </td>
+      <td class="td-right">${hasLeads?`<span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>`:'<span style="color:#94A3B8;font-size:11px">–</span>'}</td>
+      <td class="td-right">${hasLeads?`<span class="status-badge" style="background:${a.pctAte2>=80?'#D1FAE5':'#FEE2E2'};color:${a.pctAte2>=80?'#10B981':'#EF4444'}">${a.pctAte2>=80?'✓ Dentro':'✗ Fora'}</span>`:'<span style="color:#94A3B8;font-size:11px">–</span>'}</td>
+    </tr>`;
   }).join('');
+  document.getElementById('ag-pg-first').disabled=agPage===0;
+  document.getElementById('ag-pg-prev').disabled=agPage===0;
+  document.getElementById('ag-pg-next').disabled=agPage>=agTotalPages-1;
+  document.getElementById('ag-pg-last').disabled=agPage>=agTotalPages-1;
 }
 
-setInterval(loadData, 5*60*1000);
-loadData();
+function renderAgTableComp(){
+  const dm=state.dateMode[0];
+  const ym=state.selMonth[0];
+  const search=(document.getElementById('ag-search')?.value||'').toLowerCase();
+  const compDiv=document.getElementById('ag-table-comp');
+
+  // Monta fatias (semanas ou 2 dias)
+  let slices=[];
+  if(dm==='sem'){
+    const weekSet={};
+    RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())&&r.date_str&&(ym&&ym!=='all'?r.date_str.startsWith(ym):true))
+      .forEach(r=>{
+        const w=getWeekDates(r.date_str);
+        const key=w.from+'_'+w.to;
+        if(!weekSet[key]) weekSet[key]={from:w.from,to:w.to};
+      });
+    const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1);
+    const toShow=(ym&&ym!=='all')?weeks:weeks.slice(-4);
+    slices=toShow.map((w,i)=>{
+      const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
+      const isCur=new Date().toISOString().slice(0,10)>=w.from&&new Date().toISOString().slice(0,10)<=w.to;
+      return {
+        label: d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),
+        tag: isCur?'Atual':`Sem ${i+1}`,
+        isCur,
+        filter: r=>r.date_str>=w.from&&r.date_str<=w.to,
+      };
+    });
+  } else {
+    const sd=state.selDate[0], sd2=state.selDate2[0];
+    const fmtD=d=>new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+    slices=[
+      {label:fmtD(sd),  tag:'Dia 1', isCur:false, filter:r=>r.date_str===sd},
+      {label:fmtD(sd2), tag:'Dia 2', isCur:false, filter:r=>r.date_str===sd2},
+    ];
+  }
+
+  if(!slices.length){ compDiv.innerHTML=''; return; }
+
+  // Coleta todos os agentes de todas as fatias
+  const baseRows=RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())&&(ym&&ym!=='all'?r.date_str.startsWith(ym):true));
+  const agentSet=new Set(baseRows.filter(r=>slices.some(s=>s.filter(r))).map(r=>r.POWER_BI).filter(n=>n&&n!=='(sem agente)'));
+  let agents=[...agentSet].map(name=>{
+    const sup=baseRows.find(r=>r.POWER_BI===name)?.SUPERVISOR||'';
+    return {name,sup};
+  }).filter(a=>!search||a.name.toLowerCase().includes(search)||a.sup.toLowerCase().includes(search));
+  agents.sort((a,b)=>a.name.localeCompare(b.name));
+
+  document.getElementById('ag-count').textContent=agents.length;
+
+  const cols=slices.length;
+  compDiv.innerHTML=`<div class="table-wrap" style="overflow-x:auto">
+    <table style="min-width:${320+cols*200}px">
+      <thead>
+        <tr style="background:#F7F9FC">
+          <th style="text-align:left;min-width:160px">Promotor</th>
+          <th style="min-width:120px">Equipe</th>
+          ${slices.map(s=>`<th colspan="3" style="text-align:center;border-left:2px solid #E2E8F0;background:${s.isCur?'#F0FDF4':'#F7F9FC'}">
+            <div style="font-size:11px;font-weight:800;color:#1A2332">${s.label}</div>
+            <div style="font-size:9px;color:#94A3B8;font-weight:600">${s.tag}</div>
+          </th>`).join('')}
+        </tr>
+        <tr style="background:#FAFBFD">
+          <th></th><th></th>
+          ${slices.map(s=>`
+            <th class="td-right" style="border-left:2px solid #E2E8F0;font-size:9px;color:#94A3B8">Leads</th>
+            <th class="td-right" style="font-size:9px;color:#94A3B8">%≤2min</th>
+            <th class="td-right" style="font-size:9px;color:#94A3B8">Status</th>
+          `).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${agents.map(ag=>{
+          const sc=SUP_C[ag.sup]||{bg:'#EEE',tc:'#666'};
+          const agRows=baseRows.filter(r=>r.POWER_BI===ag.name);
+          const cells=slices.map((sl,i)=>{
+            const rows=agRows.filter(sl.filter);
+            const t=aggTotals(rows);
+            const leadsResp=t.ate1+t.ate2+t.gt2;
+            const p2=leadsResp>0?((t.ate1+t.ate2)/leadsResp*100):0;
+            const st=leadsResp>0?agStatus(p2):null;
+            // delta vs fatia anterior
+            let delta=null;
+            if(i>0){
+              const prev=aggTotals(agRows.filter(slices[i-1].filter));
+              const prevL=prev.ate1+prev.ate2+prev.gt2;
+              const prevP=prevL>0?((prev.ate1+prev.ate2)/prevL*100):null;
+              if(prevP!==null&&leadsResp>0) delta=p2-prevP;
+            }
+            const bg=sl.isCur?'#F0FDF4':'';
+            return `<td class="td-right" style="border-left:2px solid #E2E8F0;background:${bg};font-weight:700;color:#4A5568">${leadsResp>0?fmt(leadsResp):'–'}</td>
+            <td class="td-right" style="background:${bg}">
+              ${leadsResp>0?`<span style="font-size:13px;font-weight:900;color:${st.color}">${p2.toFixed(0)}%</span>
+              ${delta!==null?`<div style="font-size:9px;font-weight:700;color:${delta>=0?'#10B981':'#EF4444'}">${delta>=0?'▲':'▼'}${Math.abs(delta).toFixed(1)}%</div>`:''}
+              `:'<span style="color:#CBD5E0">–</span>'}
+            </td>
+            <td class="td-right" style="background:${bg}">${leadsResp>0?`<span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>`:'–'}</td>`;
+          }).join('');
+          return `<tr onmouseover="this.style.background='#F7FAFB'" onmouseout="this.style.background=''">
+            <td style="font-weight:700;white-space:nowrap">${ag.name}</td>
+            <td>${supBadge(ag.sup)}</td>
+            ${cells}
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+
+function sortAg(col){
+  if(agSortCol===col)agSortDir*=-1;else{agSortCol=col;agSortDir=-1;}
+  document.querySelectorAll('[id^="th-"]').forEach(th=>{
+    th.classList.toggle('sorted',th.id===`th-${col}`);
+    if(th.id===`th-${col}`)th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+' '+(agSortDir===-1?'↓':'↑');
+    else th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+'↕';
+  });
+  agPage=0;renderAgTable();
+}
+
+// ── DISPONIBILIDADE ───────────────────────────────────────────────────────────
+let _avData=[];
+function renderAvail(){
+  const avRows=filterAv(1);
+  const avData=aggAvByAgent(avRows);
+  _avData=avData;
+
+  renderEquipeBtns(1);
+
+  // KPIs
+  const ideal=avData.filter(a=>a.avgH>=6).length;
+  const aceit=avData.filter(a=>a.avgH>=4&&a.avgH<6).length;
+  const crit=avData.filter(a=>a.avgH<4).length;
+  document.getElementById('av-kpis').innerHTML=[
+    {l:'Promotores',v:fmt(avData.length),accent:'#2563EB'},
+    {l:'Ideal (≥6h)',v:fmt(ideal),sub:pct(ideal,avData.length),accent:'#10B981'},
+    {l:'Aceitável (4-6h)',v:fmt(aceit),sub:pct(aceit,avData.length),accent:'#F59E0B'},
+    {l:'Crítico (<4h)',v:fmt(crit),sub:pct(crit,avData.length),accent:'#EF4444'},
+  ].map(k=>`<div class="kpi-inner">
+    <div class="val" style="color:${k.accent}">${k.v}</div>
+    <div class="lbl">${k.l}</div>
+    ${k.sub?`<div class="sub" style="color:${k.accent}">${k.sub}</div>`:''}
+  </div>`).join('');
+
+  // Comparativo semanal de disponibilidade quando equipe selecionada
+  const avComp=document.getElementById('av-comparativo');
+  if(avComp && state.selSup[1]!=='Todos'){
+    const sup=state.selSup[1];
+    const supRows=RAW_AVAIL.filter(r=>r.SUPERVISOR===sup&&r.date_str);
+    const weekSet={};
+    supRows.forEach(r=>{
+      const w=getWeekDates(r.date_str);
+      const key=w.from+'_'+w.to;
+      if(!weekSet[key]) weekSet[key]={from:w.from,to:w.to,rows:[]};
+      weekSet[key].rows.push(r);
+    });
+    const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1).slice(-4);
+    if(weeks.length>0){
+      avComp.innerHTML=`<div class="card" style="margin-bottom:16px">
+        <div class="card-title">📅 Comparativo Semanal Disponibilidade — ${sup}</div>
+        <div style="display:grid;grid-template-columns:repeat(${weeks.length},1fr);gap:10px">
+        ${weeks.map((w,wi)=>{
+          const agd=aggAvByAgent(w.rows);
+          const avgH=agd.length>0?agd.reduce((s,a)=>s+a.avgH,0)/agd.length:0;
+          const ideal=agd.filter(a=>a.avgH>=6).length;
+          const crit=agd.filter(a=>a.avgH<4).length;
+          const st=availStatus(avgH);
+          const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
+          const label=d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+          const isLast=wi===weeks.length-1;
+          return `<div style="background:${isLast?'#F0FDF4':'#F8FAFC'};border:2px solid ${isLast?st.color:st.color+'44'};border-radius:10px;padding:12px;text-align:center">
+            <div style="font-size:10px;color:#94A3B8;font-weight:600;margin-bottom:6px">${isLast?'SEMANA ATUAL ·':''} ${label}</div>
+            <div style="font-size:22px;font-weight:900;color:${st.color}">${avgH.toFixed(1)}h</div>
+            <div style="font-size:10px;color:#94A3B8;margin-bottom:4px">média/dia</div>
+            <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
+            <div style="margin-top:8px;display:flex;justify-content:space-around">
+              <div><div style="font-size:11px;font-weight:700;color:#10B981">${ideal}</div><div style="font-size:9px;color:#94A3B8">ideal</div></div>
+              <div><div style="font-size:11px;font-weight:700;color:#EF4444">${crit}</div><div style="font-size:9px;color:#94A3B8">crítico</div></div>
+            </div>
+          </div>`;
+        }).join('')}
+        </div>
+      </div>`;
+    } else avComp.innerHTML='';
+  } else if(avComp) avComp.innerHTML='';
+
+  // Top 10 disponibilidade
+  const sorted=[...avData].filter(a=>a.days>=1);
+  const best10=[...sorted].sort((a,b)=>b.avgH-a.avgH).slice(0,10);
+  const worst10=[...sorted].sort((a,b)=>a.avgH-b.avgH).slice(0,10);
+
+  ['best','worst'].forEach(type=>{
+    const data=type==='best'?best10:worst10;
+    const color=type==='best'?'#10B981':'#EF4444';
+    document.getElementById(`av-top10-${type}`).innerHTML=data.map((a,i)=>{
+      const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
+      const st=availStatus(a.avgH);
+      return `<div class="top10-row" style="border-left:3px solid ${i<3?color:'transparent'}">
+        <div class="top10-medal">${medals[i]||`<span style="font-size:11px;color:#94A3B8;font-weight:700">${i+1}</span>`}</div>
+        <div>
+          <div class="top10-name">${a.name}</div>
+          <span class="top10-badge" style="background:${sc.bg};color:${sc.tc}">${a.sup}</span>
+        </div>
+        <div class="top10-leads">${a.totalH.toFixed(1)}h</div>
+        <div class="top10-pct" style="color:${st.color}">${a.avgH.toFixed(1)}h</div>
+      </div>`;
+    }).join('');
+  });
+
+  avPage=0;
+  renderAvTable();
+}
+
+function renderAvTable(){
+  let data=[..._avData];
+  data.sort((a,b)=>{
+    if(avSortCol==='name')return a.name.localeCompare(b.name)*avSortDir;
+    return(a[avSortCol]-b[avSortCol])*avSortDir;
+  });
+  avTotalPages=Math.ceil(data.length/PAGE)||1;
+  avPage=Math.min(avPage,avTotalPages-1);
+  document.getElementById('av-page-info').textContent=`Pág. ${avPage+1}/${avTotalPages} · ${data.length} registros`;
+  const paged=data.slice(avPage*PAGE,(avPage+1)*PAGE);
+  document.getElementById('av-tbody').innerHTML=paged.map(a=>{
+    const st=availStatus(a.avgH);
+    return `<tr>
+      <td style="font-weight:700;white-space:nowrap">${a.name}</td>
+      <td>${supBadge(a.sup)}</td>
+      <td class="td-right" style="color:#4A5568">${a.totalH.toFixed(1)}h</td>
+      <td class="td-right" style="color:#4A5568">${a.days}</td>
+      <td>
+        <div class="mini-bar-wrap">
+          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${Math.min((a.avgH/12)*100,100)}%;background:${st.color}"></div></div>
+          <span style="font-size:13px;font-weight:800;color:${st.color};min-width:34px;text-align:right">${a.avgH.toFixed(1)}h</span>
+        </div>
+      </td>
+      <td class="td-right"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('av-pg-first').disabled=avPage===0;
+  document.getElementById('av-pg-prev').disabled=avPage===0;
+  document.getElementById('av-pg-next').disabled=avPage>=avTotalPages-1;
+  document.getElementById('av-pg-last').disabled=avPage>=avTotalPages-1;
+}
+
+function sortAv(col){
+  if(avSortCol===col)avSortDir*=-1;else{avSortCol=col;avSortDir=-1;}
+  document.querySelectorAll('[id^="av-th-"]').forEach(th=>{
+    th.classList.toggle('sorted',th.id===`av-th-${col}`);
+    if(th.id===`av-th-${col}`)th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+' '+(avSortDir===-1?'↓':'↑');
+    else th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+'↕';
+  });
+  avPage=0;renderAvTable();
+}
 </script>
+
+<script>loadData();</script>
 </body>
 </html>

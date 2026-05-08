@@ -112,9 +112,6 @@
   .comp-bar-wrap{padding:8px 12px 10px;border-bottom:1px solid #F0F4F8}
   .comp-bar-track{height:6px;border-radius:3px;background:#F1F5F9;overflow:hidden;margin-top:4px}
   .comp-bar-fill{height:100%;border-radius:3px;transition:width .4s}
-  /* CALENDÁRIO SEMANAL */
-  .week-cal{overflow-x:auto}
-  .week-cal>div{min-width:780px}
   @media(max-width:1100px){.comp-grid{grid-template-columns:repeat(3,1fr)}}
   @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.top10-grid{grid-template-columns:1fr}.comp-grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:600px){.kpi-grid{grid-template-columns:1fr}.header-top{flex-direction:column}.comp-grid{grid-template-columns:1fr}}
@@ -172,6 +169,10 @@
       <div class="filter-label">De</div>
       <select id="sel-range-from-0" onchange="render()"></select>
     </div>
+    <div class="filter-group" id="range-wrap2-0" style="display:none">
+      <div class="filter-label">Até</div>
+      <select id="sel-range-to-0" onchange="render()"></select>
+    </div>
   </div>
 
   <!-- EQUIPE BUTTONS -->
@@ -212,9 +213,6 @@
     </div>
     <span style="font-size:12px;color:var(--sub)"><b id="ag-count"></b> promotores</span>
   </div>
-
-  <!-- Modo normal -->
-  <div id="ag-table-normal">
   <div class="table-wrap">
     <table>
       <thead>
@@ -225,7 +223,6 @@
           <th onclick="sortAg('ate1')" id="th-ate1" class="td-right">≤1min ↕</th>
           <th onclick="sortAg('ate2')" id="th-ate2" class="td-right">1-2min ↕</th>
           <th onclick="sortAg('gt2')" id="th-gt2" class="td-right">&gt;2min ↕</th>
-          <th onclick="sortAg('sem_resp')" id="th-sem_resp" class="td-right">S/ Resposta ↕</th>
           <th onclick="sortAg('pctAte2')" id="th-pctAte2" class="td-right">% ≤2min ↕</th>
           <th class="td-right">Status</th>
           <th class="td-right">Meta ≤2min</th>
@@ -243,10 +240,6 @@
       </div>
     </div>
   </div>
-  </div>
-
-  <!-- Modo comparativo (semanal / 2 dias) -->
-  <div id="ag-table-comp" style="display:none"></div>
 </div>
 
 <!-- PANEL 1: DISPONIBILIDADE -->
@@ -346,7 +339,7 @@
 // ── GOOGLE SHEETS ─────────────────────────────────────────────────────────────
 const SHEET_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vROvS5snM-Nr6L1KRvAhEVyUyyRx6n2bOo7Lq-ZqEuaOBofFUOWqKAgO7LX-o4aJHJuKTR3olNA9Lsj/pub";
 // Equipes removidas (sem dados)
-const EQUIPES_REMOVIDAS = ['ADM','BENVE'];
+const EQUIPES_REMOVIDAS = ['ADM','ADMINISTRATIVO','BENVE'];
 
 // ── RUNTIME DATA ──────────────────────────────────────────────────────────────
 let RAW_BY_DAY = [];
@@ -360,7 +353,7 @@ let MONTHS_AV  = {}; // tab 1
 // ── STATE (declarado antes de qualquer função) ────────────────────────────────
 const state = {
   dateMode:     ['acum','acum'],
-  selMonth:     ['',''],
+  selMonth:     ['',''],        // 'YYYY-MM' — mês selecionado por tab
   selDate:      ['',''],
   selDate2:     ['',''],
   selRangeFrom: ['',''],
@@ -461,18 +454,6 @@ function parseDateTimeBR(v) {
   return isNaN(d) ? null : d;
 }
 
-// ── NORMALIZA SUPERVISOR ──────────────────────────────────────────────────────
-function normSup(s){
-  if(!s) return '';
-  const u = s.trim().toUpperCase();
-  if(u.includes('HUMBERTO'))    return 'HUMBERTO BANQUERI';
-  if(u.includes('LUIZ'))        return 'LUIZ ROBERTO';
-  if(u.includes('BENVE'))       return 'REBECA BENVE';
-  if(u.includes('REBECA'))      return 'REBECA';
-  if(u.includes('ADMIN'))       return 'ADMINISTRATIVO';
-  return s.trim();
-}
-
 // ── LOAD DATA ─────────────────────────────────────────────────────────────────
 async function loadData() {
   showLoading(true);
@@ -485,146 +466,106 @@ async function loadData() {
     if (!avResp.ok) throw new Error('HTTP ' + avResp.status + ' na aba "disponibilidade"');
     const [prText, avText] = await Promise.all([prResp.text(), avResp.text()]);
 
+    console.log('[Dashboard] primeira resposta header:', prText.split('\n')[0]);
+    console.log('[Dashboard] disponibilidade header:', avText.split('\n')[0]);
+
     // ── PRIMEIRA RESPOSTA ─────────────────────────────────────────────────────
-    // Estrutura real das colunas (confirmada pelo usuário):
-    // A=MEDIA | B=TEMPO | C=SUPERVISOR | D=VENDEDOR | E=Primeira resposta do agente
-    // F=Horário de atribuição | G=DATA DE ATRIBUIÇÃO | H=Transferência | I=ID DA CONVERSA | J=STATUS | K=TEL
-    //
-    // Regra sem_resp: col B = "Sem primeira resposta"  (col A fica vazia)
+    // Fonte: SOMENTE a sheet "primeira resposta" — 1 linha = 1 lead real
+    // Colunas utilizadas:
+    //   VENDEDOR              → nome do agente
+    //   SUPERVISOR            → equipe
+    //   DATA DE ATRIBUIÇÃO    → coluna D — fonte única para filtro de data (DD/MM/YYYY)
+    //   Primeira resposta do agente → tempo HH:MM:SS ou segundos
+    //   STATUS                → "sem resposta" / "expirado" → sem_resp
+    // Linhas sem VENDEDOR ou sem DATA DE ATRIBUIÇÃO são descartadas (linhas auxiliares/vazias)
     const { headers: prHeaders, rows: prRows } = parseCSV(prText);
-    console.log('[PR] headers:', JSON.stringify(prHeaders));
-    console.log('[PR] total linhas brutas:', prRows.length);
-    if (prRows.length > 0) console.log('[PR] linha 1:', JSON.stringify(prRows[0]));
+    console.log('[Dashboard] primeira resposta headers:', prHeaders);
+    console.log('[Dashboard] primeira resposta linhas brutas:', prRows.length);
+    if (prRows.length > 0) console.log('[Dashboard] primeira resposta linha 1:', JSON.stringify(prRows[0]));
 
-    // Nomes reais das colunas pelo exemplo da planilha
-    const H_MEDIA   = prHeaders[0]; // MEDIA
-    const H_TEMPO   = prHeaders[1]; // TEMPO
-    const H_SUP     = prHeaders[2]; // SUPERVISOR
-    const H_VEND    = prHeaders[3]; // VENDEDOR
-    const H_RESP    = prHeaders[4]; // Primeira resposta do agente
-    const H_ATRIB   = prHeaders[5]; // Horário de atribuição
-    const H_DATA    = prHeaders[6]; // DATA DE ATRIBUIÇÃO
-    const H_STATUS  = prHeaders[9]; // STATUS
-
-    console.log('[PR] colunas mapeadas:', {H_MEDIA,H_TEMPO,H_SUP,H_VEND,H_RESP,H_ATRIB,H_DATA,H_STATUS});
-
+    // Sem agrupamento: cada linha = 1 registro = 1 lead
     RAW_BY_DAY = [];
-    let prSemResp=0, prOk=0, prSkipped=0;
-
     prRows.forEach(r => {
-      const media    = (r[H_MEDIA]  ||'').trim();
-      const tempo    = (r[H_TEMPO]  ||'').trim();
-      const supRaw   = (r[H_SUP]    ||'').trim();
-      const vendedor = (r[H_VEND]   ||'').trim();
-      const resposta = (r[H_RESP]   ||'').trim();
-      const atrib    = (r[H_ATRIB]  ||'').trim();
-      const dataRaw  = (r[H_DATA]   ||'').trim();
-      const status   = (r[H_STATUS] ||'').trim().toLowerCase();
+      const vendedor = (r['VENDEDOR'] || '').trim();
+      const sup      = (r['SUPERVISOR'] || '').trim();
+      // Coluna D = DATA DE ATRIBUICAO — fonte unica para filtro de data
+      const date     = fmtDate(r['DATA DE ATRIBUIÇÃO'] || r['DATA DE ATRIBUICAO'] || '');
 
-      // Pula cabeçalhos repetidos ou linhas completamente vazias
-      if(!supRaw && !vendedor && !dataRaw){ prSkipped++; return; }
-      if(vendedor.toUpperCase()==='VENDEDOR'){ prSkipped++; return; }
+      // Descartar linhas auxiliares/vazias/cabecalhos repetidos
+      if (!vendedor || !date) return;
+      if (vendedor.toUpperCase() === 'VENDEDOR' || vendedor.startsWith('=')) return;
 
-      const sup  = normSup(supRaw);
-      const date = fmtDate(dataRaw);
-      if(!date){ prSkipped++; return; }
+      // Calcula tempo de resposta: col E (Primeira resposta do agente) - col F (Horário de atribuição)
+      const dtResposta   = parseDateTimeBR(r['Primeira resposta do agente'] || '');
+      const dtAtribuicao = parseDateTimeBR(r['Horário de atribuição'] || r['Horario de atribuicao'] || '');
+      const status       = (r['STATUS'] || '').trim().toLowerCase();
 
-      const tempoNorm = tempo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-
-      // ── REGRA: col B (TEMPO) = "Sem primeira resposta" → sem_resp
-      if(tempoNorm.includes('sem primeira')){
-        RAW_BY_DAY.push({ POWER_BI: vendedor||'(sem agente)', SUPERVISOR:sup,
-          date_str:date, total_leads:1, ate1:0, ate2:0, gt2:0, sem_resp:1, fora_horario:0 });
-        prSemResp++; return;
-      }
-
-      // ── Calcula tempo de primeira resposta
-      const dtResp  = parseDateTimeBR(resposta);
-      const dtAtrib = parseDateTimeBR(atrib);
       let secs = null;
-      if(dtResp && dtAtrib && dtResp >= dtAtrib){
-        secs = Math.round((dtResp - dtAtrib) / 1000);
+      if (dtResposta && dtAtribuicao && dtResposta >= dtAtribuicao) {
+        secs = Math.round((dtResposta - dtAtribuicao) / 1000);
       }
 
-      // Fora do horário: STATUS contém "fora do horario"
-      const statusNorm = status.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-      const foraHorario = statusNorm.includes('fora do horario') ? 1 : 0;
+      let ate1 = 0, ate2 = 0, gt2 = 0, sem_resp = 0;
+      if (secs === null || status === 'sem resposta' || status === 'expirado') {
+        sem_resp = 1;
+      } else if (secs <= 60) {
+        ate1 = 1;
+      } else if (secs <= 120) {
+        ate2 = 1;
+      } else {
+        gt2 = 1;
+      }
 
-      let ate1=0, ate2=0, gt2=0, sem_resp=0, total_leads=0;
-      if(foraHorario){
-        // Não entra nas métricas — apenas registrado como informativo
-        total_leads=0;
-      } else if(status==='sem resposta'||status==='expirado'||status==='sem primeira resposta'){
-        total_leads=1; sem_resp=1; prSemResp++;
-      } else if(secs===null){
-        total_leads=1; gt2=1; prOk++;
-      } else if(secs<=60)  { total_leads=1; ate1=1; prOk++; }
-      else if(secs<=120)   { total_leads=1; ate2=1; prOk++; }
-      else                 { total_leads=1; gt2=1;  prOk++; }
-
-      RAW_BY_DAY.push({ POWER_BI:vendedor, SUPERVISOR:sup, date_str:date,
-                        total_leads, ate1, ate2, gt2, sem_resp, fora_horario:foraHorario });
+      RAW_BY_DAY.push({ POWER_BI: vendedor, SUPERVISOR: sup, date_str: date,
+                        total_leads: 1, ate1, ate2, gt2, sem_resp });
     });
-
-    console.log(`[PR] ok=${prOk} sem_resp=${prSemResp} pulados=${prSkipped} total_raw=${RAW_BY_DAY.length}`);
+    console.log('[Dashboard] RAW_BY_DAY registros (deve ser ~193):', RAW_BY_DAY.length);
 
     // ── DISPONIBILIDADE ───────────────────────────────────────────────────────
-    const { headers: avHeaders, rows: avRows } = parseCSV(avText);
-    console.log('[AV] headers:', JSON.stringify(avHeaders));
-    console.log('[AV] total linhas brutas:', avRows.length);
-    if (avRows.length > 0) console.log('[AV] linha 1:', JSON.stringify(avRows[0]));
+    // Colunas: Agent Name, Date, HORARIO, Reason, SITUAÇÃO, PF OU PME, SUPERVISOR, TEMPO LOGADO, ...
+    // avail_hours = soma de TEMPO LOGADO onde SITUAÇÃO === 'Disponível', por agente+sup+data
+    const { rows: avRows } = parseCSV(avText);
+    console.log('[Dashboard] disponibilidade linhas:', avRows.length);
+    if (avRows.length > 0) console.log('[Dashboard] disponibilidade linha 1:', JSON.stringify(avRows[0]));
 
-    // Estrutura confirmada pelo usuário:
+    // Estrutura real da planilha Disponibilidade:
     // Agent Name | Date (DD/MM/YYYY) | HORARIO | Reason | SITUAÇÃO | PF OU PME | SUPERVISOR | TEMPO LOGADO | Tempo de um status para outro
+    // A disponibilidade é calculada somando "Tempo de um status para outro" onde SITUAÇÃO === 'Disponível'
+    // por agente + supervisor + data (1 dia = 1 registro agrupado)
     const avMap = {};
-    let avDisp=0, avOutros=0, avSemAgent=0;
-
     avRows.forEach(r => {
       const agent = (r['Agent Name'] || '').trim();
-      const sup   = normSup((r['SUPERVISOR'] || '').trim());
+      // SUPERVISOR está na coluna 7 (índice 6)
+      const sup   = (r['SUPERVISOR'] || '').trim();
+      // Date vem como DD/MM/YYYY
       const date  = fmtDate(r['Date'] || '');
+      // SITUAÇÃO: filtramos somente 'Disponível'
+      const sit   = (r['SITUAÇÃO'] || r['SITUACAO'] || r['SITUA\u00c7\u00c3O'] || '').trim().toLowerCase();
+      // Tempo real: última coluna "Tempo de um status para outro"
+      const tempo = (r['Tempo de um status para outro'] || r['TEMPO LOGADO'] || '').trim();
 
-      // SITUAÇÃO — testa múltiplas grafias
-      const sitRaw = (
-        r['SITUAÇÃO'] || r['SITUACAO'] || r['Situação'] || r['Situacao'] ||
-        r['SITUA\u00c7\u00c3O'] || ''
-      ).trim();
-      const sitNorm = sitRaw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-
-      // Tempo: prefere "Tempo de um status para outro" (última col), fallback TEMPO LOGADO
-      const tempo = (
-        r['Tempo de um status para outro'] ||
-        r['TEMPO DE UM STATUS PARA OUTRO'] ||
-        r['TEMPO LOGADO'] ||
-        r['Tempo Logado'] || ''
-      ).trim();
-
-      if (!agent){ avSemAgent++; return; }
-      if (!date) return;
+      if (!agent || !date) return;
+      // Ignora agente sem supervisor válido
+      if (EQUIPES_REMOVIDAS.includes(sup.toUpperCase())) return;
 
       const key = agent + '|' + sup + '|' + date;
-      if (!avMap[key]) avMap[key] = { POWER_BI:agent, SUPERVISOR:sup, date_str:date, avail_hours:0 };
-
-      if (sitNorm==='disponivel') {
+      if (!avMap[key]) avMap[key] = { POWER_BI: agent, SUPERVISOR: sup, date_str: date, avail_hours: 0 };
+      // Soma somente registros com situação Disponível
+      const sitNorm = sit.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+      if (sitNorm === 'disponivel' || sitNorm === 'disponível' || sit === 'disponível' || sit === 'disponivel') {
         avMap[key].avail_hours += hmsToH(tempo);
-        avDisp++;
-      } else {
-        avOutros++;
       }
     });
+    RAW_AVAIL = Object.values(avMap).filter(r => r.POWER_BI && r.date_str);
+    console.log('[Dashboard] RAW_AVAIL registros:', RAW_AVAIL.length);
 
-    RAW_AVAIL = Object.values(avMap).filter(r=>r.POWER_BI&&r.date_str);
-    console.log(`[AV] registros Disponível=${avDisp} outros=${avOutros} semAgent=${avSemAgent}`);
-    console.log('[AV] RAW_AVAIL agrupados:', RAW_AVAIL.length);
-
-    // ── SUPERVISORES ─────────────────────────────────────────────────────────
-    // Ordena supervisores pela ordem definida em SUPS_ORDER; desconhecidos vão ao final
+    // ── DATAS E SUPERVISORES ──────────────────────────────────────────────────
+    const dateSet = new Set([...RAW_BY_DAY.map(r=>r.date_str), ...RAW_AVAIL.map(r=>r.date_str)]);
+    ALL_DATES = [...dateSet].filter(Boolean).sort();
     const supSet = new Set([...RAW_BY_DAY.map(r=>r.SUPERVISOR), ...RAW_AVAIL.map(r=>r.SUPERVISOR)]);
-    const supArr = [...supSet].filter(s=>s && !EQUIPES_REMOVIDAS.includes(s.toUpperCase()));
-    ALL_SUPS = [
-      ...SUPS_ORDER.filter(s => supArr.some(a => a.toUpperCase()===s.toUpperCase())),
-      ...supArr.filter(s => !SUPS_ORDER.some(o => o.toUpperCase()===s.toUpperCase())),
-    ];
+    ALL_SUPS = [...supSet].filter(s=>s && !EQUIPES_REMOVIDAS.includes(s.toUpperCase())).sort();
+
+    console.log('[Dashboard] ALL_DATES:', ALL_DATES);
     console.log('[Dashboard] ALL_SUPS:', ALL_SUPS);
 
     showLoading(false);
@@ -663,20 +604,11 @@ function showError(msg) {
     + '<button onclick="loadData()" style="margin-top:14px;padding:10px 28px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700">🔄 Tentar novamente</button>';
 }
 
-// ── SUP COLORS & ORDEM ───────────────────────────────────────────────────────
-const SUPS_ORDER = [
-  'HUMBERTO BANQUERI',
-  'LUIZ ROBERTO',
-  'REBECA',
-  'REBECA BENVE',
-  'ADMINISTRATIVO',
-];
+// ── SUP COLORS ────────────────────────────────────────────────────────────────
 const SUP_C = {
-  'HUMBERTO BANQUERI': {bg:'#EBF4FF',tc:'#1D4ED8'},
-  'LUIZ ROBERTO':      {bg:'#F3E8FF',tc:'#6B21A8'},
-  'REBECA':            {bg:'#FFF0F6',tc:'#BE185D'},
-  'REBECA BENVE':      {bg:'#FFF8E8',tc:'#975A16'},
-  'ADMINISTRATIVO':    {bg:'#E8F4F8',tc:'#0E7490'},
+  'EQUIPE ALFA':       {bg:'#FFF5F5',tc:'#C53030'},
+  'EQUIPE FENIX':      {bg:'#FFF8E8',tc:'#975A16'},
+  'EQUIPE GLADIADORES':{bg:'#E8F8EE',tc:'#276749'},
 };
 const medals=['🥇','🥈','🥉'];
 
@@ -705,16 +637,16 @@ function filterAv(t){
   });
 }
 function aggTotals(rows){
-  const t={total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0,fora_horario:0};
-  rows.forEach(r=>{t.total_leads+=r.total_leads;t.ate1+=r.ate1;t.ate2+=r.ate2;t.gt2+=r.gt2;t.sem_resp+=r.sem_resp;t.fora_horario+=(r.fora_horario||0);});
+  const t={total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
+  rows.forEach(r=>{t.total_leads+=r.total_leads;t.ate1+=r.ate1;t.ate2+=r.ate2;t.gt2+=r.gt2;t.sem_resp+=r.sem_resp;});
   return t;
 }
 function aggByAgent(rows){
   const m={};
   rows.forEach(r=>{
-    if(!m[r.POWER_BI])m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0,fora_horario:0};
+    if(!m[r.POWER_BI])m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
     const a=m[r.POWER_BI];
-    a.total_leads+=r.total_leads;a.ate1+=r.ate1;a.ate2+=r.ate2;a.gt2+=r.gt2;a.sem_resp+=r.sem_resp;a.fora_horario+=(r.fora_horario||0);
+    a.total_leads+=r.total_leads;a.ate1+=r.ate1;a.ate2+=r.ate2;a.gt2+=r.gt2;a.sem_resp+=r.sem_resp;
   });
   return Object.values(m).map(a=>({...a,pctAte2:a.total_leads>0?(a.ate1+a.ate2)/a.total_leads*100:0}));
 }
@@ -765,13 +697,13 @@ function filterRows(raw, t){
   const dm=state.dateMode[t], sd=state.selDate[t], sd2=state.selDate2[t];
   const rfrom=state.selRangeFrom[t], rto=state.selRangeTo[t];
   const sup=state.selSup[t];
-  const ym=state.selMonth[t];
+  const ym=state.selMonth[t]; // 'YYYY-MM' or 'all'
   return raw.filter(r=>{
+    // remove equipes zeradas
     if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
     if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
+    // filtro de mês
     if(ym && ym!=='all' && !r.date_str.startsWith(ym)) return false;
-    // Registros fora do horário SEMPRE passam (para somar ao contador informativo do agente)
-    // mas total_leads=0 garante que não entram nas métricas
     if(dm==='acum') return true;
     if(dm==='dia')  return r.date_str===sd;
     if(dm==='2dias') return r.date_str===sd||r.date_str===sd2;
@@ -828,19 +760,6 @@ function renderEquipeBtns(t){
       style="background:${sc.bg};color:${sc.tc};border-color:${isActive?sc.tc:'transparent'}"
       onclick="selectEquipe('${s}',${t})">${s==='Todos'?'Todas as Equipes':s}</button>`;
   }).join('');
-
-  // Mostra/oculta botões de comparativo (Semanal, 2 Dias, Período) conforme seleção
-  if(t===0){
-    const isTodos = cur==='Todos';
-    ['btn-sem-0','btn-2dias-0','btn-range-0'].forEach(id=>{
-      const el=document.getElementById(id);
-      if(el) el.style.display=isTodos?'':'none';
-    });
-    // Se equipe específica e modo comparativo ativo, volta para acumulado
-    if(!isTodos && ['sem','2dias','range'].includes(state.dateMode[0])){
-      setPeriod('acum',0);
-    }
-  }
 }
 
 function selectEquipe(sup,t){
@@ -1044,11 +963,9 @@ function renderPR(){
   const compDiv = document.getElementById('pr-comparativo');
   const kpiDiv  = document.getElementById('pr-kpis');
 
-  // allRows: filtrado por período e mês (sem filtro de supervisor) — para comparativo entre equipes
+  // rows filtered by period only (no sup filter) for cross-team comparison
   const allRows = RAW_BY_DAY.filter(r=>{
     if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
-    const ym=state.selMonth[0];
-    if(ym && ym!=='all' && !r.date_str.startsWith(ym)) return false;
     const dm=state.dateMode[0], sd=state.selDate[0], sd2=state.selDate2[0];
     const rfrom=state.selRangeFrom[0], rto=state.selRangeTo[0];
     if(dm==='dia')  return r.date_str===sd;
@@ -1059,153 +976,51 @@ function renderPR(){
   });
 
   if(isTodos){
+    // ── COMPARATIVO GERAL: uma coluna por equipe ────────────────────────────
     compDiv.style.display='block';
     kpiDiv.style.display='none';
 
-    const dm=state.dateMode[0];
+    const supTots = ALL_SUPS.map(s=>{
+      const rows=allRows.filter(r=>r.SUPERVISOR===s);
+      return {sup:s, ...aggTotals(rows)};
+    });
+    const maxLeads = Math.max(...supTots.map(s=>s.total_leads),1);
 
-    // ── MODOS COMPARATIVOS: semanal, 2 dias, período ────────────────────────
-    // Cada "fatia" é exibida lado a lado por equipe — comparação, não soma
-    if(dm==='sem'||dm==='2dias'||dm==='range'){
-
-      // Monta as fatias a comparar
-      let slices=[];
-      if(dm==='sem'){
-        // Semanas dentro do mês selecionado (ou últimas 5)
-        const ym=state.selMonth[0];
-        const weekSet={};
-        RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())&&r.date_str)
-          .forEach(r=>{
-            if(ym&&ym!=='all'&&!r.date_str.startsWith(ym)) return;
-            const w=getWeekDates(r.date_str);
-            const key=w.from+'_'+w.to;
-            if(!weekSet[key]) weekSet[key]={label:'',from:w.from,to:w.to};
-          });
-        const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1);
-        const toShow=(ym&&ym!=='all')?weeks:weeks.slice(-5);
-        slices=toShow.map((w,i)=>{
-          const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
-          const isCur=new Date().toISOString().slice(0,10)>=w.from&&new Date().toISOString().slice(0,10)<=w.to;
-          return {
-            label: d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),
-            tag: isCur?'Semana Atual':`Sem ${i+1}`,
-            filter: r=>r.date_str>=w.from&&r.date_str<=w.to,
-          };
-        });
-      } else if(dm==='2dias'){
-        const sd=state.selDate[0], sd2=state.selDate2[0];
-        const fmt2=d=>new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
-        slices=[
-          {label:fmt2(sd),  tag:'Dia 1', filter:r=>r.date_str===sd},
-          {label:fmt2(sd2), tag:'Dia 2', filter:r=>r.date_str===sd2},
-        ];
-      } else if(dm==='range'){
-        const from=state.selRangeFrom[0], to=state.selRangeTo[0];
-        const d1=new Date(from+'T12:00:00'),d2=new Date(to+'T12:00:00');
-        // Divide o range em até 4 partes iguais por semana
-        const weekSet={};
-        RAW_BY_DAY.filter(r=>r.date_str>=from&&r.date_str<=to&&!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase()))
-          .forEach(r=>{const w=getWeekDates(r.date_str);const key=w.from+'_'+w.to;if(!weekSet[key])weekSet[key]={from:w.from,to:w.to};});
-        const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1);
-        slices=weeks.map((w,i)=>{
-          const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
-          return {
-            label: d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),
-            tag:`Sem ${i+1}`,
-            filter:r=>r.date_str>=w.from&&r.date_str<=w.to,
-          };
-        });
-      }
-
-      if(slices.length===0){
-        compDiv.innerHTML=`<div class="card"><div class="card-title">Sem dados para comparar no período selecionado</div></div>`;
-      } else {
-        const ym=state.selMonth[0];
-        // Tabela comparativa: linhas = equipes, colunas = fatias
-        const cols=slices.length;
-        compDiv.innerHTML=`<div class="card" style="overflow-x:auto">
-          <div class="card-title">📊 Comparativo ${dm==='2dias'?'— 2 Dias':dm==='sem'?'Semanal':'— Período'} · Todas as Equipes</div>
-          <table style="width:100%;border-collapse:collapse;min-width:${300+cols*160}px">
-            <thead>
-              <tr style="background:#F7F9FC">
-                <th style="text-align:left;padding:8px 12px;font-size:10px;color:#94A3B8;font-weight:700;letter-spacing:.7px;text-transform:uppercase;border-bottom:2px solid #E2E8F0;min-width:160px">Equipe</th>
-                ${slices.map((s,i)=>`<th style="text-align:center;padding:8px 12px;border-bottom:2px solid #E2E8F0;min-width:160px">
-                  <div style="font-size:11px;font-weight:800;color:#1A2332">${s.label}</div>
-                  <div style="font-size:9px;color:#94A3B8;font-weight:600">${s.tag}</div>
-                </th>`).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              ${ALL_SUPS.map(sup=>{
-                const sc=SUP_C[sup]||{bg:'#EEE',tc:'#666'};
-                const baseRows=RAW_BY_DAY.filter(r=>r.SUPERVISOR===sup&&!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())&&(ym&&ym!=='all'?r.date_str.startsWith(ym):true));
-                const cells=slices.map((sl,i)=>{
-                  const rows=baseRows.filter(sl.filter);
-                  const t=aggTotals(rows);
-                  const p2=t.total_leads>0?((t.ate1+t.ate2)/t.total_leads*100):0;
-                  const st=t.total_leads>0?agStatus(p2):null;
-                  const prev=i>0?aggTotals(baseRows.filter(slices[i-1].filter)):null;
-                  const prevP2=prev&&prev.total_leads>0?((prev.ate1+prev.ate2)/prev.total_leads*100):null;
-                  const delta=prevP2!==null?(p2-prevP2):null;
-                  const deltaStr=delta!==null?(delta>=0?`▲ ${delta.toFixed(1)}%`:`▼ ${Math.abs(delta).toFixed(1)}%`):'';
-                  const deltaColor=delta===null?'#94A3B8':delta>=0?'#10B981':'#EF4444';
-                  return `<td style="text-align:center;padding:10px 8px;border-bottom:1px solid #F0F4F8;border-left:1px solid #F0F4F8">
-                    ${t.total_leads>0?`
-                      <div style="font-size:18px;font-weight:900;color:${st.color}">${p2.toFixed(1)}%</div>
-                      <div style="font-size:10px;color:#94A3B8;margin:2px 0">${fmt(t.total_leads)} leads</div>
-                      <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
-                      ${delta!==null?`<div style="font-size:10px;font-weight:700;color:${deltaColor};margin-top:4px">${deltaStr}</div>`:''}
-                    `:`<div style="color:#CBD5E0;font-size:12px">sem dados</div>`}
-                  </td>`;
-                }).join('');
-                return `<tr style="transition:background .1s" onmouseover="this.style.background='#F7FAFB'" onmouseout="this.style.background=''">
-                  <td style="padding:10px 12px;border-bottom:1px solid #F0F4F8">
-                    <span class="eq-badge" style="background:${sc.bg};color:${sc.tc};font-size:11px;padding:4px 8px">${sup}</span>
-                  </td>
-                  ${cells}
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </div>`;
-      }
-
-    } else {
-      // ── ACUMULADO / DIA: cards por equipe (comportamento original) ──────────
-      const maxLeads = Math.max(...ALL_SUPS.map(s=>{ const r=aggTotals(allRows.filter(x=>x.SUPERVISOR===s)); return r.ate1+r.ate2+r.gt2; }),1);
-      compDiv.innerHTML = `<div class="comp-grid">${ALL_SUPS.map(s=>{
-        const rows=allRows.filter(r=>r.SUPERVISOR===s);
-        const st2=aggTotals(rows);
-        const leadsResp = st2.ate1+st2.ate2+st2.gt2;
-        const sc=SUP_C[s]||{bg:'#EEF',tc:'#333'};
-        const p2 = leadsResp>0?((st2.ate1+st2.ate2)/leadsResp*100):0;
-        const pGt= leadsResp>0?(st2.gt2/leadsResp*100):0;
-        const barW=(leadsResp/maxLeads*100).toFixed(1);
-        const stag=agStatus(p2);
-        const agCnt=[...new Set(rows.map(r=>r.POWER_BI).filter(n=>n&&n!=='(sem agente)'))].length;
-        const agWithin=aggByAgent(rows).filter(a=>a.pctAte2>=80&&a.name!=='(sem agente)').length;
-        return `<div class="comp-card">
-          <div class="comp-header" style="background:${sc.bg};color:${sc.tc}">${s}</div>
-          <div class="comp-bar-wrap">
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:#94A3B8"><span>Leads</span><span style="font-weight:700;color:#1A2332">${fmt(leadsResp)}</span></div>
-            <div class="comp-bar-track"><div class="comp-bar-fill" style="width:${barW}%;background:${sc.tc}40"></div></div>
-          </div>
-          <div class="comp-row">
-            <div><div class="comp-lbl">≤ 2min</div><div class="comp-val" style="color:${stag.color}">${fmt(st2.ate1+st2.ate2)}</div></div>
-            <div style="text-align:right"><div class="comp-sub" style="color:${stag.color}">${p2.toFixed(1)}%</div>
-            <span class="status-badge" style="background:${stag.bg};color:${stag.color}">${stag.label}</span></div>
-          </div>
-          <div class="comp-row">
-            <div><div class="comp-lbl">&gt; 2min</div><div class="comp-val" style="color:#F59E0B">${fmt(st2.gt2)}</div></div>
-            <div style="text-align:right"><div class="comp-sub" style="color:#F59E0B">${pGt.toFixed(1)}%</div></div>
-          </div>
-          <div class="comp-row">
-            <div><div class="comp-lbl">Promotores</div><div class="comp-val" style="color:#2563EB">${agCnt}</div></div>
-            <div style="text-align:right"><div class="comp-lbl">Dentro meta</div><div class="comp-sub" style="color:#10B981">${agWithin}</div></div>
-          </div>
-        </div>`;
-      }).join('')}</div>`;
-    }
+    compDiv.innerHTML = `<div class="comp-grid">${supTots.map(s=>{
+      const sc=SUP_C[s.sup]||{bg:'#EEF',tc:'#333'};
+      const p2 = s.total_leads>0?((s.ate1+s.ate2)/s.total_leads*100):0;
+      const pGt= s.total_leads>0?(s.gt2/s.total_leads*100):0;
+      const pSr= s.total_leads>0?(s.sem_resp/s.total_leads*100):0;
+      const barW= (s.total_leads/maxLeads*100).toFixed(1);
+      const st=agStatus(p2);
+      const agCnt = [...new Set(allRows.filter(r=>r.SUPERVISOR===s.sup).map(r=>r.POWER_BI))].length;
+      // promotores dentro do esperado (≤2min)
+      const agWithin = aggByAgent(allRows.filter(r=>r.SUPERVISOR===s.sup)).filter(a=>a.pctAte2>=80).length;
+      return `<div class="comp-card">
+        <div class="comp-header" style="background:${sc.bg};color:${sc.tc}">${s.sup}</div>
+        <div class="comp-bar-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#94A3B8"><span>Leads</span><span style="font-weight:700;color:#1A2332">${fmt(s.total_leads)}</span></div>
+          <div class="comp-bar-track"><div class="comp-bar-fill" style="width:${barW}%;background:${sc.tc}40"></div></div>
+        </div>
+        <div class="comp-row">
+          <div><div class="comp-lbl">≤ 2min</div><div class="comp-val" style="color:${st.color}">${fmt(s.ate1+s.ate2)}</div></div>
+          <div style="text-align:right"><div class="comp-sub" style="color:${st.color}">${p2.toFixed(1)}%</div>
+          <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></div>
+        </div>
+        <div class="comp-row">
+          <div><div class="comp-lbl">&gt; 2min</div><div class="comp-val" style="color:#F59E0B">${fmt(s.gt2)}</div></div>
+          <div style="text-align:right"><div class="comp-sub" style="color:#F59E0B">${pGt.toFixed(1)}%</div></div>
+        </div>
+        <div class="comp-row">
+          <div><div class="comp-lbl">S/ Resposta</div><div class="comp-val" style="color:#EF4444">${fmt(s.sem_resp)}</div></div>
+          <div style="text-align:right"><div class="comp-sub" style="color:#EF4444">${pSr.toFixed(1)}%</div></div>
+        </div>
+        <div class="comp-row">
+          <div><div class="comp-lbl">Promotores</div><div class="comp-val" style="color:#2563EB">${agCnt}</div></div>
+          <div style="text-align:right"><div class="comp-lbl">Dentro meta</div><div class="comp-sub" style="color:#10B981">${agWithin}</div></div>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
 
   } else {
     // ── KPIs + COMPARATIVO SEMANAL para equipe específica ──────────────────
@@ -1222,109 +1037,44 @@ function renderPR(){
       ${k.sub?`<div class="sub" style="color:${k.accent}">${k.sub}</div>`:''}
     </div>`).join('');
 
-    // ── Comparativo semanal — restrito ao mês selecionado ──────────────────
+    // ── Comparativo semanal da equipe (últimas 4 semanas) ───────────────────
     const sup=state.selSup[0];
-    const selYM=state.selMonth[0]; // 'YYYY-MM' ou 'all'
-
-    // Pega todas as linhas do supervisor (sem filtro de mês/período — para ter dados de semanas)
-    const supAllRows=RAW_BY_DAY.filter(r=>r.SUPERVISOR===sup&&r.date_str);
-
-    // Monta semanas dentro do mês selecionado (ou últimas 5 semanas se 'all')
+    const supRows=RAW_BY_DAY.filter(r=>r.SUPERVISOR===sup&&r.date_str);
+    // Collect all weeks with data
     const weekSet={};
-    supAllRows.forEach(r=>{
-      // Se mês selecionado, só inclui datas daquele mês
-      if(selYM&&selYM!=='all'&&!r.date_str.startsWith(selYM)) return;
+    supRows.forEach(r=>{
       const w=getWeekDates(r.date_str);
       const key=w.from+'_'+w.to;
       if(!weekSet[key]) weekSet[key]={from:w.from,to:w.to,rows:[]};
       weekSet[key].rows.push(r);
     });
-    const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1);
-    // Se 'all', limita às últimas 5 semanas; se mês específico, mostra todas do mês
-    const weeksToShow=(selYM&&selYM!=='all')?weeks:weeks.slice(-5);
+    const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1).slice(-4);
 
-    // Hoje para marcar semana atual
-    const todayStr=new Date().toISOString().slice(0,10);
-
-    if(weeksToShow.length>0){
-      const monthTitle=selYM&&selYM!=='all'
-        ?`${monthLabel(selYM)}`
-        :'Últimas semanas';
-
+    if(weeks.length>0){
       compDiv.innerHTML=`<div class="card" style="margin-bottom:16px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div class="card-title" style="margin-bottom:0">📅 Comparativo Semanal — ${sup} <span style="color:#94A3B8;font-weight:400">${monthTitle}</span></div>
+        <div class="card-title">📅 Comparativo Semanal — ${sup}</div>
+        <div style="display:grid;grid-template-columns:repeat(${weeks.length},1fr);gap:10px">
+        ${weeks.map((w,wi)=>{
+          const t2=aggTotals(w.rows);
+          const p2=t2.total_leads>0?((t2.ate1+t2.ate2)/t2.total_leads*100):0;
+          const st=agStatus(p2);
+          const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
+          const label=d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+          const agTotal=[...new Set(w.rows.map(r=>r.POWER_BI))].length;
+          const agWithin=aggByAgent(w.rows).filter(a=>a.pctAte2>=80).length;
+          const isLast=wi===weeks.length-1;
+          return `<div style="background:${isLast?'#F0FDF4':'#F8FAFC'};border:2px solid ${isLast?st.color:st.color+'44'};border-radius:10px;padding:12px;text-align:center">
+            <div style="font-size:10px;color:#94A3B8;font-weight:600;margin-bottom:6px">${isLast?'SEMANA ATUAL':''}${label}</div>
+            <div style="font-size:22px;font-weight:900;color:${st.color}">${p2.toFixed(1)}%</div>
+            <div style="font-size:10px;color:#94A3B8;margin-bottom:4px">≤ 2min</div>
+            <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
+            <div style="margin-top:8px;display:flex;justify-content:space-around">
+              <div><div style="font-size:11px;font-weight:700;color:#4A5568">${fmt(t2.total_leads)}</div><div style="font-size:9px;color:#94A3B8">leads</div></div>
+              <div><div style="font-size:11px;font-weight:700;color:#10B981">${agWithin}/${agTotal}</div><div style="font-size:9px;color:#94A3B8">na meta</div></div>
+            </div>
+          </div>`;
+        }).join('')}
         </div>
-        <!-- CALENDÁRIO SEMANAL -->
-        <div class="week-cal"><div style="display:flex;flex-direction:column;gap:8px">
-          <!-- Header dias da semana -->
-          <div style="display:grid;grid-template-columns:140px repeat(7,1fr) 80px 80px 80px 70px;gap:4px;font-size:9px;font-weight:700;color:#94A3B8;letter-spacing:.7px;text-transform:uppercase;padding:0 4px">
-            <div>Semana</div>
-            <div style="text-align:center">SEG</div>
-            <div style="text-align:center">TER</div>
-            <div style="text-align:center">QUA</div>
-            <div style="text-align:center">QUI</div>
-            <div style="text-align:center">SEX</div>
-            <div style="text-align:center">SÁB</div>
-            <div style="text-align:center">DOM</div>
-            <div style="text-align:center">Leads</div>
-            <div style="text-align:center">≤2min</div>
-            <div style="text-align:center">%</div>
-            <div style="text-align:center">Status</div>
-          </div>
-          ${weeksToShow.map((w,wi)=>{
-            const t2=aggTotals(w.rows);
-            const p2=t2.total_leads>0?((t2.ate1+t2.ate2)/t2.total_leads*100):0;
-            const st=agStatus(p2);
-            const isCurrent=todayStr>=w.from&&todayStr<=w.to;
-            const agTotal=[...new Set(w.rows.map(r=>r.POWER_BI))].length;
-            const agWithin=aggByAgent(w.rows).filter(a=>a.pctAte2>=80).length;
-            const d1=new Date(w.from+'T12:00:00'), d2=new Date(w.to+'T12:00:00');
-            const weekLabel=d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
-              +' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-
-            // Gera os 7 dias da semana (seg a dom)
-            const dayCells=[];
-            for(let d=0;d<7;d++){
-              const dt=new Date(w.from+'T12:00:00');
-              dt.setDate(dt.getDate()+d);
-              const ds=dt.toISOString().slice(0,10);
-              // Verifica se está no mês selecionado
-              const inMonth=!selYM||selYM==='all'||ds.startsWith(selYM);
-              const dayRows=w.rows.filter(r=>r.date_str===ds);
-              const dayTots=aggTotals(dayRows);
-              const dayP2=dayTots.total_leads>0?((dayTots.ate1+dayTots.ate2)/dayTots.total_leads*100):0;
-              const daySt=dayTots.total_leads>0?agStatus(dayP2):null;
-              const isToday=ds===todayStr;
-              const dayNum=dt.toLocaleDateString('pt-BR',{day:'2-digit'});
-              // Cor de fundo da célula
-              let cellBg='#F8FAFC', cellBorder='transparent';
-              if(!inMonth){ cellBg='#F0F0F0'; }
-              else if(isToday){ cellBg='#DBEAFE'; cellBorder='#2563EB'; }
-              else if(daySt){ cellBg=daySt.bg; cellBorder=daySt.color+'66'; }
-              dayCells.push(`<div style="text-align:center;background:${cellBg};border:1px solid ${cellBorder};border-radius:6px;padding:4px 2px;min-height:38px;display:flex;flex-direction:column;align-items:center;justify-content:center">
-                <div style="font-size:11px;font-weight:700;color:${isToday?'#2563EB':'#4A5568'}">${dayNum}</div>
-                ${inMonth&&dayTots.total_leads>0
-                  ?`<div style="font-size:9px;font-weight:700;color:${daySt.color}">${dayP2.toFixed(0)}%</div>`
-                  :(inMonth?`<div style="font-size:9px;color:#CBD5E0">–</div>`:`<div style="font-size:9px;color:#D1D5DB">—</div>`)
-                }
-              </div>`);
-            }
-
-            return `<div style="display:grid;grid-template-columns:140px repeat(7,1fr) 80px 80px 80px 70px;gap:4px;align-items:center;background:${isCurrent?'#F0FDF4':'#FAFBFD'};border:1px solid ${isCurrent?st.color+'66':st.color+'22'};border-radius:8px;padding:6px 4px">
-              <div>
-                <div style="font-size:10px;font-weight:700;color:#4A5568">${weekLabel}</div>
-                ${isCurrent?`<div style="font-size:9px;color:#10B981;font-weight:600">● semana atual</div>`:''}
-                <div style="font-size:9px;color:#94A3B8">${agWithin}/${agTotal} na meta</div>
-              </div>
-              ${dayCells.join('')}
-              <div style="text-align:center;font-size:13px;font-weight:700;color:#4A5568">${fmt(t2.total_leads)}</div>
-              <div style="text-align:center;font-size:13px;font-weight:700;color:#10B981">${fmt(t2.ate1+t2.ate2)}</div>
-              <div style="text-align:center;font-size:15px;font-weight:900;color:${st.color}">${p2.toFixed(1)}%</div>
-              <div style="text-align:center"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></div>
-            </div>`;
-          }).join('')}
-        </div></div><!-- /week-cal -->
       </div>`;
     } else {
       compDiv.innerHTML='';
@@ -1359,22 +1109,6 @@ function renderPR(){
 }
 
 function renderAgTable(){
-  const dm = state.dateMode[0];
-  const isComp = (dm==='sem' || dm==='2dias') && state.selSup[0]==='Todos';
-
-  const normalDiv = document.getElementById('ag-table-normal');
-  const compDiv   = document.getElementById('ag-table-comp');
-  if(normalDiv) normalDiv.style.display = isComp ? 'none' : '';
-  if(compDiv)   compDiv.style.display   = isComp ? '' : 'none';
-
-  if(isComp){
-    renderAgTableComp();
-  } else {
-    renderAgTableNormal();
-  }
-}
-
-function renderAgTableNormal(){
   const search=(document.getElementById('ag-search')?.value||'').toLowerCase();
   let data=[..._agData];
   if(search)data=data.filter(a=>a.name.toLowerCase().includes(search)||a.sup.toLowerCase().includes(search));
@@ -1389,27 +1123,25 @@ function renderAgTableNormal(){
   const paged=data.slice(agPage*PAGE,(agPage+1)*PAGE);
   document.getElementById('ag-tbody').innerHTML=paged.map(a=>{
     const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
-    const hasLeads = a.total_leads > 0;
-    const st = hasLeads ? agStatus(a.pctAte2) : null;
-    const p1=hasLeads?(a.ate1/a.total_leads*100).toFixed(0):0;
-    const p2=hasLeads?(a.ate2/a.total_leads*100).toFixed(0):0;
-    const pGt=hasLeads?(a.gt2/a.total_leads*100).toFixed(0):0;
+    const st=agStatus(a.pctAte2);
+    const p1=a.total_leads>0?(a.ate1/a.total_leads*100).toFixed(0):0;
+    const p2=a.total_leads>0?(a.ate2/a.total_leads*100).toFixed(0):0;
+    const pGt=a.total_leads>0?(a.gt2/a.total_leads*100).toFixed(0):0;
     return `<tr>
       <td style="font-weight:700;white-space:nowrap">${a.name}</td>
       <td>${supBadge(a.sup)}</td>
-      <td class="td-right" style="font-weight:600;color:#4A5568">${hasLeads?fmt(a.total_leads):'–'}</td>
-      <td class="td-right"><div style="color:#10B981;font-weight:700">${hasLeads?fmt(a.ate1):'–'}</div>${hasLeads?`<div style="font-size:9px;color:#94A3B8">${p1}%</div>`:''}</td>
-      <td class="td-right"><div style="color:#F59E0B;font-weight:700">${hasLeads?fmt(a.ate2):'–'}</div>${hasLeads?`<div style="font-size:9px;color:#94A3B8">${p2}%</div>`:''}</td>
-      <td class="td-right"><div style="color:#EF4444;font-weight:700">${hasLeads?fmt(a.gt2):'–'}</div>${hasLeads?`<div style="font-size:9px;color:#94A3B8">${pGt}%</div>`:''}</td>
-      <td class="td-right"><div style="color:#6B7280;font-weight:700">${hasLeads?fmt(a.sem_resp):'–'}</div>${hasLeads&&a.sem_resp>0?`<div style="font-size:9px;color:#94A3B8">${(a.sem_resp/a.total_leads*100).toFixed(0)}%</div>`:''}</td>
+      <td class="td-right" style="font-weight:600;color:#4A5568">${fmt(a.total_leads)}</td>
+      <td class="td-right"><div style="color:#10B981;font-weight:700">${fmt(a.ate1)}</div><div style="font-size:9px;color:#94A3B8">${p1}%</div></td>
+      <td class="td-right"><div style="color:#F59E0B;font-weight:700">${fmt(a.ate2)}</div><div style="font-size:9px;color:#94A3B8">${p2}%</div></td>
+      <td class="td-right"><div style="color:#EF4444;font-weight:700">${fmt(a.gt2)}</div><div style="font-size:9px;color:#94A3B8">${pGt}%</div></td>
       <td>
-        ${hasLeads?`<div class="mini-bar-wrap">
+        <div class="mini-bar-wrap">
           <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${Math.min(a.pctAte2,100)}%;background:${st.color}"></div></div>
           <span style="font-size:12px;font-weight:800;color:${st.color};min-width:34px;text-align:right">${a.pctAte2.toFixed(0)}%</span>
-        </div>`:'<span style="color:#94A3B8;font-size:12px">–</span>'}
+        </div>
       </td>
-      <td class="td-right">${hasLeads?`<span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>`:'<span style="color:#94A3B8;font-size:11px">–</span>'}</td>
-      <td class="td-right">${hasLeads?`<span class="status-badge" style="background:${a.pctAte2>=80?'#D1FAE5':'#FEE2E2'};color:${a.pctAte2>=80?'#10B981':'#EF4444'}">${a.pctAte2>=80?'✓ Dentro':'✗ Fora'}</span>`:'<span style="color:#94A3B8;font-size:11px">–</span>'}</td>
+      <td class="td-right"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></td>
+      <td class="td-right"><span class="status-badge" style="background:${a.pctAte2>=80?'#D1FAE5':'#FEE2E2'};color:${a.pctAte2>=80?'#10B981':'#EF4444'}">${a.pctAte2>=80?'✓ Dentro':'✗ Fora'}</span></td>
     </tr>`;
   }).join('');
   document.getElementById('ag-pg-first').disabled=agPage===0;
@@ -1417,114 +1149,6 @@ function renderAgTableNormal(){
   document.getElementById('ag-pg-next').disabled=agPage>=agTotalPages-1;
   document.getElementById('ag-pg-last').disabled=agPage>=agTotalPages-1;
 }
-
-function renderAgTableComp(){
-  const dm=state.dateMode[0];
-  const ym=state.selMonth[0];
-  const search=(document.getElementById('ag-search')?.value||'').toLowerCase();
-  const compDiv=document.getElementById('ag-table-comp');
-
-  // Monta fatias (semanas ou 2 dias)
-  let slices=[];
-  if(dm==='sem'){
-    const weekSet={};
-    RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())&&r.date_str&&(ym&&ym!=='all'?r.date_str.startsWith(ym):true))
-      .forEach(r=>{
-        const w=getWeekDates(r.date_str);
-        const key=w.from+'_'+w.to;
-        if(!weekSet[key]) weekSet[key]={from:w.from,to:w.to};
-      });
-    const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1);
-    const toShow=(ym&&ym!=='all')?weeks:weeks.slice(-4);
-    slices=toShow.map((w,i)=>{
-      const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
-      const isCur=new Date().toISOString().slice(0,10)>=w.from&&new Date().toISOString().slice(0,10)<=w.to;
-      return {
-        label: d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),
-        tag: isCur?'Atual':`Sem ${i+1}`,
-        isCur,
-        filter: r=>r.date_str>=w.from&&r.date_str<=w.to,
-      };
-    });
-  } else {
-    const sd=state.selDate[0], sd2=state.selDate2[0];
-    const fmtD=d=>new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
-    slices=[
-      {label:fmtD(sd),  tag:'Dia 1', isCur:false, filter:r=>r.date_str===sd},
-      {label:fmtD(sd2), tag:'Dia 2', isCur:false, filter:r=>r.date_str===sd2},
-    ];
-  }
-
-  if(!slices.length){ compDiv.innerHTML=''; return; }
-
-  // Coleta todos os agentes de todas as fatias
-  const baseRows=RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())&&(ym&&ym!=='all'?r.date_str.startsWith(ym):true));
-  const agentSet=new Set(baseRows.filter(r=>slices.some(s=>s.filter(r))).map(r=>r.POWER_BI).filter(n=>n&&n!=='(sem agente)'));
-  let agents=[...agentSet].map(name=>{
-    const sup=baseRows.find(r=>r.POWER_BI===name)?.SUPERVISOR||'';
-    return {name,sup};
-  }).filter(a=>!search||a.name.toLowerCase().includes(search)||a.sup.toLowerCase().includes(search));
-  agents.sort((a,b)=>a.name.localeCompare(b.name));
-
-  document.getElementById('ag-count').textContent=agents.length;
-
-  const cols=slices.length;
-  compDiv.innerHTML=`<div class="table-wrap" style="overflow-x:auto">
-    <table style="min-width:${320+cols*200}px">
-      <thead>
-        <tr style="background:#F7F9FC">
-          <th style="text-align:left;min-width:160px">Promotor</th>
-          <th style="min-width:120px">Equipe</th>
-          ${slices.map(s=>`<th colspan="3" style="text-align:center;border-left:2px solid #E2E8F0;background:${s.isCur?'#F0FDF4':'#F7F9FC'}">
-            <div style="font-size:11px;font-weight:800;color:#1A2332">${s.label}</div>
-            <div style="font-size:9px;color:#94A3B8;font-weight:600">${s.tag}</div>
-          </th>`).join('')}
-        </tr>
-        <tr style="background:#FAFBFD">
-          <th></th><th></th>
-          ${slices.map(s=>`
-            <th class="td-right" style="border-left:2px solid #E2E8F0;font-size:9px;color:#94A3B8">Leads</th>
-            <th class="td-right" style="font-size:9px;color:#94A3B8">%≤2min</th>
-            <th class="td-right" style="font-size:9px;color:#94A3B8">Status</th>
-          `).join('')}
-        </tr>
-      </thead>
-      <tbody>
-        ${agents.map(ag=>{
-          const sc=SUP_C[ag.sup]||{bg:'#EEE',tc:'#666'};
-          const agRows=baseRows.filter(r=>r.POWER_BI===ag.name);
-          const cells=slices.map((sl,i)=>{
-            const rows=agRows.filter(sl.filter);
-            const t=aggTotals(rows);
-            const leadsResp=t.ate1+t.ate2+t.gt2;
-            const p2=leadsResp>0?((t.ate1+t.ate2)/leadsResp*100):0;
-            const st=leadsResp>0?agStatus(p2):null;
-            // delta vs fatia anterior
-            let delta=null;
-            if(i>0){
-              const prev=aggTotals(agRows.filter(slices[i-1].filter));
-              const prevL=prev.ate1+prev.ate2+prev.gt2;
-              const prevP=prevL>0?((prev.ate1+prev.ate2)/prevL*100):null;
-              if(prevP!==null&&leadsResp>0) delta=p2-prevP;
-            }
-            const bg=sl.isCur?'#F0FDF4':'';
-            return `<td class="td-right" style="border-left:2px solid #E2E8F0;background:${bg};font-weight:700;color:#4A5568">${leadsResp>0?fmt(leadsResp):'–'}</td>
-            <td class="td-right" style="background:${bg}">
-              ${leadsResp>0?`<span style="font-size:13px;font-weight:900;color:${st.color}">${p2.toFixed(0)}%</span>
-              ${delta!==null?`<div style="font-size:9px;font-weight:700;color:${delta>=0?'#10B981':'#EF4444'}">${delta>=0?'▲':'▼'}${Math.abs(delta).toFixed(1)}%</div>`:''}
-              `:'<span style="color:#CBD5E0">–</span>'}
-            </td>
-            <td class="td-right" style="background:${bg}">${leadsResp>0?`<span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>`:'–'}</td>`;
-          }).join('');
-          return `<tr onmouseover="this.style.background='#F7FAFB'" onmouseout="this.style.background=''">
-            <td style="font-weight:700;white-space:nowrap">${ag.name}</td>
-            <td>${supBadge(ag.sup)}</td>
-            ${cells}
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div>`;
 
 function sortAg(col){
   if(agSortCol===col)agSortDir*=-1;else{agSortCol=col;agSortDir=-1;}

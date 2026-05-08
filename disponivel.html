@@ -557,9 +557,6 @@ async function loadData() {
 
     console.log(`[PR] ok=${prOk} sem_resp=${prSemResp} pulados=${prSkipped} total_raw=${RAW_BY_DAY.length}`);
 
-    console.log(`[PR] Processados: ok=${prOk} sem_resp=${prSemResp} semVendedor=${prNoVendedor} semData=${prNoDate} pulados=${prSkipped}`);
-    console.log('[PR] RAW_BY_DAY total:', RAW_BY_DAY.length);
-
     // ── DISPONIBILIDADE ───────────────────────────────────────────────────────
     const { headers: avHeaders, rows: avRows } = parseCSV(avText);
     console.log('[AV] headers:', JSON.stringify(avHeaders));
@@ -608,10 +605,6 @@ async function loadData() {
     RAW_AVAIL = Object.values(avMap).filter(r=>r.POWER_BI&&r.date_str);
     console.log(`[AV] registros Disponível=${avDisp} outros=${avOutros} semAgent=${avSemAgent}`);
     console.log('[AV] RAW_AVAIL agrupados:', RAW_AVAIL.length);
-
-    // Guarda stats para painel de diagnóstico
-    window._diagPR = { total: prRows.length, ok: prOk, sem_resp: prSemResp, semVendedor: prNoVendedor, semData: prNoDate, pulados: prSkipped, raw: RAW_BY_DAY.length, headers: prHeaders };
-    window._diagAV = { total: avRows.length, disp: avDisp, outros: avOutros, semAgent: avSemAgent, raw: RAW_AVAIL.length, headers: avHeaders };
 
     // ── SUPERVISORES ─────────────────────────────────────────────────────────
     // Ordena supervisores pela ordem definida em SUPS_ORDER; desconhecidos vão ao final

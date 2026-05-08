@@ -486,7 +486,7 @@ async function loadData() {
     RAW_BY_DAY = [];
     prRows.forEach(r => {
       const vendedor = (r['VENDEDOR'] || '').trim();
-      const sup      = (r['SUPERVISOR'] || '').trim();
+      const sup      = normSup((r['SUPERVISOR'] || '').trim());
       // Coluna D = DATA DE ATRIBUICAO — fonte unica para filtro de data
       const date     = fmtDate(r['DATA DE ATRIBUIÇÃO'] || r['DATA DE ATRIBUICAO'] || '');
 
@@ -535,7 +535,7 @@ async function loadData() {
     avRows.forEach(r => {
       const agent = (r['Agent Name'] || '').trim();
       // SUPERVISOR está na coluna 7 (índice 6)
-      const sup   = (r['SUPERVISOR'] || '').trim();
+      const sup   = normSup((r['SUPERVISOR'] || '').trim());
       // Date vem como DD/MM/YYYY
       const date  = fmtDate(r['Date'] || '');
       // SITUAÇÃO: filtramos somente 'Disponível'
@@ -562,7 +562,11 @@ async function loadData() {
     const dateSet = new Set([...RAW_BY_DAY.map(r=>r.date_str), ...RAW_AVAIL.map(r=>r.date_str)]);
     ALL_DATES = [...dateSet].filter(Boolean).sort();
     const supSet = new Set([...RAW_BY_DAY.map(r=>r.SUPERVISOR), ...RAW_AVAIL.map(r=>r.SUPERVISOR)]);
-    ALL_SUPS = [...supSet].filter(s=>s && !EQUIPES_REMOVIDAS.includes(s.toUpperCase())).sort();
+    const supArr = [...supSet].filter(s=>s && !EQUIPES_REMOVIDAS.includes(s.toUpperCase()));
+    ALL_SUPS = [
+      ...SUPS_ORDER.filter(o => supArr.some(a => a===o)),
+      ...supArr.filter(s => !SUPS_ORDER.includes(s)),
+    ];
 
     console.log('[Dashboard] ALL_DATES:', ALL_DATES);
     console.log('[Dashboard] ALL_SUPS:', ALL_SUPS);
@@ -604,10 +608,32 @@ function showError(msg) {
 }
 
 // ── SUP COLORS ────────────────────────────────────────────────────────────────
+// Normaliza nome do supervisor para padrão único
+function normSup(s){
+  if(!s) return '';
+  const u = s.trim().toUpperCase();
+  if(u.includes('HUMBERTO'))    return 'HUMBERTO BANQUERI';
+  if(u.includes('LUIZ'))        return 'LUIZ ROBERTO';
+  if(u.includes('BENVE'))       return 'REBECA BENVE';
+  if(u.includes('REBECA'))      return 'REBECA';
+  if(u.includes('ADMIN'))       return 'ADMINISTRATIVO';
+  return s.trim();
+}
+
+const SUPS_ORDER = [
+  'HUMBERTO BANQUERI',
+  'LUIZ ROBERTO',
+  'REBECA',
+  'REBECA BENVE',
+  'ADMINISTRATIVO',
+];
+
 const SUP_C = {
-  'EQUIPE ALFA':       {bg:'#FFF5F5',tc:'#C53030'},
-  'EQUIPE FENIX':      {bg:'#FFF8E8',tc:'#975A16'},
-  'EQUIPE GLADIADORES':{bg:'#E8F8EE',tc:'#276749'},
+  'HUMBERTO BANQUERI': {bg:'#EBF4FF',tc:'#1D4ED8'},
+  'LUIZ ROBERTO':      {bg:'#F3E8FF',tc:'#6B21A8'},
+  'REBECA':            {bg:'#FFF0F6',tc:'#BE185D'},
+  'REBECA BENVE':      {bg:'#FFF8E8',tc:'#975A16'},
+  'ADMINISTRATIVO':    {bg:'#E8F4F8',tc:'#0E7490'},
 };
 const medals=['🥇','🥈','🥉'];
 
@@ -990,9 +1016,9 @@ function renderPR(){
       const pGt= leadsResp>0?(s.gt2/leadsResp*100):0;
       const barW= (leadsResp/maxLeads*100).toFixed(1);
       const st=agStatus(p2);
-      const agCnt = [...new Set(allRows.filter(r=>r.SUPERVISOR===s.sup).map(r=>r.POWER_BI))].length;
-      // promotores dentro do esperado (≤2min)
-      const agWithin = aggByAgent(allRows.filter(r=>r.SUPERVISOR===s.sup)).filter(a=>a.pctAte2>=80).length;
+      const supRows=allRows.filter(r=>r.SUPERVISOR===s.sup);
+      const agCnt = [...new Set(supRows.map(r=>r.POWER_BI).filter(n=>n))].length;
+      const agWithin = aggByAgent(supRows).filter(a=>a.pctAte2>=80).length;
       return `<div class="comp-card">
         <div class="comp-header" style="background:${sc.bg};color:${sc.tc}">${s.sup}</div>
         <div class="comp-bar-wrap">

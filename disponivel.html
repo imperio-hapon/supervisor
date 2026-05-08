@@ -133,7 +133,6 @@
       <div class="kpi-box"><div class="kpi-val" id="h-sem" style="color:#FC8181">–</div><div class="kpi-label">Enc. s/ Resposta</div><div class="kpi-sub" id="h-sem-pct" style="color:#FC8181"></div></div>
       <div class="kpi-box"><div class="kpi-val" id="h-ate2" style="color:#68D391">–</div><div class="kpi-label">Respondidos ≤2min</div><div class="kpi-sub" id="h-ate2-pct" style="color:#68D391"></div></div>
       <div class="kpi-box"><div class="kpi-val" id="h-gt2" style="color:#F6AD55">–</div><div class="kpi-label">Respondidos &gt;2min</div><div class="kpi-sub" id="h-gt2-pct" style="color:#F6AD55"></div></div>
-      <div class="kpi-box"><div class="kpi-val" id="h-fora" style="color:#FBBF24">–</div><div class="kpi-label">Fora do Horário</div><div class="kpi-sub" id="h-fora-pct" style="color:#FBBF24"></div></div>
     </div>
   </div>
   <div class="tabs">
@@ -228,7 +227,6 @@
           <th onclick="sortAg('gt2')" id="th-gt2" class="td-right">&gt;2min ↕</th>
           <th onclick="sortAg('sem_resp')" id="th-sem_resp" class="td-right">S/ Resposta ↕</th>
           <th onclick="sortAg('pctAte2')" id="th-pctAte2" class="td-right">% ≤2min ↕</th>
-          <th onclick="sortAg('fora_horario')" id="th-fora_horario" class="td-right">Fora Horário ↕</th>
           <th class="td-right">Status</th>
           <th class="td-right">Meta ≤2min</th>
         </tr>
@@ -1027,8 +1025,6 @@ function render(){
   document.getElementById('h-ate2-pct').textContent=pct(tots0.ate1+tots0.ate2,tots0.total_leads);
   document.getElementById('h-gt2').textContent=fmt(tots0.gt2);
   document.getElementById('h-gt2-pct').textContent=pct(tots0.gt2,tots0.total_leads);
-  document.getElementById('h-fora').textContent=fmt(tots0.fora_horario);
-  document.getElementById('h-fora-pct').textContent=pct(tots0.fora_horario,tots0.total_leads);
 
   if(t===0) renderPR();
   if(t===1) renderAvail();
@@ -1053,7 +1049,6 @@ function renderPR(){
     if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
     const ym=state.selMonth[0];
     if(ym && ym!=='all' && !r.date_str.startsWith(ym)) return false;
-    if(state.foraHorario && !r.fora_horario) return false;
     const dm=state.dateMode[0], sd=state.selDate[0], sd2=state.selDate2[0];
     const rfrom=state.selRangeFrom[0], rto=state.selRangeTo[0];
     if(dm==='dia')  return r.date_str===sd;
@@ -1185,7 +1180,6 @@ function renderPR(){
         const sc=SUP_C[s]||{bg:'#EEF',tc:'#333'};
         const p2 = leadsResp>0?((st2.ate1+st2.ate2)/leadsResp*100):0;
         const pGt= leadsResp>0?(st2.gt2/leadsResp*100):0;
-        const pFh= leadsResp>0?(st2.fora_horario/leadsResp*100):0;
         const barW=(leadsResp/maxLeads*100).toFixed(1);
         const stag=agStatus(p2);
         const agCnt=[...new Set(rows.map(r=>r.POWER_BI).filter(n=>n&&n!=='(sem agente)'))].length;
@@ -1204,10 +1198,6 @@ function renderPR(){
           <div class="comp-row">
             <div><div class="comp-lbl">&gt; 2min</div><div class="comp-val" style="color:#F59E0B">${fmt(st2.gt2)}</div></div>
             <div style="text-align:right"><div class="comp-sub" style="color:#F59E0B">${pGt.toFixed(1)}%</div></div>
-          </div>
-          <div class="comp-row" style="background:#FFFBEB">
-            <div><div class="comp-lbl">Fora Horário</div><div class="comp-val" style="color:#D97706">${fmt(st2.fora_horario)}</div></div>
-            <div style="text-align:right"><div class="comp-sub" style="color:#D97706">${pFh.toFixed(1)}%</div></div>
           </div>
           <div class="comp-row">
             <div><div class="comp-lbl">Promotores</div><div class="comp-val" style="color:#2563EB">${agCnt}</div></div>
@@ -1418,7 +1408,6 @@ function renderAgTableNormal(){
           <span style="font-size:12px;font-weight:800;color:${st.color};min-width:34px;text-align:right">${a.pctAte2.toFixed(0)}%</span>
         </div>`:'<span style="color:#94A3B8;font-size:12px">–</span>'}
       </td>
-      <td class="td-right" style="color:#D97706;font-weight:700">${a.fora_horario>0?fmt(a.fora_horario):'–'}</td>
       <td class="td-right">${hasLeads?`<span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>`:'<span style="color:#94A3B8;font-size:11px">–</span>'}</td>
       <td class="td-right">${hasLeads?`<span class="status-badge" style="background:${a.pctAte2>=80?'#D1FAE5':'#FEE2E2'};color:${a.pctAte2>=80?'#10B981':'#EF4444'}">${a.pctAte2>=80?'✓ Dentro':'✗ Fora'}</span>`:'<span style="color:#94A3B8;font-size:11px">–</span>'}</td>
     </tr>`;

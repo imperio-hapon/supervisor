@@ -173,10 +173,6 @@
       <div class="filter-label">De</div>
       <select id="sel-range-from-0" onchange="render()"></select>
     </div>
-    <div class="filter-group">
-      <div class="filter-label">Ver apenas</div>
-      <button id="btn-fora" class="btn-toggle" onclick="toggleForaHorario()" style="border-color:#F59E0B;color:#92400E">🚫 Excluir Fora do Horário</button>
-    </div>
   </div>
 
   <!-- EQUIPE BUTTONS -->
@@ -358,13 +354,12 @@ let MONTHS_AV  = {}; // tab 1
 // ── STATE (declarado antes de qualquer função) ────────────────────────────────
 const state = {
   dateMode:     ['acum','acum'],
-  selMonth:     ['',''],        // 'YYYY-MM' — mês selecionado por tab
+  selMonth:     ['',''],
   selDate:      ['',''],
   selDate2:     ['',''],
   selRangeFrom: ['',''],
   selRangeTo:   ['',''],
   selSup:       ['Todos','Todos'],
-  foraHorario:  false,          // filtro: mostrar apenas leads "fora do horário"
 };
 let agSortCol='total_leads', agSortDir=-1, agPage=0, agTotalPages=1;
 let avSortCol='avgH',        avSortDir=-1, avPage=0, avTotalPages=1;
@@ -545,21 +540,24 @@ async function loadData() {
         secs = Math.round((dtResp - dtAtrib) / 1000);
       }
 
-      // Fora do horário: STATUS contém "fora do horario" (com ou sem acento)
+      // Fora do horário: STATUS contém "fora do horario"
       const statusNorm = status.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
       const foraHorario = statusNorm.includes('fora do horario') ? 1 : 0;
 
-      let ate1=0, ate2=0, gt2=0, sem_resp=0;
-      if(status==='sem resposta'||status==='expirado'||status==='sem primeira resposta'){
-        sem_resp=1; prSemResp++;
+      let ate1=0, ate2=0, gt2=0, sem_resp=0, total_leads=0;
+      if(foraHorario){
+        // Não entra nas métricas — apenas registrado como informativo
+        total_leads=0;
+      } else if(status==='sem resposta'||status==='expirado'||status==='sem primeira resposta'){
+        total_leads=1; sem_resp=1; prSemResp++;
       } else if(secs===null){
-        gt2=1; prOk++;
-      } else if(secs<=60)  { ate1=1; prOk++; }
-      else if(secs<=120)   { ate2=1; prOk++; }
-      else                 { gt2=1;  prOk++; }
+        total_leads=1; gt2=1; prOk++;
+      } else if(secs<=60)  { total_leads=1; ate1=1; prOk++; }
+      else if(secs<=120)   { total_leads=1; ate2=1; prOk++; }
+      else                 { total_leads=1; gt2=1;  prOk++; }
 
       RAW_BY_DAY.push({ POWER_BI:vendedor, SUPERVISOR:sup, date_str:date,
-                        total_leads:1, ate1, ate2, gt2, sem_resp, fora_horario:foraHorario });
+                        total_leads, ate1, ate2, gt2, sem_resp, fora_horario:foraHorario });
     });
 
     console.log(`[PR] ok=${prOk} sem_resp=${prSemResp} pulados=${prSkipped} total_raw=${RAW_BY_DAY.length}`);
@@ -766,8 +764,6 @@ function filterRows(raw, t){
     if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
     if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
     if(ym && ym!=='all' && !r.date_str.startsWith(ym)) return false;
-    // filtro fora do horário: quando ativo, EXCLUI leads com fora_horario=1
-    if(state.foraHorario && r.fora_horario) return false;
     if(dm==='acum') return true;
     if(dm==='dia')  return r.date_str===sd;
     if(dm==='2dias') return r.date_str===sd||r.date_str===sd2;
@@ -829,19 +825,6 @@ function renderEquipeBtns(t){
 function selectEquipe(sup,t){
   state.selSup[t]=sup;
   agPage=0;avPage=0;
-  render();
-}
-
-function toggleForaHorario(){
-  state.foraHorario=!state.foraHorario;
-  const btn=document.getElementById('btn-fora');
-  if(btn){
-    btn.classList.toggle('active', state.foraHorario);
-    btn.style.background = state.foraHorario ? '#FEF3C7' : '';
-    btn.style.color      = state.foraHorario ? '#92400E' : '';
-    btn.style.borderColor= state.foraHorario ? '#D97706' : '#F59E0B';
-  }
-  agPage=0;
   render();
 }
 

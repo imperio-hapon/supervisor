@@ -112,6 +112,9 @@
   .comp-bar-wrap{padding:8px 12px 10px;border-bottom:1px solid #F0F4F8}
   .comp-bar-track{height:6px;border-radius:3px;background:#F1F5F9;overflow:hidden;margin-top:4px}
   .comp-bar-fill{height:100%;border-radius:3px;transition:width .4s}
+  /* CALENDÁRIO SEMANAL */
+  .week-cal{overflow-x:auto}
+  .week-cal>div{min-width:780px}
   @media(max-width:1100px){.comp-grid{grid-template-columns:repeat(3,1fr)}}
   @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.top10-grid{grid-template-columns:1fr}.comp-grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:600px){.kpi-grid{grid-template-columns:1fr}.header-top{flex-direction:column}.comp-grid{grid-template-columns:1fr}}
@@ -502,6 +505,21 @@ async function loadData() {
       const sup      = kSup      ? (r[kSup]     ||'').trim() : '';
       const date     = fmtDate(kData ? (r[kData]||'') : '');
       const status   = kStatus   ? (r[kStatus]  ||'').trim().toLowerCase() : '';
+
+      // ── Regra: coluna A (VENDEDOR) vazia + coluna B (STATUS/primeira resposta) = "Sem primeira resposta"
+      // → contabiliza como lead finalizado sem primeira mensagem (sem_resp)
+      const primeiraResposta = kResposta ? (r[kResposta]||'').trim() : '';
+      const isFinalizadoSemResposta =
+        !vendedor &&
+        (primeiraResposta.toLowerCase()==='sem primeira resposta' ||
+         status==='sem primeira resposta');
+
+      if (isFinalizadoSemResposta && date) {
+        // Registra como sem_resp sob supervisor encontrado (ou 'DESCONHECIDO')
+        RAW_BY_DAY.push({ POWER_BI:'(sem agente)', SUPERVISOR:sup||'DESCONHECIDO',
+          date_str:date, total_leads:1, ate1:0, ate2:0, gt2:0, sem_resp:1 });
+        prSemResp++; return;
+      }
 
       if (!vendedor){ prNoVendedor++; return; }
       if (!date)    { prNoDate++;     return; }
@@ -1074,44 +1092,109 @@ function renderPR(){
       ${k.sub?`<div class="sub" style="color:${k.accent}">${k.sub}</div>`:''}
     </div>`).join('');
 
-    // ── Comparativo semanal da equipe (últimas 4 semanas) ───────────────────
+    // ── Comparativo semanal — restrito ao mês selecionado ──────────────────
     const sup=state.selSup[0];
-    const supRows=RAW_BY_DAY.filter(r=>r.SUPERVISOR===sup&&r.date_str);
-    // Collect all weeks with data
+    const selYM=state.selMonth[0]; // 'YYYY-MM' ou 'all'
+
+    // Pega todas as linhas do supervisor (sem filtro de mês/período — para ter dados de semanas)
+    const supAllRows=RAW_BY_DAY.filter(r=>r.SUPERVISOR===sup&&r.date_str);
+
+    // Monta semanas dentro do mês selecionado (ou últimas 5 semanas se 'all')
     const weekSet={};
-    supRows.forEach(r=>{
+    supAllRows.forEach(r=>{
+      // Se mês selecionado, só inclui datas daquele mês
+      if(selYM&&selYM!=='all'&&!r.date_str.startsWith(selYM)) return;
       const w=getWeekDates(r.date_str);
       const key=w.from+'_'+w.to;
       if(!weekSet[key]) weekSet[key]={from:w.from,to:w.to,rows:[]};
       weekSet[key].rows.push(r);
     });
-    const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1).slice(-4);
+    const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1);
+    // Se 'all', limita às últimas 5 semanas; se mês específico, mostra todas do mês
+    const weeksToShow=(selYM&&selYM!=='all')?weeks:weeks.slice(-5);
 
-    if(weeks.length>0){
+    // Hoje para marcar semana atual
+    const todayStr=new Date().toISOString().slice(0,10);
+
+    if(weeksToShow.length>0){
+      const monthTitle=selYM&&selYM!=='all'
+        ?`${monthLabel(selYM)}`
+        :'Últimas semanas';
+
       compDiv.innerHTML=`<div class="card" style="margin-bottom:16px">
-        <div class="card-title">📅 Comparativo Semanal — ${sup}</div>
-        <div style="display:grid;grid-template-columns:repeat(${weeks.length},1fr);gap:10px">
-        ${weeks.map((w,wi)=>{
-          const t2=aggTotals(w.rows);
-          const p2=t2.total_leads>0?((t2.ate1+t2.ate2)/t2.total_leads*100):0;
-          const st=agStatus(p2);
-          const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
-          const label=d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-          const agTotal=[...new Set(w.rows.map(r=>r.POWER_BI))].length;
-          const agWithin=aggByAgent(w.rows).filter(a=>a.pctAte2>=80).length;
-          const isLast=wi===weeks.length-1;
-          return `<div style="background:${isLast?'#F0FDF4':'#F8FAFC'};border:2px solid ${isLast?st.color:st.color+'44'};border-radius:10px;padding:12px;text-align:center">
-            <div style="font-size:10px;color:#94A3B8;font-weight:600;margin-bottom:6px">${isLast?'SEMANA ATUAL':''}${label}</div>
-            <div style="font-size:22px;font-weight:900;color:${st.color}">${p2.toFixed(1)}%</div>
-            <div style="font-size:10px;color:#94A3B8;margin-bottom:4px">≤ 2min</div>
-            <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
-            <div style="margin-top:8px;display:flex;justify-content:space-around">
-              <div><div style="font-size:11px;font-weight:700;color:#4A5568">${fmt(t2.total_leads)}</div><div style="font-size:9px;color:#94A3B8">leads</div></div>
-              <div><div style="font-size:11px;font-weight:700;color:#10B981">${agWithin}/${agTotal}</div><div style="font-size:9px;color:#94A3B8">na meta</div></div>
-            </div>
-          </div>`;
-        }).join('')}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="card-title" style="margin-bottom:0">📅 Comparativo Semanal — ${sup} <span style="color:#94A3B8;font-weight:400">${monthTitle}</span></div>
         </div>
+        <!-- CALENDÁRIO SEMANAL -->
+        <div class="week-cal"><div style="display:flex;flex-direction:column;gap:8px">
+          <!-- Header dias da semana -->
+          <div style="display:grid;grid-template-columns:140px repeat(7,1fr) 80px 80px 80px 70px;gap:4px;font-size:9px;font-weight:700;color:#94A3B8;letter-spacing:.7px;text-transform:uppercase;padding:0 4px">
+            <div>Semana</div>
+            <div style="text-align:center">SEG</div>
+            <div style="text-align:center">TER</div>
+            <div style="text-align:center">QUA</div>
+            <div style="text-align:center">QUI</div>
+            <div style="text-align:center">SEX</div>
+            <div style="text-align:center">SÁB</div>
+            <div style="text-align:center">DOM</div>
+            <div style="text-align:center">Leads</div>
+            <div style="text-align:center">≤2min</div>
+            <div style="text-align:center">%</div>
+            <div style="text-align:center">Status</div>
+          </div>
+          ${weeksToShow.map((w,wi)=>{
+            const t2=aggTotals(w.rows);
+            const p2=t2.total_leads>0?((t2.ate1+t2.ate2)/t2.total_leads*100):0;
+            const st=agStatus(p2);
+            const isCurrent=todayStr>=w.from&&todayStr<=w.to;
+            const agTotal=[...new Set(w.rows.map(r=>r.POWER_BI))].length;
+            const agWithin=aggByAgent(w.rows).filter(a=>a.pctAte2>=80).length;
+            const d1=new Date(w.from+'T12:00:00'), d2=new Date(w.to+'T12:00:00');
+            const weekLabel=d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
+              +' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+
+            // Gera os 7 dias da semana (seg a dom)
+            const dayCells=[];
+            for(let d=0;d<7;d++){
+              const dt=new Date(w.from+'T12:00:00');
+              dt.setDate(dt.getDate()+d);
+              const ds=dt.toISOString().slice(0,10);
+              // Verifica se está no mês selecionado
+              const inMonth=!selYM||selYM==='all'||ds.startsWith(selYM);
+              const dayRows=w.rows.filter(r=>r.date_str===ds);
+              const dayTots=aggTotals(dayRows);
+              const dayP2=dayTots.total_leads>0?((dayTots.ate1+dayTots.ate2)/dayTots.total_leads*100):0;
+              const daySt=dayTots.total_leads>0?agStatus(dayP2):null;
+              const isToday=ds===todayStr;
+              const dayNum=dt.toLocaleDateString('pt-BR',{day:'2-digit'});
+              // Cor de fundo da célula
+              let cellBg='#F8FAFC', cellBorder='transparent';
+              if(!inMonth){ cellBg='#F0F0F0'; }
+              else if(isToday){ cellBg='#DBEAFE'; cellBorder='#2563EB'; }
+              else if(daySt){ cellBg=daySt.bg; cellBorder=daySt.color+'66'; }
+              dayCells.push(`<div style="text-align:center;background:${cellBg};border:1px solid ${cellBorder};border-radius:6px;padding:4px 2px;min-height:38px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <div style="font-size:11px;font-weight:700;color:${isToday?'#2563EB':'#4A5568'}">${dayNum}</div>
+                ${inMonth&&dayTots.total_leads>0
+                  ?`<div style="font-size:9px;font-weight:700;color:${daySt.color}">${dayP2.toFixed(0)}%</div>`
+                  :(inMonth?`<div style="font-size:9px;color:#CBD5E0">–</div>`:`<div style="font-size:9px;color:#D1D5DB">—</div>`)
+                }
+              </div>`);
+            }
+
+            return `<div style="display:grid;grid-template-columns:140px repeat(7,1fr) 80px 80px 80px 70px;gap:4px;align-items:center;background:${isCurrent?'#F0FDF4':'#FAFBFD'};border:1px solid ${isCurrent?st.color+'66':st.color+'22'};border-radius:8px;padding:6px 4px">
+              <div>
+                <div style="font-size:10px;font-weight:700;color:#4A5568">${weekLabel}</div>
+                ${isCurrent?`<div style="font-size:9px;color:#10B981;font-weight:600">● semana atual</div>`:''}
+                <div style="font-size:9px;color:#94A3B8">${agWithin}/${agTotal} na meta</div>
+              </div>
+              ${dayCells.join('')}
+              <div style="text-align:center;font-size:13px;font-weight:700;color:#4A5568">${fmt(t2.total_leads)}</div>
+              <div style="text-align:center;font-size:13px;font-weight:700;color:#10B981">${fmt(t2.ate1+t2.ate2)}</div>
+              <div style="text-align:center;font-size:15px;font-weight:900;color:${st.color}">${p2.toFixed(1)}%</div>
+              <div style="text-align:center"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></div>
+            </div>`;
+          }).join('')}
+        </div></div><!-- /week-cal -->
       </div>`;
     } else {
       compDiv.innerHTML='';

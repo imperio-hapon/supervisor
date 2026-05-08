@@ -474,18 +474,26 @@ async function loadData() {
     console.log('[PR] headers:', JSON.stringify(prHeaders));
     console.log('[PR] total linhas brutas:', prRows.length);
     if (prRows.length > 0) console.log('[PR] linha 1:', JSON.stringify(prRows[0]));
+    if (prRows.length > 1) console.log('[PR] linha 2:', JSON.stringify(prRows[1]));
 
-    // Detecta automaticamente os nomes de colunas com variações de acento/espaço
-    function findCol(row, candidates){
+    // Guarda índices posicionais das colunas (A=0, B=1, C=2...)
+    // Coluna A = VENDEDOR (índice 0)
+    // Coluna B = segunda coluna — se A estiver vazia e B = "Sem primeira resposta" → sem_resp
+    const colA = prHeaders[0] || '';   // VENDEDOR
+    const colB = prHeaders[1] || '';   // segunda coluna
+
+    // Detecta colunas por nome com fallback posicional
+    function findCol(row, candidates, fallbackIdx){
       for(const c of candidates){
         const k = Object.keys(row).find(k => k.trim().toLowerCase() === c.toLowerCase());
         if(k !== undefined && row[k] !== undefined) return k;
       }
-      // fallback: partial match
       for(const c of candidates){
         const k = Object.keys(row).find(k => k.trim().toLowerCase().includes(c.toLowerCase().split(' ')[0]));
         if(k !== undefined && row[k] !== undefined) return k;
       }
+      // fallback: usa índice posicional
+      if(fallbackIdx !== undefined && prHeaders[fallbackIdx]) return prHeaders[fallbackIdx];
       return null;
     }
 
@@ -493,40 +501,55 @@ async function loadData() {
     let prSkipped = 0, prNoDate = 0, prNoVendedor = 0, prSemResp = 0, prOk = 0;
 
     prRows.forEach(r => {
-      // Detecção robusta de colunas
-      const kVendedor  = findCol(r, ['VENDEDOR','Vendedor','vendedor']);
-      const kSup       = findCol(r, ['SUPERVISOR','Supervisor']);
-      const kData      = findCol(r, ['DATA DE ATRIBUIÇÃO','DATA DE ATRIBUICAO','Data de Atribuição','Data Atribuição','DATA ATRIBUIÇÃO']);
-      const kResposta  = findCol(r, ['Primeira resposta do agente','primeira resposta do agente','PRIMEIRA RESPOSTA DO AGENTE']);
-      const kAtrib     = findCol(r, ['Horário de atribuição','Horario de atribuicao','HORÁRIO DE ATRIBUIÇÃO','HORARIO DE ATRIBUICAO','Hora de atribuição']);
-      const kStatus    = findCol(r, ['STATUS','Status','status']);
+      // Leitura posicional: col A = VENDEDOR, col B = segunda coluna
+      const valColA = (r[colA] || '').trim();
+      const valColB = (r[colB] || '').trim();
 
-      const vendedor = kVendedor ? (r[kVendedor]||'').trim() : '';
-      const sup      = kSup      ? (r[kSup]     ||'').trim() : '';
+      const kSup    = findCol(r, ['SUPERVISOR','Supervisor'], 2);
+      const kData   = findCol(r, ['DATA DE ATRIBUIÇÃO','DATA DE ATRIBUICAO','Data de Atribuição','DATA ATRIBUIÇÃO'], 3);
+      const kAtrib  = findCol(r, ['Horário de atribuição','Horario de atribuicao','HORÁRIO DE ATRIBUIÇÃO','HORARIO DE ATRIBUICAO'], 4);
+      const kStatus = findCol(r, ['STATUS','Status','status']);
+
+      const vendedor = valColA;
+      const sup      = kSup  ? (r[kSup] ||'').trim() : '';
       const date     = fmtDate(kData ? (r[kData]||'') : '');
-      const status   = kStatus   ? (r[kStatus]  ||'').trim().toLowerCase() : '';
+      const status   = kStatus ? (r[kStatus]||'').trim().toLowerCase() : '';
 
-      // ── Regra: coluna A (VENDEDOR) vazia + coluna B (STATUS/primeira resposta) = "Sem primeira resposta"
-      // → contabiliza como lead finalizado sem primeira mensagem (sem_resp)
-      const primeiraResposta = kResposta ? (r[kResposta]||'').trim() : '';
-      const isFinalizadoSemResposta =
-        !vendedor &&
-        (primeiraResposta.toLowerCase()==='sem primeira resposta' ||
-         status==='sem primeira resposta');
+      // ── REGRA PRINCIPAL: col A vazia + col B = "Sem primeira resposta"
+      // → lead finalizado sem primeira mensagem
+      const colBNorm = valColB.toLowerCase().trim()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      const isSemPrimeira =
+        !vendedor && (
+          colBNorm === 'sem primeira resposta' ||
+          colBNorm.includes('sem primeira') ||
+          valColB.toLowerCase() === 'sem primeira resposta'
+        );
 
-      if (isFinalizadoSemResposta && date) {
-        // Registra como sem_resp sob supervisor encontrado (ou 'DESCONHECIDO')
-        RAW_BY_DAY.push({ POWER_BI:'(sem agente)', SUPERVISOR:sup||'DESCONHECIDO',
+      if (isSemPrimeira) {
+        if (!date) { prNoDate++; return; }
+        RAW_BY_DAY.push({ POWER_BI:'(sem agente)', SUPERVISOR:sup,
           date_str:date, total_leads:1, ate1:0, ate2:0, gt2:0, sem_resp:1 });
         prSemResp++; return;
       }
 
+      // ── linhas normais com agente
       if (!vendedor){ prNoVendedor++; return; }
       if (!date)    { prNoDate++;     return; }
       if (vendedor.toUpperCase()==='VENDEDOR'||vendedor.startsWith('=')){ prSkipped++; return; }
 
-      const dtResposta   = kResposta ? parseDateTimeBR(r[kResposta]  || '') : null;
-      const dtAtribuicao = kAtrib    ? parseDateTimeBR(r[kAtrib]     || '') : null;
+      // Coluna de primeira resposta = coluna B quando há agente (contém timestamp)
+      // Mas se col B = "Sem primeira resposta" com agente preenchido → também sem_resp
+      const kResposta = findCol(r, ['Primeira resposta do agente','primeira resposta do agente','PRIMEIRA RESPOSTA DO AGENTE'], 1);
+      const dtResposta   = kResposta ? parseDateTimeBR(r[kResposta] || '') : null;
+      const dtAtribuicao = kAtrib    ? parseDateTimeBR(r[kAtrib]    || '') : null;
+
+      // Se col B explicitamente "Sem primeira resposta" (mesmo com agente)
+      if (colBNorm === 'sem primeira resposta' || colBNorm.includes('sem primeira')) {
+        RAW_BY_DAY.push({ POWER_BI:vendedor, SUPERVISOR:sup, date_str:date,
+          total_leads:1, ate1:0, ate2:0, gt2:0, sem_resp:1 });
+        prSemResp++; return;
+      }
 
       let secs = null;
       if (dtResposta && dtAtribuicao && dtResposta >= dtAtribuicao) {
@@ -534,11 +557,9 @@ async function loadData() {
       }
 
       let ate1=0,ate2=0,gt2=0,sem_resp=0;
-      // Marca sem resposta SOMENTE se status explícito OU sem data de resposta alguma
-      if (status==='sem resposta'||status==='expirado') {
+      if (status==='sem resposta'||status==='expirado'||status==='sem primeira resposta') {
         sem_resp=1; prSemResp++;
       } else if (secs===null) {
-        // sem data de resposta mas não marcado como sem resposta → trata como >2min (lead existente)
         gt2=1; prOk++;
       } else if (secs<=60)  { ate1=1; prOk++; }
       else if (secs<=120)   { ate2=1; prOk++; }

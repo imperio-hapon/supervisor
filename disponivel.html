@@ -457,6 +457,18 @@ function parseDateTimeBR(v) {
   return isNaN(d) ? null : d;
 }
 
+// ── NORMALIZA SUPERVISOR ──────────────────────────────────────────────────────
+function normSup(s){
+  if(!s) return '';
+  const u = s.trim().toUpperCase();
+  if(u.includes('HUMBERTO'))    return 'HUMBERTO BANQUERI';
+  if(u.includes('LUIZ'))        return 'LUIZ ROBERTO';
+  if(u.includes('BENVE'))       return 'REBECA BENVE';
+  if(u.includes('REBECA'))      return 'REBECA';
+  if(u.includes('ADMIN'))       return 'ADMINISTRATIVO';
+  return s.trim();
+}
+
 // ── LOAD DATA ─────────────────────────────────────────────────────────────────
 async function loadData() {
   showLoading(true);
@@ -470,104 +482,80 @@ async function loadData() {
     const [prText, avText] = await Promise.all([prResp.text(), avResp.text()]);
 
     // ── PRIMEIRA RESPOSTA ─────────────────────────────────────────────────────
+    // Estrutura real das colunas (confirmada pelo usuário):
+    // A=MEDIA | B=TEMPO | C=SUPERVISOR | D=VENDEDOR | E=Primeira resposta do agente
+    // F=Horário de atribuição | G=DATA DE ATRIBUIÇÃO | H=Transferência | I=ID DA CONVERSA | J=STATUS | K=TEL
+    //
+    // Regra sem_resp: col B = "Sem primeira resposta"  (col A fica vazia)
     const { headers: prHeaders, rows: prRows } = parseCSV(prText);
     console.log('[PR] headers:', JSON.stringify(prHeaders));
     console.log('[PR] total linhas brutas:', prRows.length);
     if (prRows.length > 0) console.log('[PR] linha 1:', JSON.stringify(prRows[0]));
-    if (prRows.length > 1) console.log('[PR] linha 2:', JSON.stringify(prRows[1]));
 
-    // Guarda índices posicionais das colunas (A=0, B=1, C=2...)
-    // Coluna A = VENDEDOR (índice 0)
-    // Coluna B = segunda coluna — se A estiver vazia e B = "Sem primeira resposta" → sem_resp
-    const colA = prHeaders[0] || '';   // VENDEDOR
-    const colB = prHeaders[1] || '';   // segunda coluna
+    // Nomes reais das colunas pelo exemplo da planilha
+    const H_MEDIA   = prHeaders[0]; // MEDIA
+    const H_TEMPO   = prHeaders[1]; // TEMPO
+    const H_SUP     = prHeaders[2]; // SUPERVISOR
+    const H_VEND    = prHeaders[3]; // VENDEDOR
+    const H_RESP    = prHeaders[4]; // Primeira resposta do agente
+    const H_ATRIB   = prHeaders[5]; // Horário de atribuição
+    const H_DATA    = prHeaders[6]; // DATA DE ATRIBUIÇÃO
+    const H_STATUS  = prHeaders[9]; // STATUS
 
-    // Detecta colunas por nome com fallback posicional
-    function findCol(row, candidates, fallbackIdx){
-      for(const c of candidates){
-        const k = Object.keys(row).find(k => k.trim().toLowerCase() === c.toLowerCase());
-        if(k !== undefined && row[k] !== undefined) return k;
-      }
-      for(const c of candidates){
-        const k = Object.keys(row).find(k => k.trim().toLowerCase().includes(c.toLowerCase().split(' ')[0]));
-        if(k !== undefined && row[k] !== undefined) return k;
-      }
-      // fallback: usa índice posicional
-      if(fallbackIdx !== undefined && prHeaders[fallbackIdx]) return prHeaders[fallbackIdx];
-      return null;
-    }
+    console.log('[PR] colunas mapeadas:', {H_MEDIA,H_TEMPO,H_SUP,H_VEND,H_RESP,H_ATRIB,H_DATA,H_STATUS});
 
     RAW_BY_DAY = [];
-    let prSkipped = 0, prNoDate = 0, prNoVendedor = 0, prSemResp = 0, prOk = 0;
+    let prSemResp=0, prOk=0, prSkipped=0;
 
     prRows.forEach(r => {
-      // Leitura posicional: col A = VENDEDOR, col B = segunda coluna
-      const valColA = (r[colA] || '').trim();
-      const valColB = (r[colB] || '').trim();
+      const media    = (r[H_MEDIA]  ||'').trim();
+      const tempo    = (r[H_TEMPO]  ||'').trim();
+      const supRaw   = (r[H_SUP]    ||'').trim();
+      const vendedor = (r[H_VEND]   ||'').trim();
+      const resposta = (r[H_RESP]   ||'').trim();
+      const atrib    = (r[H_ATRIB]  ||'').trim();
+      const dataRaw  = (r[H_DATA]   ||'').trim();
+      const status   = (r[H_STATUS] ||'').trim().toLowerCase();
 
-      const kSup    = findCol(r, ['SUPERVISOR','Supervisor'], 2);
-      const kData   = findCol(r, ['DATA DE ATRIBUIÇÃO','DATA DE ATRIBUICAO','Data de Atribuição','DATA ATRIBUIÇÃO'], 3);
-      const kAtrib  = findCol(r, ['Horário de atribuição','Horario de atribuicao','HORÁRIO DE ATRIBUIÇÃO','HORARIO DE ATRIBUICAO'], 4);
-      const kStatus = findCol(r, ['STATUS','Status','status']);
+      // Pula cabeçalhos repetidos ou linhas completamente vazias
+      if(!supRaw && !vendedor && !dataRaw){ prSkipped++; return; }
+      if(vendedor.toUpperCase()==='VENDEDOR'){ prSkipped++; return; }
 
-      const vendedor = valColA;
-      const sup      = kSup  ? (r[kSup] ||'').trim() : '';
-      const date     = fmtDate(kData ? (r[kData]||'') : '');
-      const status   = kStatus ? (r[kStatus]||'').trim().toLowerCase() : '';
+      const sup  = normSup(supRaw);
+      const date = fmtDate(dataRaw);
+      if(!date){ prSkipped++; return; }
 
-      // ── REGRA PRINCIPAL: col A vazia + col B = "Sem primeira resposta"
-      // → lead finalizado sem primeira mensagem
-      const colBNorm = valColB.toLowerCase().trim()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      const isSemPrimeira =
-        !vendedor && (
-          colBNorm === 'sem primeira resposta' ||
-          colBNorm.includes('sem primeira') ||
-          valColB.toLowerCase() === 'sem primeira resposta'
-        );
+      const tempoNorm = tempo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
-      if (isSemPrimeira) {
-        if (!date) { prNoDate++; return; }
-        RAW_BY_DAY.push({ POWER_BI:'(sem agente)', SUPERVISOR:sup,
+      // ── REGRA: col B (TEMPO) = "Sem primeira resposta" → sem_resp
+      if(tempoNorm.includes('sem primeira')){
+        RAW_BY_DAY.push({ POWER_BI: vendedor||'(sem agente)', SUPERVISOR:sup,
           date_str:date, total_leads:1, ate1:0, ate2:0, gt2:0, sem_resp:1 });
         prSemResp++; return;
       }
 
-      // ── linhas normais com agente
-      if (!vendedor){ prNoVendedor++; return; }
-      if (!date)    { prNoDate++;     return; }
-      if (vendedor.toUpperCase()==='VENDEDOR'||vendedor.startsWith('=')){ prSkipped++; return; }
-
-      // Coluna de primeira resposta = coluna B quando há agente (contém timestamp)
-      // Mas se col B = "Sem primeira resposta" com agente preenchido → também sem_resp
-      const kResposta = findCol(r, ['Primeira resposta do agente','primeira resposta do agente','PRIMEIRA RESPOSTA DO AGENTE'], 1);
-      const dtResposta   = kResposta ? parseDateTimeBR(r[kResposta] || '') : null;
-      const dtAtribuicao = kAtrib    ? parseDateTimeBR(r[kAtrib]    || '') : null;
-
-      // Se col B explicitamente "Sem primeira resposta" (mesmo com agente)
-      if (colBNorm === 'sem primeira resposta' || colBNorm.includes('sem primeira')) {
-        RAW_BY_DAY.push({ POWER_BI:vendedor, SUPERVISOR:sup, date_str:date,
-          total_leads:1, ate1:0, ate2:0, gt2:0, sem_resp:1 });
-        prSemResp++; return;
-      }
-
+      // ── Calcula tempo de primeira resposta
+      const dtResp  = parseDateTimeBR(resposta);
+      const dtAtrib = parseDateTimeBR(atrib);
       let secs = null;
-      if (dtResposta && dtAtribuicao && dtResposta >= dtAtribuicao) {
-        secs = Math.round((dtResposta - dtAtribuicao) / 1000);
+      if(dtResp && dtAtrib && dtResp >= dtAtrib){
+        secs = Math.round((dtResp - dtAtrib) / 1000);
       }
 
-      let ate1=0,ate2=0,gt2=0,sem_resp=0;
-      if (status==='sem resposta'||status==='expirado'||status==='sem primeira resposta') {
+      let ate1=0, ate2=0, gt2=0, sem_resp=0;
+      if(status==='sem resposta'||status==='expirado'||status==='sem primeira resposta'){
         sem_resp=1; prSemResp++;
-      } else if (secs===null) {
+      } else if(secs===null){
         gt2=1; prOk++;
-      } else if (secs<=60)  { ate1=1; prOk++; }
-      else if (secs<=120)   { ate2=1; prOk++; }
-      else                  { gt2=1;  prOk++; }
+      } else if(secs<=60)  { ate1=1; prOk++; }
+      else if(secs<=120)   { ate2=1; prOk++; }
+      else                 { gt2=1;  prOk++; }
 
       RAW_BY_DAY.push({ POWER_BI:vendedor, SUPERVISOR:sup, date_str:date,
                         total_leads:1, ate1, ate2, gt2, sem_resp });
     });
+
+    console.log(`[PR] ok=${prOk} sem_resp=${prSemResp} pulados=${prSkipped} total_raw=${RAW_BY_DAY.length}`);
 
     console.log(`[PR] Processados: ok=${prOk} sem_resp=${prSemResp} semVendedor=${prNoVendedor} semData=${prNoDate} pulados=${prSkipped}`);
     console.log('[PR] RAW_BY_DAY total:', RAW_BY_DAY.length);
@@ -585,7 +573,7 @@ async function loadData() {
 
     avRows.forEach(r => {
       const agent = (r['Agent Name'] || '').trim();
-      const sup   = (r['SUPERVISOR'] || '').trim();
+      const sup   = normSup((r['SUPERVISOR'] || '').trim());
       const date  = fmtDate(r['Date'] || '');
 
       // SITUAÇÃO — testa múltiplas grafias

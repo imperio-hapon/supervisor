@@ -203,6 +203,15 @@ const SUP_CFG = {
   'BENVE'            :{label:'Benve',         nome:'Benve',            color:'#7b2d8b',cls:'benve',   chip:'chip-benve'},
   'JOSY BOMFIM'      :{label:'Administrativo',nome:'Administrativo',   color:'#0077b6',cls:'josy',    chip:'chip-josy'},
 };
+// ─── CONVERSÕES OFICIAIS POR EQUIPE (ajuste manual) ───────────────────────
+const TEAM_CONV_OVERRIDE = {
+  'HUMBERTO BANQUERI': 9.69,        // Alfa
+  'JOSY BOMFIM'      : 0.55,        // Administrativo
+  'LUIZ ROBERTO'     : 5.55,        // Gladiadores
+  'REBECA MOURA'     : 8.73,        // Fênix
+  'BENVE'            : 10.59        // Benve
+};
+
 const SUP_KEYS = Object.keys(SUP_CFG);
 const sc  = k => SUP_CFG[k];
 const scl = k => sc(k)?.label||k;
@@ -335,8 +344,11 @@ function renderSupGrid() {
     const mt   = rows.reduce((a,r)=>a+r.meta,0);
     const n    = rows.length;
     const mvp  = n>0?+(vt/n).toFixed(1):0;
+    const supCvOverride = TEAM_CONV_OVERRIDE[key];
     const supCvRows = rows.filter(r=>r.cv!==null&&r.cv!==undefined);
-    const supCv     = supCvRows.length>0 ? supCvRows.reduce((s,r)=>s+r.cv,0)/supCvRows.length : null;
+    const supCv     = (supCvOverride!==undefined && supCvOverride!==null)
+      ? supCvOverride
+      : (supCvRows.length>0 ? supCvRows.reduce((s,r)=>s+r.cv,0)/supCvRows.length : null);
     const supCvDisp = supCv!==null ? supCv.toFixed(2)+'%' : '—';
     const pct  = mt>0?+(vt/mt*100).toFixed(1):0;
     const proj = Math.round(vt * PROJ_FATOR);

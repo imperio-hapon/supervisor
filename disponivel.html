@@ -133,6 +133,7 @@
       <div class="kpi-box"><div class="kpi-val" id="h-sem" style="color:#FC8181">–</div><div class="kpi-label">Enc. s/ Resposta</div><div class="kpi-sub" id="h-sem-pct" style="color:#FC8181"></div></div>
       <div class="kpi-box"><div class="kpi-val" id="h-ate2" style="color:#68D391">–</div><div class="kpi-label">Respondidos ≤2min</div><div class="kpi-sub" id="h-ate2-pct" style="color:#68D391"></div></div>
       <div class="kpi-box"><div class="kpi-val" id="h-gt2" style="color:#F6AD55">–</div><div class="kpi-label">Respondidos &gt;2min</div><div class="kpi-sub" id="h-gt2-pct" style="color:#F6AD55"></div></div>
+      <div class="kpi-box"><div class="kpi-val" id="h-fora" style="color:#FBBF24">–</div><div class="kpi-label">Fora do Horário</div><div class="kpi-sub" id="h-fora-pct" style="color:#FBBF24"></div></div>
     </div>
   </div>
   <div class="tabs">
@@ -172,9 +173,9 @@
       <div class="filter-label">De</div>
       <select id="sel-range-from-0" onchange="render()"></select>
     </div>
-    <div class="filter-group" id="range-wrap2-0" style="display:none">
-      <div class="filter-label">Até</div>
-      <select id="sel-range-to-0" onchange="render()"></select>
+    <div class="filter-group">
+      <div class="filter-label">Ver apenas</div>
+      <button id="btn-fora" class="btn-toggle" onclick="toggleForaHorario()" style="border-color:#F59E0B;color:#92400E">🚫 Excluir Fora do Horário</button>
     </div>
   </div>
 
@@ -227,6 +228,7 @@
           <th onclick="sortAg('ate2')" id="th-ate2" class="td-right">1-2min ↕</th>
           <th onclick="sortAg('gt2')" id="th-gt2" class="td-right">&gt;2min ↕</th>
           <th onclick="sortAg('pctAte2')" id="th-pctAte2" class="td-right">% ≤2min ↕</th>
+          <th onclick="sortAg('fora_horario')" id="th-fora_horario" class="td-right">Fora Horário ↕</th>
           <th class="td-right">Status</th>
           <th class="td-right">Meta ≤2min</th>
         </tr>
@@ -362,6 +364,7 @@ const state = {
   selRangeFrom: ['',''],
   selRangeTo:   ['',''],
   selSup:       ['Todos','Todos'],
+  foraHorario:  false,          // filtro: mostrar apenas leads "fora do horário"
 };
 let agSortCol='total_leads', agSortDir=-1, agPage=0, agTotalPages=1;
 let avSortCol='avgH',        avSortDir=-1, avPage=0, avTotalPages=1;
@@ -530,7 +533,7 @@ async function loadData() {
       // ── REGRA: col B (TEMPO) = "Sem primeira resposta" → sem_resp
       if(tempoNorm.includes('sem primeira')){
         RAW_BY_DAY.push({ POWER_BI: vendedor||'(sem agente)', SUPERVISOR:sup,
-          date_str:date, total_leads:1, ate1:0, ate2:0, gt2:0, sem_resp:1 });
+          date_str:date, total_leads:1, ate1:0, ate2:0, gt2:0, sem_resp:1, fora_horario:0 });
         prSemResp++; return;
       }
 
@@ -542,6 +545,10 @@ async function loadData() {
         secs = Math.round((dtResp - dtAtrib) / 1000);
       }
 
+      // Fora do horário: STATUS contém "fora do horario" (com ou sem acento)
+      const statusNorm = status.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+      const foraHorario = statusNorm.includes('fora do horario') ? 1 : 0;
+
       let ate1=0, ate2=0, gt2=0, sem_resp=0;
       if(status==='sem resposta'||status==='expirado'||status==='sem primeira resposta'){
         sem_resp=1; prSemResp++;
@@ -552,7 +559,7 @@ async function loadData() {
       else                 { gt2=1;  prOk++; }
 
       RAW_BY_DAY.push({ POWER_BI:vendedor, SUPERVISOR:sup, date_str:date,
-                        total_leads:1, ate1, ate2, gt2, sem_resp });
+                        total_leads:1, ate1, ate2, gt2, sem_resp, fora_horario:foraHorario });
     });
 
     console.log(`[PR] ok=${prOk} sem_resp=${prSemResp} pulados=${prSkipped} total_raw=${RAW_BY_DAY.length}`);
@@ -694,16 +701,16 @@ function filterAv(t){
   });
 }
 function aggTotals(rows){
-  const t={total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
-  rows.forEach(r=>{t.total_leads+=r.total_leads;t.ate1+=r.ate1;t.ate2+=r.ate2;t.gt2+=r.gt2;t.sem_resp+=r.sem_resp;});
+  const t={total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0,fora_horario:0};
+  rows.forEach(r=>{t.total_leads+=r.total_leads;t.ate1+=r.ate1;t.ate2+=r.ate2;t.gt2+=r.gt2;t.sem_resp+=r.sem_resp;t.fora_horario+=(r.fora_horario||0);});
   return t;
 }
 function aggByAgent(rows){
   const m={};
   rows.forEach(r=>{
-    if(!m[r.POWER_BI])m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
+    if(!m[r.POWER_BI])m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0,fora_horario:0};
     const a=m[r.POWER_BI];
-    a.total_leads+=r.total_leads;a.ate1+=r.ate1;a.ate2+=r.ate2;a.gt2+=r.gt2;a.sem_resp+=r.sem_resp;
+    a.total_leads+=r.total_leads;a.ate1+=r.ate1;a.ate2+=r.ate2;a.gt2+=r.gt2;a.sem_resp+=r.sem_resp;a.fora_horario+=(r.fora_horario||0);
   });
   return Object.values(m).map(a=>({...a,pctAte2:a.total_leads>0?(a.ate1+a.ate2)/a.total_leads*100:0}));
 }
@@ -754,13 +761,13 @@ function filterRows(raw, t){
   const dm=state.dateMode[t], sd=state.selDate[t], sd2=state.selDate2[t];
   const rfrom=state.selRangeFrom[t], rto=state.selRangeTo[t];
   const sup=state.selSup[t];
-  const ym=state.selMonth[t]; // 'YYYY-MM' or 'all'
+  const ym=state.selMonth[t];
   return raw.filter(r=>{
-    // remove equipes zeradas
     if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
     if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
-    // filtro de mês
     if(ym && ym!=='all' && !r.date_str.startsWith(ym)) return false;
+    // filtro fora do horário: quando ativo, EXCLUI leads com fora_horario=1
+    if(state.foraHorario && r.fora_horario) return false;
     if(dm==='acum') return true;
     if(dm==='dia')  return r.date_str===sd;
     if(dm==='2dias') return r.date_str===sd||r.date_str===sd2;
@@ -822,6 +829,19 @@ function renderEquipeBtns(t){
 function selectEquipe(sup,t){
   state.selSup[t]=sup;
   agPage=0;avPage=0;
+  render();
+}
+
+function toggleForaHorario(){
+  state.foraHorario=!state.foraHorario;
+  const btn=document.getElementById('btn-fora');
+  if(btn){
+    btn.classList.toggle('active', state.foraHorario);
+    btn.style.background = state.foraHorario ? '#FEF3C7' : '';
+    btn.style.color      = state.foraHorario ? '#92400E' : '';
+    btn.style.borderColor= state.foraHorario ? '#D97706' : '#F59E0B';
+  }
+  agPage=0;
   render();
 }
 
@@ -1001,6 +1021,8 @@ function render(){
   document.getElementById('h-ate2-pct').textContent=pct(tots0.ate1+tots0.ate2,tots0.total_leads);
   document.getElementById('h-gt2').textContent=fmt(tots0.gt2);
   document.getElementById('h-gt2-pct').textContent=pct(tots0.gt2,tots0.total_leads);
+  document.getElementById('h-fora').textContent=fmt(tots0.fora_horario);
+  document.getElementById('h-fora-pct').textContent=pct(tots0.fora_horario,tots0.total_leads);
 
   if(t===0) renderPR();
   if(t===1) renderAvail();
@@ -1020,9 +1042,12 @@ function renderPR(){
   const compDiv = document.getElementById('pr-comparativo');
   const kpiDiv  = document.getElementById('pr-kpis');
 
-  // rows filtered by period only (no sup filter) for cross-team comparison
+  // allRows: filtrado por período e mês (sem filtro de supervisor) — para comparativo entre equipes
   const allRows = RAW_BY_DAY.filter(r=>{
     if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
+    const ym=state.selMonth[0];
+    if(ym && ym!=='all' && !r.date_str.startsWith(ym)) return false;
+    if(state.foraHorario && !r.fora_horario) return false;
     const dm=state.dateMode[0], sd=state.selDate[0], sd2=state.selDate2[0];
     const rfrom=state.selRangeFrom[0], rto=state.selRangeTo[0];
     if(dm==='dia')  return r.date_str===sd;
@@ -1048,11 +1073,12 @@ function renderPR(){
       const p2 = s.total_leads>0?((s.ate1+s.ate2)/s.total_leads*100):0;
       const pGt= s.total_leads>0?(s.gt2/s.total_leads*100):0;
       const pSr= s.total_leads>0?(s.sem_resp/s.total_leads*100):0;
+      const pFh= s.total_leads>0?(s.fora_horario/s.total_leads*100):0;
       const barW= (s.total_leads/maxLeads*100).toFixed(1);
       const st=agStatus(p2);
-      const agCnt = [...new Set(allRows.filter(r=>r.SUPERVISOR===s.sup).map(r=>r.POWER_BI))].length;
-      // promotores dentro do esperado (≤2min)
-      const agWithin = aggByAgent(allRows.filter(r=>r.SUPERVISOR===s.sup)).filter(a=>a.pctAte2>=80).length;
+      const supRows=allRows.filter(r=>r.SUPERVISOR===s.sup);
+      const agCnt = [...new Set(supRows.map(r=>r.POWER_BI).filter(n=>n&&n!=='(sem agente)'))].length;
+      const agWithin = aggByAgent(supRows).filter(a=>a.pctAte2>=80&&a.name!=='(sem agente)').length;
       return `<div class="comp-card">
         <div class="comp-header" style="background:${sc.bg};color:${sc.tc}">${s.sup}</div>
         <div class="comp-bar-wrap">
@@ -1071,6 +1097,10 @@ function renderPR(){
         <div class="comp-row">
           <div><div class="comp-lbl">S/ Resposta</div><div class="comp-val" style="color:#EF4444">${fmt(s.sem_resp)}</div></div>
           <div style="text-align:right"><div class="comp-sub" style="color:#EF4444">${pSr.toFixed(1)}%</div></div>
+        </div>
+        <div class="comp-row" style="background:#FFFBEB">
+          <div><div class="comp-lbl">Fora Horário</div><div class="comp-val" style="color:#D97706">${fmt(s.fora_horario)}</div></div>
+          <div style="text-align:right"><div class="comp-sub" style="color:#D97706">${pFh.toFixed(1)}%</div></div>
         </div>
         <div class="comp-row">
           <div><div class="comp-lbl">Promotores</div><div class="comp-val" style="color:#2563EB">${agCnt}</div></div>
@@ -1263,6 +1293,7 @@ function renderAgTable(){
         </div>
       </td>
       <td class="td-right"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></td>
+      <td class="td-right" style="color:#D97706;font-weight:700">${a.fora_horario>0?fmt(a.fora_horario):'–'}</td>
       <td class="td-right"><span class="status-badge" style="background:${a.pctAte2>=80?'#D1FAE5':'#FEE2E2'};color:${a.pctAte2>=80?'#10B981':'#EF4444'}">${a.pctAte2>=80?'✓ Dentro':'✗ Fora'}</span></td>
     </tr>`;
   }).join('');

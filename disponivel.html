@@ -186,8 +186,8 @@
   <!-- TOP 10 -->
   <div class="top10-grid">
     <div class="top10-card">
-      <div class="top10-header" style="background:#D1FAE5">
-        <div class="top10-strip" style="background:#10B981"></div>
+      <div class="top10-header" style="background:#DBEAFE">
+        <div class="top10-strip" style="background:#3B82F6"></div>
         <div class="top10-title">Top 10 Melhores</div>
         <div class="top10-sub">maior % ≤2min</div>
       </div>
@@ -823,6 +823,19 @@ function renderEquipeBtns(t){
       style="background:${sc.bg};color:${sc.tc};border-color:${isActive?sc.tc:'transparent'}"
       onclick="selectEquipe('${s}',${t})">${s==='Todos'?'Todas as Equipes':s}</button>`;
   }).join('');
+
+  // Mostra/oculta botões de comparativo (Semanal, 2 Dias, Período) conforme seleção
+  if(t===0){
+    const isTodos = cur==='Todos';
+    ['btn-sem-0','btn-2dias-0','btn-range-0'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.style.display=isTodos?'':'none';
+    });
+    // Se equipe específica e modo comparativo ativo, volta para acumulado
+    if(!isTodos && ['sem','2dias','range'].includes(state.dateMode[0])){
+      setPeriod('acum',0);
+    }
+  }
 }
 
 function selectEquipe(sup,t){
@@ -1044,56 +1057,162 @@ function renderPR(){
   });
 
   if(isTodos){
-    // ── COMPARATIVO GERAL: uma coluna por equipe ────────────────────────────
     compDiv.style.display='block';
     kpiDiv.style.display='none';
 
-    const supTots = ALL_SUPS.map(s=>{
-      const rows=allRows.filter(r=>r.SUPERVISOR===s);
-      return {sup:s, ...aggTotals(rows)};
-    });
-    const maxLeads = Math.max(...supTots.map(s=>s.total_leads),1);
+    const dm=state.dateMode[0];
 
-    compDiv.innerHTML = `<div class="comp-grid">${supTots.map(s=>{
-      const sc=SUP_C[s.sup]||{bg:'#EEF',tc:'#333'};
-      const p2 = s.total_leads>0?((s.ate1+s.ate2)/s.total_leads*100):0;
-      const pGt= s.total_leads>0?(s.gt2/s.total_leads*100):0;
-      const pSr= s.total_leads>0?(s.sem_resp/s.total_leads*100):0;
-      const pFh= s.total_leads>0?(s.fora_horario/s.total_leads*100):0;
-      const barW= (s.total_leads/maxLeads*100).toFixed(1);
-      const st=agStatus(p2);
-      const supRows=allRows.filter(r=>r.SUPERVISOR===s.sup);
-      const agCnt = [...new Set(supRows.map(r=>r.POWER_BI).filter(n=>n&&n!=='(sem agente)'))].length;
-      const agWithin = aggByAgent(supRows).filter(a=>a.pctAte2>=80&&a.name!=='(sem agente)').length;
-      return `<div class="comp-card">
-        <div class="comp-header" style="background:${sc.bg};color:${sc.tc}">${s.sup}</div>
-        <div class="comp-bar-wrap">
-          <div style="display:flex;justify-content:space-between;font-size:10px;color:#94A3B8"><span>Leads</span><span style="font-weight:700;color:#1A2332">${fmt(s.total_leads)}</span></div>
-          <div class="comp-bar-track"><div class="comp-bar-fill" style="width:${barW}%;background:${sc.tc}40"></div></div>
-        </div>
-        <div class="comp-row">
-          <div><div class="comp-lbl">≤ 2min</div><div class="comp-val" style="color:${st.color}">${fmt(s.ate1+s.ate2)}</div></div>
-          <div style="text-align:right"><div class="comp-sub" style="color:${st.color}">${p2.toFixed(1)}%</div>
-          <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></div>
-        </div>
-        <div class="comp-row">
-          <div><div class="comp-lbl">&gt; 2min</div><div class="comp-val" style="color:#F59E0B">${fmt(s.gt2)}</div></div>
-          <div style="text-align:right"><div class="comp-sub" style="color:#F59E0B">${pGt.toFixed(1)}%</div></div>
-        </div>
-        <div class="comp-row">
-          <div><div class="comp-lbl">S/ Resposta</div><div class="comp-val" style="color:#EF4444">${fmt(s.sem_resp)}</div></div>
-          <div style="text-align:right"><div class="comp-sub" style="color:#EF4444">${pSr.toFixed(1)}%</div></div>
-        </div>
-        <div class="comp-row" style="background:#FFFBEB">
-          <div><div class="comp-lbl">Fora Horário</div><div class="comp-val" style="color:#D97706">${fmt(s.fora_horario)}</div></div>
-          <div style="text-align:right"><div class="comp-sub" style="color:#D97706">${pFh.toFixed(1)}%</div></div>
-        </div>
-        <div class="comp-row">
-          <div><div class="comp-lbl">Promotores</div><div class="comp-val" style="color:#2563EB">${agCnt}</div></div>
-          <div style="text-align:right"><div class="comp-lbl">Dentro meta</div><div class="comp-sub" style="color:#10B981">${agWithin}</div></div>
-        </div>
-      </div>`;
-    }).join('')}</div>`;
+    // ── MODOS COMPARATIVOS: semanal, 2 dias, período ────────────────────────
+    // Cada "fatia" é exibida lado a lado por equipe — comparação, não soma
+    if(dm==='sem'||dm==='2dias'||dm==='range'){
+
+      // Monta as fatias a comparar
+      let slices=[];
+      if(dm==='sem'){
+        // Semanas dentro do mês selecionado (ou últimas 5)
+        const ym=state.selMonth[0];
+        const weekSet={};
+        RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())&&r.date_str)
+          .forEach(r=>{
+            if(ym&&ym!=='all'&&!r.date_str.startsWith(ym)) return;
+            const w=getWeekDates(r.date_str);
+            const key=w.from+'_'+w.to;
+            if(!weekSet[key]) weekSet[key]={label:'',from:w.from,to:w.to};
+          });
+        const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1);
+        const toShow=(ym&&ym!=='all')?weeks:weeks.slice(-5);
+        slices=toShow.map((w,i)=>{
+          const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
+          const isCur=new Date().toISOString().slice(0,10)>=w.from&&new Date().toISOString().slice(0,10)<=w.to;
+          return {
+            label: d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),
+            tag: isCur?'Semana Atual':`Sem ${i+1}`,
+            filter: r=>r.date_str>=w.from&&r.date_str<=w.to,
+          };
+        });
+      } else if(dm==='2dias'){
+        const sd=state.selDate[0], sd2=state.selDate2[0];
+        const fmt2=d=>new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+        slices=[
+          {label:fmt2(sd),  tag:'Dia 1', filter:r=>r.date_str===sd},
+          {label:fmt2(sd2), tag:'Dia 2', filter:r=>r.date_str===sd2},
+        ];
+      } else if(dm==='range'){
+        const from=state.selRangeFrom[0], to=state.selRangeTo[0];
+        const d1=new Date(from+'T12:00:00'),d2=new Date(to+'T12:00:00');
+        // Divide o range em até 4 partes iguais por semana
+        const weekSet={};
+        RAW_BY_DAY.filter(r=>r.date_str>=from&&r.date_str<=to&&!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase()))
+          .forEach(r=>{const w=getWeekDates(r.date_str);const key=w.from+'_'+w.to;if(!weekSet[key])weekSet[key]={from:w.from,to:w.to};});
+        const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1);
+        slices=weeks.map((w,i)=>{
+          const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
+          return {
+            label: d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),
+            tag:`Sem ${i+1}`,
+            filter:r=>r.date_str>=w.from&&r.date_str<=w.to,
+          };
+        });
+      }
+
+      if(slices.length===0){
+        compDiv.innerHTML=`<div class="card"><div class="card-title">Sem dados para comparar no período selecionado</div></div>`;
+      } else {
+        const ym=state.selMonth[0];
+        // Tabela comparativa: linhas = equipes, colunas = fatias
+        const cols=slices.length;
+        compDiv.innerHTML=`<div class="card" style="overflow-x:auto">
+          <div class="card-title">📊 Comparativo ${dm==='2dias'?'— 2 Dias':dm==='sem'?'Semanal':'— Período'} · Todas as Equipes</div>
+          <table style="width:100%;border-collapse:collapse;min-width:${300+cols*160}px">
+            <thead>
+              <tr style="background:#F7F9FC">
+                <th style="text-align:left;padding:8px 12px;font-size:10px;color:#94A3B8;font-weight:700;letter-spacing:.7px;text-transform:uppercase;border-bottom:2px solid #E2E8F0;min-width:160px">Equipe</th>
+                ${slices.map((s,i)=>`<th style="text-align:center;padding:8px 12px;border-bottom:2px solid #E2E8F0;min-width:160px">
+                  <div style="font-size:11px;font-weight:800;color:#1A2332">${s.label}</div>
+                  <div style="font-size:9px;color:#94A3B8;font-weight:600">${s.tag}</div>
+                </th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${ALL_SUPS.map(sup=>{
+                const sc=SUP_C[sup]||{bg:'#EEE',tc:'#666'};
+                const baseRows=RAW_BY_DAY.filter(r=>r.SUPERVISOR===sup&&!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())&&(ym&&ym!=='all'?r.date_str.startsWith(ym):true));
+                const cells=slices.map((sl,i)=>{
+                  const rows=baseRows.filter(sl.filter);
+                  const t=aggTotals(rows);
+                  const p2=t.total_leads>0?((t.ate1+t.ate2)/t.total_leads*100):0;
+                  const st=t.total_leads>0?agStatus(p2):null;
+                  const prev=i>0?aggTotals(baseRows.filter(slices[i-1].filter)):null;
+                  const prevP2=prev&&prev.total_leads>0?((prev.ate1+prev.ate2)/prev.total_leads*100):null;
+                  const delta=prevP2!==null?(p2-prevP2):null;
+                  const deltaStr=delta!==null?(delta>=0?`▲ ${delta.toFixed(1)}%`:`▼ ${Math.abs(delta).toFixed(1)}%`):'';
+                  const deltaColor=delta===null?'#94A3B8':delta>=0?'#10B981':'#EF4444';
+                  return `<td style="text-align:center;padding:10px 8px;border-bottom:1px solid #F0F4F8;border-left:1px solid #F0F4F8">
+                    ${t.total_leads>0?`
+                      <div style="font-size:18px;font-weight:900;color:${st.color}">${p2.toFixed(1)}%</div>
+                      <div style="font-size:10px;color:#94A3B8;margin:2px 0">${fmt(t.total_leads)} leads</div>
+                      <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
+                      ${delta!==null?`<div style="font-size:10px;font-weight:700;color:${deltaColor};margin-top:4px">${deltaStr}</div>`:''}
+                    `:`<div style="color:#CBD5E0;font-size:12px">sem dados</div>`}
+                  </td>`;
+                }).join('');
+                return `<tr style="transition:background .1s" onmouseover="this.style.background='#F7FAFB'" onmouseout="this.style.background=''">
+                  <td style="padding:10px 12px;border-bottom:1px solid #F0F4F8">
+                    <span class="eq-badge" style="background:${sc.bg};color:${sc.tc};font-size:11px;padding:4px 8px">${sup}</span>
+                  </td>
+                  ${cells}
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+      }
+
+    } else {
+      // ── ACUMULADO / DIA: cards por equipe (comportamento original) ──────────
+      const maxLeads = Math.max(...ALL_SUPS.map(s=>aggTotals(allRows.filter(r=>r.SUPERVISOR===s)).total_leads),1);
+      compDiv.innerHTML = `<div class="comp-grid">${ALL_SUPS.map(s=>{
+        const rows=allRows.filter(r=>r.SUPERVISOR===s);
+        const st2=aggTotals(rows);
+        const sc=SUP_C[s]||{bg:'#EEF',tc:'#333'};
+        const p2 = st2.total_leads>0?((st2.ate1+st2.ate2)/st2.total_leads*100):0;
+        const pGt= st2.total_leads>0?(st2.gt2/st2.total_leads*100):0;
+        const pSr= st2.total_leads>0?(st2.sem_resp/st2.total_leads*100):0;
+        const pFh= st2.total_leads>0?(st2.fora_horario/st2.total_leads*100):0;
+        const barW=(st2.total_leads/maxLeads*100).toFixed(1);
+        const stag=agStatus(p2);
+        const agCnt=[...new Set(rows.map(r=>r.POWER_BI).filter(n=>n&&n!=='(sem agente)'))].length;
+        const agWithin=aggByAgent(rows).filter(a=>a.pctAte2>=80&&a.name!=='(sem agente)').length;
+        return `<div class="comp-card">
+          <div class="comp-header" style="background:${sc.bg};color:${sc.tc}">${s}</div>
+          <div class="comp-bar-wrap">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#94A3B8"><span>Leads</span><span style="font-weight:700;color:#1A2332">${fmt(st2.total_leads)}</span></div>
+            <div class="comp-bar-track"><div class="comp-bar-fill" style="width:${barW}%;background:${sc.tc}40"></div></div>
+          </div>
+          <div class="comp-row">
+            <div><div class="comp-lbl">≤ 2min</div><div class="comp-val" style="color:${stag.color}">${fmt(st2.ate1+st2.ate2)}</div></div>
+            <div style="text-align:right"><div class="comp-sub" style="color:${stag.color}">${p2.toFixed(1)}%</div>
+            <span class="status-badge" style="background:${stag.bg};color:${stag.color}">${stag.label}</span></div>
+          </div>
+          <div class="comp-row">
+            <div><div class="comp-lbl">&gt; 2min</div><div class="comp-val" style="color:#F59E0B">${fmt(st2.gt2)}</div></div>
+            <div style="text-align:right"><div class="comp-sub" style="color:#F59E0B">${pGt.toFixed(1)}%</div></div>
+          </div>
+          <div class="comp-row">
+            <div><div class="comp-lbl">S/ Resposta</div><div class="comp-val" style="color:#EF4444">${fmt(st2.sem_resp)}</div></div>
+            <div style="text-align:right"><div class="comp-sub" style="color:#EF4444">${pSr.toFixed(1)}%</div></div>
+          </div>
+          <div class="comp-row" style="background:#FFFBEB">
+            <div><div class="comp-lbl">Fora Horário</div><div class="comp-val" style="color:#D97706">${fmt(st2.fora_horario)}</div></div>
+            <div style="text-align:right"><div class="comp-sub" style="color:#D97706">${pFh.toFixed(1)}%</div></div>
+          </div>
+          <div class="comp-row">
+            <div><div class="comp-lbl">Promotores</div><div class="comp-val" style="color:#2563EB">${agCnt}</div></div>
+            <div style="text-align:right"><div class="comp-lbl">Dentro meta</div><div class="comp-sub" style="color:#10B981">${agWithin}</div></div>
+          </div>
+        </div>`;
+      }).join('')}</div>`;
+    }
 
   } else {
     // ── KPIs + COMPARATIVO SEMANAL para equipe específica ──────────────────
@@ -1227,7 +1346,7 @@ function renderPR(){
 
   ['best','worst'].forEach(type=>{
     const data=type==='best'?best:worst;
-    const color=type==='best'?'#10B981':'#EF4444';
+    const color=type==='best'?'#3B82F6':'#EF4444';
     document.getElementById(`pr-top10-${type}`).innerHTML=data.map((a,i)=>{
       const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
       return `<div class="top10-row" style="border-left:3px solid ${i<3?color:'transparent'}">

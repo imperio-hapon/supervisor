@@ -1170,23 +1170,23 @@ function renderPR(){
 
     } else {
       // ── ACUMULADO / DIA: cards por equipe (comportamento original) ──────────
-      const maxLeads = Math.max(...ALL_SUPS.map(s=>aggTotals(allRows.filter(r=>r.SUPERVISOR===s)).total_leads),1);
+      const maxLeads = Math.max(...ALL_SUPS.map(s=>{ const r=aggTotals(allRows.filter(x=>x.SUPERVISOR===s)); return r.ate1+r.ate2+r.gt2; }),1);
       compDiv.innerHTML = `<div class="comp-grid">${ALL_SUPS.map(s=>{
         const rows=allRows.filter(r=>r.SUPERVISOR===s);
         const st2=aggTotals(rows);
+        const leadsResp = st2.ate1+st2.ate2+st2.gt2;
         const sc=SUP_C[s]||{bg:'#EEF',tc:'#333'};
-        const p2 = st2.total_leads>0?((st2.ate1+st2.ate2)/st2.total_leads*100):0;
-        const pGt= st2.total_leads>0?(st2.gt2/st2.total_leads*100):0;
-        const pSr= st2.total_leads>0?(st2.sem_resp/st2.total_leads*100):0;
-        const pFh= st2.total_leads>0?(st2.fora_horario/st2.total_leads*100):0;
-        const barW=(st2.total_leads/maxLeads*100).toFixed(1);
+        const p2 = leadsResp>0?((st2.ate1+st2.ate2)/leadsResp*100):0;
+        const pGt= leadsResp>0?(st2.gt2/leadsResp*100):0;
+        const pFh= leadsResp>0?(st2.fora_horario/leadsResp*100):0;
+        const barW=(leadsResp/maxLeads*100).toFixed(1);
         const stag=agStatus(p2);
         const agCnt=[...new Set(rows.map(r=>r.POWER_BI).filter(n=>n&&n!=='(sem agente)'))].length;
         const agWithin=aggByAgent(rows).filter(a=>a.pctAte2>=80&&a.name!=='(sem agente)').length;
         return `<div class="comp-card">
           <div class="comp-header" style="background:${sc.bg};color:${sc.tc}">${s}</div>
           <div class="comp-bar-wrap">
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:#94A3B8"><span>Leads</span><span style="font-weight:700;color:#1A2332">${fmt(st2.total_leads)}</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#94A3B8"><span>Leads</span><span style="font-weight:700;color:#1A2332">${fmt(leadsResp)}</span></div>
             <div class="comp-bar-track"><div class="comp-bar-fill" style="width:${barW}%;background:${sc.tc}40"></div></div>
           </div>
           <div class="comp-row">
@@ -1197,10 +1197,6 @@ function renderPR(){
           <div class="comp-row">
             <div><div class="comp-lbl">&gt; 2min</div><div class="comp-val" style="color:#F59E0B">${fmt(st2.gt2)}</div></div>
             <div style="text-align:right"><div class="comp-sub" style="color:#F59E0B">${pGt.toFixed(1)}%</div></div>
-          </div>
-          <div class="comp-row">
-            <div><div class="comp-lbl">S/ Resposta</div><div class="comp-val" style="color:#EF4444">${fmt(st2.sem_resp)}</div></div>
-            <div style="text-align:right"><div class="comp-sub" style="color:#EF4444">${pSr.toFixed(1)}%</div></div>
           </div>
           <div class="comp-row" style="background:#FFFBEB">
             <div><div class="comp-lbl">Fora Horário</div><div class="comp-val" style="color:#D97706">${fmt(st2.fora_horario)}</div></div>

@@ -338,7 +338,7 @@
 // ── GOOGLE SHEETS ─────────────────────────────────────────────────────────────
 const SHEET_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vROvS5snM-Nr6L1KRvAhEVyUyyRx6n2bOo7Lq-ZqEuaOBofFUOWqKAgO7LX-o4aJHJuKTR3olNA9Lsj/pub";
 // Equipes removidas (sem dados)
-const EQUIPES_REMOVIDAS = ['ADM','ADMINISTRATIVO','BENVE'];
+const EQUIPES_REMOVIDAS = ['ADM','BENVE'];
 
 // ── RUNTIME DATA ──────────────────────────────────────────────────────────────
 let RAW_BY_DAY = [];
@@ -646,18 +646,36 @@ function fmt(n){return Math.round(n).toLocaleString('pt-BR');}
 function pct(a,b){return b>0?((a/b)*100).toFixed(1)+'%':'–';}
 
 function filterPR(t){
-  const dm=state.dateMode[t],sd=state.selDate[t],sup=state.selSup[t];
+  const dm=state.dateMode[t], sd=state.selDate[t], sd2=state.selDate2[t];
+  const rfrom=state.selRangeFrom[t], rto=state.selRangeTo[t];
+  const sup=state.selSup[t];
+  const ym=state.selMonth[t];
   return RAW_BY_DAY.filter(r=>{
-    if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
-    if(dm==='dia')return r.date_str===sd;
+    if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
+    if(sup!=='Todos'&&r.SUPERVISOR!==sup) return false;
+    if(ym&&ym!=='all'&&!r.date_str.startsWith(ym)) return false;
+    if(dm==='acum') return true;
+    if(dm==='dia')  return r.date_str===sd;
+    if(dm==='2dias')return r.date_str===sd||r.date_str===sd2;
+    if(dm==='sem'){const w=getWeekDates(sd);return r.date_str>=w.from&&r.date_str<=w.to;}
+    if(dm==='range')return r.date_str>=rfrom&&r.date_str<=rto;
     return true;
   });
 }
 function filterAv(t){
-  const dm=state.dateMode[t],sd=state.selDate[t],sup=state.selSup[t];
+  const dm=state.dateMode[t], sd=state.selDate[t], sd2=state.selDate2[t];
+  const rfrom=state.selRangeFrom[t], rto=state.selRangeTo[t];
+  const sup=state.selSup[t];
+  const ym=state.selMonth[t];
   return RAW_AVAIL.filter(r=>{
-    if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
-    if(dm==='dia')return r.date_str===sd;
+    if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
+    if(sup!=='Todos'&&r.SUPERVISOR!==sup) return false;
+    if(ym&&ym!=='all'&&!r.date_str.startsWith(ym)) return false;
+    if(dm==='acum') return true;
+    if(dm==='dia')  return r.date_str===sd;
+    if(dm==='2dias')return r.date_str===sd||r.date_str===sd2;
+    if(dm==='sem'){const w=getWeekDates(sd);return r.date_str>=w.from&&r.date_str<=w.to;}
+    if(dm==='range')return r.date_str>=rfrom&&r.date_str<=rto;
     return true;
   });
 }
@@ -986,11 +1004,14 @@ function renderPR(){
   const compDiv = document.getElementById('pr-comparativo');
   const kpiDiv  = document.getElementById('pr-kpis');
 
-  // rows filtered by period only (no sup filter) for cross-team comparison
+  // rows filtered by period + month (no sup filter) for cross-team comparison
   const allRows = RAW_BY_DAY.filter(r=>{
     if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
+    const ym=state.selMonth[0];
+    if(ym&&ym!=='all'&&!r.date_str.startsWith(ym)) return false;
     const dm=state.dateMode[0], sd=state.selDate[0], sd2=state.selDate2[0];
     const rfrom=state.selRangeFrom[0], rto=state.selRangeTo[0];
+    if(dm==='acum') return true;
     if(dm==='dia')  return r.date_str===sd;
     if(dm==='2dias')return r.date_str===sd||r.date_str===sd2;
     if(dm==='sem'){const w=getWeekDates(sd);return r.date_str>=w.from&&r.date_str<=w.to;}

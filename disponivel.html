@@ -647,7 +647,7 @@ function aggByAgent(rows){
     const a=m[r.POWER_BI];
     a.total_leads+=r.total_leads;a.ate1+=r.ate1;a.ate2+=r.ate2;a.gt2+=r.gt2;a.sem_resp+=r.sem_resp;
   });
-  return Object.values(m).map(a=>({...a,pctAte2:a.total_leads>0?(a.ate1+a.ate2)/a.total_leads*100:0}));
+  return Object.values(m).map(a=>({...a,leadsResp:a.ate1+a.ate2+a.gt2,pctAte2:(a.ate1+a.ate2+a.gt2)>0?(a.ate1+a.ate2)/(a.ate1+a.ate2+a.gt2)*100:0}));
 }
 function aggBySup(rows){
   const m={};
@@ -936,11 +936,11 @@ function render(){
   const prRows0=filterPR(0);
   const tots0=aggTotals(prRows0);
   document.getElementById('period-label').textContent=`${periodLabel()} · ${state.selSup[t]==='Todos'?'Todas as equipes':state.selSup[t]}`;
-  document.getElementById('h-leads').textContent=fmt(tots0.total_leads);
+  document.getElementById('h-leads').textContent=fmt(tots0.ate1+tots0.ate2+tots0.gt2);
   document.getElementById('h-ate2').textContent=fmt(tots0.ate1+tots0.ate2);
-  document.getElementById('h-ate2-pct').textContent=pct(tots0.ate1+tots0.ate2,tots0.total_leads);
+  document.getElementById('h-ate2-pct').textContent=pct(tots0.ate1+tots0.ate2,tots0.ate1+tots0.ate2+tots0.gt2);
   document.getElementById('h-gt2').textContent=fmt(tots0.gt2);
-  document.getElementById('h-gt2-pct').textContent=pct(tots0.gt2,tots0.total_leads);
+  document.getElementById('h-gt2-pct').textContent=pct(tots0.gt2,tots0.ate1+tots0.ate2+tots0.gt2);
 
   if(t===0) renderPR();
   if(t===1) renderAvail();
@@ -981,13 +981,14 @@ function renderPR(){
       const rows=allRows.filter(r=>r.SUPERVISOR===s);
       return {sup:s, ...aggTotals(rows)};
     });
-    const maxLeads = Math.max(...supTots.map(s=>s.total_leads),1);
+    const maxLeads = Math.max(...supTots.map(s=>s.ate1+s.ate2+s.gt2),1);
 
     compDiv.innerHTML = `<div class="comp-grid">${supTots.map(s=>{
       const sc=SUP_C[s.sup]||{bg:'#EEF',tc:'#333'};
-      const p2 = s.total_leads>0?((s.ate1+s.ate2)/s.total_leads*100):0;
-      const pGt= s.total_leads>0?(s.gt2/s.total_leads*100):0;
-      const barW= (s.total_leads/maxLeads*100).toFixed(1);
+      const leadsResp=s.ate1+s.ate2+s.gt2;
+      const p2 = leadsResp>0?((s.ate1+s.ate2)/leadsResp*100):0;
+      const pGt= leadsResp>0?(s.gt2/leadsResp*100):0;
+      const barW= (leadsResp/maxLeads*100).toFixed(1);
       const st=agStatus(p2);
       const agCnt = [...new Set(allRows.filter(r=>r.SUPERVISOR===s.sup).map(r=>r.POWER_BI))].length;
       // promotores dentro do esperado (≤2min)
@@ -995,7 +996,7 @@ function renderPR(){
       return `<div class="comp-card">
         <div class="comp-header" style="background:${sc.bg};color:${sc.tc}">${s.sup}</div>
         <div class="comp-bar-wrap">
-          <div style="display:flex;justify-content:space-between;font-size:10px;color:#94A3B8"><span>Leads</span><span style="font-weight:700;color:#1A2332">${fmt(s.total_leads)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#94A3B8"><span>Leads</span><span style="font-weight:700;color:#1A2332">${fmt(leadsResp)}</span></div>
           <div class="comp-bar-track"><div class="comp-bar-fill" style="width:${barW}%;background:${sc.tc}40"></div></div>
         </div>
         <div class="comp-row">
@@ -1019,9 +1020,9 @@ function renderPR(){
     compDiv.style.display='block';
     kpiDiv.style.display='grid';
     kpiDiv.innerHTML=[
-      {l:'Leads Totais',v:fmt(tots.total_leads),accent:'#2563EB'},
-      {l:'Respondidos ≤2min',v:fmt(tots.ate1+tots.ate2),sub:pct(tots.ate1+tots.ate2,tots.total_leads),accent:'#10B981'},
-      {l:'Respondidos >2min',v:fmt(tots.gt2),sub:pct(tots.gt2,tots.total_leads),accent:'#F59E0B'},
+      {l:'Leads Totais',v:fmt(tots.ate1+tots.ate2+tots.gt2),accent:'#2563EB'},
+      {l:'Respondidos ≤2min',v:fmt(tots.ate1+tots.ate2),sub:pct(tots.ate1+tots.ate2,tots.ate1+tots.ate2+tots.gt2),accent:'#10B981'},
+      {l:'Respondidos >2min',v:fmt(tots.gt2),sub:pct(tots.gt2,tots.ate1+tots.ate2+tots.gt2),accent:'#F59E0B'},
     ].map(k=>`<div class="kpi-inner">
       <div class="val" style="color:${k.accent}">${k.v}</div>
       <div class="lbl">${k.l}</div>
@@ -1047,7 +1048,7 @@ function renderPR(){
         <div style="display:grid;grid-template-columns:repeat(${weeks.length},1fr);gap:10px">
         ${weeks.map((w,wi)=>{
           const t2=aggTotals(w.rows);
-          const p2=t2.total_leads>0?((t2.ate1+t2.ate2)/t2.total_leads*100):0;
+          const _lr=t2.ate1+t2.ate2+t2.gt2;const p2=_lr>0?((t2.ate1+t2.ate2)/_lr*100):0;
           const st=agStatus(p2);
           const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
           const label=d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
@@ -1060,7 +1061,7 @@ function renderPR(){
             <div style="font-size:10px;color:#94A3B8;margin-bottom:4px">≤ 2min</div>
             <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
             <div style="margin-top:8px;display:flex;justify-content:space-around">
-              <div><div style="font-size:11px;font-weight:700;color:#4A5568">${fmt(t2.total_leads)}</div><div style="font-size:9px;color:#94A3B8">leads</div></div>
+              <div><div style="font-size:11px;font-weight:700;color:#4A5568">${fmt(t2.ate1+t2.ate2+t2.gt2)}</div><div style="font-size:9px;color:#94A3B8">leads</div></div>
               <div><div style="font-size:11px;font-weight:700;color:#10B981">${agWithin}/${agTotal}</div><div style="font-size:9px;color:#94A3B8">na meta</div></div>
             </div>
           </div>`;
@@ -1074,7 +1075,7 @@ function renderPR(){
 
   // Top 10
   const minL=5;
-  const sorted=[...agData].filter(a=>a.total_leads>=minL);
+  const sorted=[...agData].filter(a=>(a.ate1+a.ate2+a.gt2)>=minL);
   const best=[...sorted].sort((a,b)=>b.pctAte2-a.pctAte2).slice(0,10);
   const worst=[...sorted].sort((a,b)=>a.pctAte2-b.pctAte2).slice(0,10);
 
@@ -1089,7 +1090,7 @@ function renderPR(){
           <div class="top10-name">${a.name}</div>
           <span class="top10-badge" style="background:${sc.bg};color:${sc.tc}">${a.sup}</span>
         </div>
-        <div class="top10-leads">${fmt(a.total_leads)}</div>
+        <div class="top10-leads">${fmt(a.ate1+a.ate2+a.gt2)}</div>
         <div class="top10-pct" style="color:${color}">${a.pctAte2.toFixed(1)}%</div>
       </div>`;
     }).join('');
@@ -1115,13 +1116,14 @@ function renderAgTable(){
   document.getElementById('ag-tbody').innerHTML=paged.map(a=>{
     const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
     const st=agStatus(a.pctAte2);
-    const p1=a.total_leads>0?(a.ate1/a.total_leads*100).toFixed(0):0;
-    const p2=a.total_leads>0?(a.ate2/a.total_leads*100).toFixed(0):0;
-    const pGt=a.total_leads>0?(a.gt2/a.total_leads*100).toFixed(0):0;
+    const lr=a.ate1+a.ate2+a.gt2;
+    const p1=lr>0?(a.ate1/lr*100).toFixed(0):0;
+    const p2=lr>0?(a.ate2/lr*100).toFixed(0):0;
+    const pGt=lr>0?(a.gt2/lr*100).toFixed(0):0;
     return `<tr>
       <td style="font-weight:700;white-space:nowrap">${a.name}</td>
       <td>${supBadge(a.sup)}</td>
-      <td class="td-right" style="font-weight:600;color:#4A5568">${fmt(a.total_leads)}</td>
+      <td class="td-right" style="font-weight:600;color:#4A5568">${fmt(lr)}</td>
       <td class="td-right"><div style="color:#10B981;font-weight:700">${fmt(a.ate1)}</div><div style="font-size:9px;color:#94A3B8">${p1}%</div></td>
       <td class="td-right"><div style="color:#F59E0B;font-weight:700">${fmt(a.ate2)}</div><div style="font-size:9px;color:#94A3B8">${p2}%</div></td>
       <td class="td-right"><div style="color:#EF4444;font-weight:700">${fmt(a.gt2)}</div><div style="font-size:9px;color:#94A3B8">${pGt}%</div></td>

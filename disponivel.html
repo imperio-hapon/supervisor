@@ -127,7 +127,6 @@
     </div>
     <div class="kpi-strip">
       <div class="kpi-box"><div class="kpi-val" id="h-leads" style="color:#7EB3FF">–</div><div class="kpi-label">Leads Totais</div></div>
-      <div class="kpi-box"><div class="kpi-val" id="h-sem" style="color:#FC8181">–</div><div class="kpi-label">Enc. s/ Resposta</div><div class="kpi-sub" id="h-sem-pct" style="color:#FC8181"></div></div>
       <div class="kpi-box"><div class="kpi-val" id="h-ate2" style="color:#68D391">–</div><div class="kpi-label">Respondidos ≤2min</div><div class="kpi-sub" id="h-ate2-pct" style="color:#68D391"></div></div>
       <div class="kpi-box"><div class="kpi-val" id="h-gt2" style="color:#F6AD55">–</div><div class="kpi-label">Respondidos &gt;2min</div><div class="kpi-sub" id="h-gt2-pct" style="color:#F6AD55"></div></div>
     </div>
@@ -938,8 +937,6 @@ function render(){
   const tots0=aggTotals(prRows0);
   document.getElementById('period-label').textContent=`${periodLabel()} · ${state.selSup[t]==='Todos'?'Todas as equipes':state.selSup[t]}`;
   document.getElementById('h-leads').textContent=fmt(tots0.total_leads);
-  document.getElementById('h-sem').textContent=fmt(tots0.sem_resp);
-  document.getElementById('h-sem-pct').textContent=pct(tots0.sem_resp,tots0.total_leads);
   document.getElementById('h-ate2').textContent=fmt(tots0.ate1+tots0.ate2);
   document.getElementById('h-ate2-pct').textContent=pct(tots0.ate1+tots0.ate2,tots0.total_leads);
   document.getElementById('h-gt2').textContent=fmt(tots0.gt2);
@@ -990,7 +987,6 @@ function renderPR(){
       const sc=SUP_C[s.sup]||{bg:'#EEF',tc:'#333'};
       const p2 = s.total_leads>0?((s.ate1+s.ate2)/s.total_leads*100):0;
       const pGt= s.total_leads>0?(s.gt2/s.total_leads*100):0;
-      const pSr= s.total_leads>0?(s.sem_resp/s.total_leads*100):0;
       const barW= (s.total_leads/maxLeads*100).toFixed(1);
       const st=agStatus(p2);
       const agCnt = [...new Set(allRows.filter(r=>r.SUPERVISOR===s.sup).map(r=>r.POWER_BI))].length;
@@ -1012,10 +1008,6 @@ function renderPR(){
           <div style="text-align:right"><div class="comp-sub" style="color:#F59E0B">${pGt.toFixed(1)}%</div></div>
         </div>
         <div class="comp-row">
-          <div><div class="comp-lbl">S/ Resposta</div><div class="comp-val" style="color:#EF4444">${fmt(s.sem_resp)}</div></div>
-          <div style="text-align:right"><div class="comp-sub" style="color:#EF4444">${pSr.toFixed(1)}%</div></div>
-        </div>
-        <div class="comp-row">
           <div><div class="comp-lbl">Promotores</div><div class="comp-val" style="color:#2563EB">${agCnt}</div></div>
           <div style="text-align:right"><div class="comp-lbl">Dentro meta</div><div class="comp-sub" style="color:#10B981">${agWithin}</div></div>
         </div>
@@ -1030,7 +1022,6 @@ function renderPR(){
       {l:'Leads Totais',v:fmt(tots.total_leads),accent:'#2563EB'},
       {l:'Respondidos ≤2min',v:fmt(tots.ate1+tots.ate2),sub:pct(tots.ate1+tots.ate2,tots.total_leads),accent:'#10B981'},
       {l:'Respondidos >2min',v:fmt(tots.gt2),sub:pct(tots.gt2,tots.total_leads),accent:'#F59E0B'},
-      {l:'Enc. s/ Resposta',v:fmt(tots.sem_resp),sub:pct(tots.sem_resp,tots.total_leads),accent:'#EF4444'},
     ].map(k=>`<div class="kpi-inner">
       <div class="val" style="color:${k.accent}">${k.v}</div>
       <div class="lbl">${k.l}</div>

@@ -1258,26 +1258,18 @@ function buildCompSlices(){
 function renderAgTable(){
   const search=(document.getElementById('ag-search')?.value||'').toLowerCase();
   let data=[..._agData];
-  if(search)data=data.filter(a=>a.name.toLowerCase().includes(search)||a.sup.toLowerCase().includes(search));
-  data.sort((a,b)=>{
-    if(agSortCol==='name')return a.name.localeCompare(b.name)*agSortDir;
-    return(a[agSortCol]-b[agSortCol])*agSortDir;
-  });
-  agTotalPages=Math.ceil(data.length/PAGE)||1;
-  agPage=Math.min(agPage,agTotalPages-1);
-  document.getElementById('ag-count').textContent=data.length;
-  document.getElementById('ag-page-info').textContent=`Pág. ${agPage+1}/${agTotalPages} · ${data.length} registros`;
-  // Slices comparativos (pode ser vazio)
+  if(search) data=data.filter(a=>a.name.toLowerCase().includes(search)||a.sup.toLowerCase().includes(search));
+
+  // Slices comparativos
   const slices=buildCompSlices();
   const hasComp=slices.length>0;
 
-  // Sort: ANTES da paginação
+  // ── SORT ÚNICO — comparativo tem prioridade sobre sort normal ──────────────
   if(hasComp && compSortSlice>=0 && compSortSlice<slices.length){
     const sl=slices[compSortSlice];
-    // Pré-calcula valor para cada agente (evita recalcular dentro do sort)
     const valCache=new Map();
     data.forEach(ag=>{
-      const rows=RAW_BY_DAY.filter(r=>r.POWER_BI===ag.name&&sl.filter(r));
+      const rows=RAW_BY_DAY.filter(r=>r.POWER_BI===ag.name && sl.filter(r));
       const t=aggTotals(rows);
       const lr=t.ate1+t.ate2+t.gt2;
       valCache.set(ag.name, compSortField==='leads' ? lr : (lr>0?((t.ate1+t.ate2)/lr*100):0));
@@ -1285,11 +1277,16 @@ function renderAgTable(){
     data.sort((a,b)=>(valCache.get(a.name)-valCache.get(b.name))*compSortDir);
   } else {
     data.sort((a,b)=>{
-      if(agSortCol==='name')return a.name.localeCompare(b.name)*agSortDir;
-      return(a[agSortCol]-b[agSortCol])*agSortDir;
+      if(agSortCol==='name') return a.name.localeCompare(b.name)*agSortDir;
+      return (a[agSortCol]-b[agSortCol])*agSortDir;
     });
   }
 
+  // Paginação DEPOIS do sort
+  agTotalPages=Math.ceil(data.length/PAGE)||1;
+  agPage=Math.min(agPage,agTotalPages-1);
+  document.getElementById('ag-count').textContent=data.length;
+  document.getElementById('ag-page-info').textContent=`Pág. ${agPage+1}/${agTotalPages} · ${data.length} registros`;
   const paged=data.slice(agPage*PAGE,(agPage+1)*PAGE);
 
   // Atualiza header com colunas comparativas (clicáveis para sort)

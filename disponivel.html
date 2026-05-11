@@ -331,6 +331,8 @@ let RAW_BY_DAY = [];
 let RAW_AVAIL  = [];
 let ALL_DATES  = [];
 let ALL_SUPS   = [];
+let PR_HEADERS = []; // cabeçalhos originais da planilha
+let PR_ROWS_RAW = []; // linhas brutas da planilha (para export)
 // Months indexed per tab: { '2026-04': ['2026-04-01', ...], ... }
 let MONTHS_PR  = {}; // tab 0
 let MONTHS_AV  = {}; // tab 1
@@ -360,37 +362,20 @@ function sortComp(sliceIdx, field){
 }
 
 function exportAgCSV(){
-  // Exporta os dados brutos da planilha (RAW_BY_DAY) conforme filtros ativos
-  const rows = filterPR(0); // respeita filtro de mês, período, equipe
+  // Filtra índices dos registros válidos conforme filtros ativos
+  const filteredRows = filterPR(0); // respeita mês, período, equipe
+  const validIdx = new Set(filteredRows.map(r => r._idx));
 
-  // Reconstrói a partir dos dados originais preservando todas as colunas
-  // RAW_BY_DAY tem: POWER_BI, SUPERVISOR, date_str, total_leads, ate1, ate2, gt2, sem_resp, fora_horario
-  // Adiciona coluna de classificação de resposta
-  const headers = ['Data','Promotor','Supervisor','≤1min','1-2min','>2min','S/ Resposta','Fora Horário','Classificação'];
+  // Pega as linhas brutas originais na mesma ordem
+  const exportRows = PR_ROWS_RAW.filter((_, i) => validIdx.has(i));
 
-  const csvRows = rows.map(r => {
-    let classif = '';
-    if (r.fora_horario)  classif = 'Fora do Horário';
-    else if (r.sem_resp) classif = 'Sem Resposta';
-    else if (r.ate1)     classif = '≤1min';
-    else if (r.ate2)     classif = '1-2min';
-    else if (r.gt2)      classif = '>2min';
+  if (!exportRows.length) { alert('Nenhum dado para exportar com os filtros atuais.'); return; }
 
-    return [
-      r.date_str,
-      r.POWER_BI,
-      r.SUPERVISOR,
-      r.ate1   || 0,
-      r.ate2   || 0,
-      r.gt2    || 0,
-      r.sem_resp     || 0,
-      r.fora_horario || 0,
-      classif
-    ];
-  });
+  // Usa os cabeçalhos originais da planilha
+  const headers = PR_HEADERS;
 
-  const csv = [headers, ...csvRows]
-    .map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(','))
+  const csv = [headers, ...exportRows.map(r => headers.map(h => r[h] || ''))]
+    .map(row => row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(','))
     .join('\n');
 
   const bom  = '\uFEFF';
@@ -522,23 +507,22 @@ async function loadData() {
     //   STATUS                → "sem resposta" / "expirado" → sem_resp
     // Linhas sem VENDEDOR ou sem DATA DE ATRIBUIÇÃO são descartadas (linhas auxiliares/vazias)
     const { headers: prHeaders, rows: prRows } = parseCSV(prText);
+    PR_HEADERS = prHeaders;
     console.log('[Dashboard] primeira resposta headers:', prHeaders);
     console.log('[Dashboard] primeira resposta linhas brutas:', prRows.length);
     if (prRows.length > 0) console.log('[Dashboard] primeira resposta linha 1:', JSON.stringify(prRows[0]));
 
     // Sem agrupamento: cada linha = 1 registro = 1 lead
     RAW_BY_DAY = [];
+    PR_ROWS_RAW = []; // guarda linha bruta vinculada a cada RAW_BY_DAY
     prRows.forEach(r => {
       const vendedor = (r['VENDEDOR'] || '').trim();
       const sup      = normSup((r['SUPERVISOR'] || '').trim());
-      // Coluna D = DATA DE ATRIBUICAO — fonte unica para filtro de data
       const date     = fmtDate(r['DATA DE ATRIBUIÇÃO'] || r['DATA DE ATRIBUICAO'] || '');
 
-      // Descartar linhas auxiliares/vazias/cabecalhos repetidos
       if (!vendedor || !date) return;
       if (vendedor.toUpperCase() === 'VENDEDOR' || vendedor.startsWith('=')) return;
 
-      // Calcula tempo de resposta: col E (Primeira resposta do agente) - col F (Horário de atribuição)
       const dtResposta   = parseDateTimeBR(r['Primeira resposta do agente'] || '');
       const dtAtribuicao = parseDateTimeBR(r['Horário de atribuição'] || r['Horario de atribuicao'] || '');
       const status       = (r['STATUS'] || '').trim().toLowerCase();
@@ -559,8 +543,10 @@ async function loadData() {
         gt2 = 1;
       }
 
+      const idx = RAW_BY_DAY.length;
       RAW_BY_DAY.push({ POWER_BI: vendedor, SUPERVISOR: sup, date_str: date,
-                        total_leads: 1, ate1, ate2, gt2, sem_resp });
+                        total_leads: 1, ate1, ate2, gt2, sem_resp, _idx: idx });
+      PR_ROWS_RAW.push(r); // linha original com todos os campos
     });
     console.log('[Dashboard] RAW_BY_DAY registros (deve ser ~193):', RAW_BY_DAY.length);
 

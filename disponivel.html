@@ -212,6 +212,7 @@
       <input type="text" id="ag-search" placeholder="Buscar promotor..." oninput="agPage=0;renderAgTable()">
     </div>
     <span style="font-size:12px;color:var(--sub)"><b id="ag-count"></b> promotores</span>
+    <button onclick="exportAgCSV()" style="margin-left:auto;padding:6px 14px;background:#2563EB;color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px">⬇ Exportar CSV</button>
   </div>
   <div class="table-wrap" style="overflow-x:auto">
     <table id="ag-table">
@@ -345,6 +346,64 @@ const state = {
   selSup:       ['Todos','Todos'],
 };
 let agSortCol='total_leads', agSortDir=-1, agPage=0, agTotalPages=1;
+let compSortSlice=-1, compSortDir=-1; // -1 = sem sort comparativo
+let compSortField='pct'; // 'pct' ou 'leads'
+
+function sortComp(sliceIdx, field){
+  if(compSortSlice===sliceIdx && compSortField===field){
+    compSortDir*=-1;
+  } else {
+    compSortSlice=sliceIdx; compSortField=field; compSortDir=-1;
+  }
+  agPage=0;
+  renderAgTable();
+}
+
+function exportAgCSV(){
+  // Exporta os dados brutos da planilha (RAW_BY_DAY) conforme filtros ativos
+  const rows = filterPR(0); // respeita filtro de mês, período, equipe
+
+  // Reconstrói a partir dos dados originais preservando todas as colunas
+  // RAW_BY_DAY tem: POWER_BI, SUPERVISOR, date_str, total_leads, ate1, ate2, gt2, sem_resp, fora_horario
+  // Adiciona coluna de classificação de resposta
+  const headers = ['Data','Promotor','Supervisor','≤1min','1-2min','>2min','S/ Resposta','Fora Horário','Classificação'];
+
+  const csvRows = rows.map(r => {
+    let classif = '';
+    if (r.fora_horario)  classif = 'Fora do Horário';
+    else if (r.sem_resp) classif = 'Sem Resposta';
+    else if (r.ate1)     classif = '≤1min';
+    else if (r.ate2)     classif = '1-2min';
+    else if (r.gt2)      classif = '>2min';
+
+    return [
+      r.date_str,
+      r.POWER_BI,
+      r.SUPERVISOR,
+      r.ate1   || 0,
+      r.ate2   || 0,
+      r.gt2    || 0,
+      r.sem_resp     || 0,
+      r.fora_horario || 0,
+      classif
+    ];
+  });
+
+  const csv = [headers, ...csvRows]
+    .map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(','))
+    .join('\n');
+
+  const bom  = '\uFEFF';
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const today = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+  const sup   = state.selSup[0]==='Todos' ? 'todas-equipes' : state.selSup[0].replace(/\s+/g,'-').toLowerCase();
+  a.href     = url;
+  a.download = `leads_${sup}_${today}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 let avSortCol='avgH',        avSortDir=-1, avPage=0, avTotalPages=1;
 const PAGE = 15;
 
@@ -836,6 +895,7 @@ function switchTab(i){
 
 function setPeriod(mode,t){
   state.dateMode[t]=mode;
+  compSortSlice=-1; // reset sort comparativo ao mudar período
   const modes=['acum','dia','sem','2dias','range'];
   modes.forEach(m=>{
     const el=document.getElementById(`btn-${m}-${t}`);
@@ -1227,17 +1287,37 @@ function renderAgTable(){
   const slices=buildCompSlices();
   const hasComp=slices.length>0;
 
-  // Atualiza header com colunas comparativas
+  // Sort: se compSort ativo, ordena pelos dados da fatia comparativa
+  if(hasComp && compSortSlice>=0 && compSortSlice<slices.length){
+    const sl=slices[compSortSlice];
+    data.sort((a,b)=>{
+      const getVal=ag=>{
+        const rows=RAW_BY_DAY.filter(r=>r.POWER_BI===ag.name&&sl.filter(r));
+        const t=aggTotals(rows);
+        const lr=t.ate1+t.ate2+t.gt2;
+        if(compSortField==='leads') return lr;
+        return lr>0?((t.ate1+t.ate2)/lr*100):0;
+      };
+      return (getVal(a)-getVal(b))*compSortDir;
+    });
+  } else {
+    data.sort((a,b)=>{
+      if(agSortCol==='name')return a.name.localeCompare(b.name)*agSortDir;
+      return(a[agSortCol]-b[agSortCol])*agSortDir;
+    });
+  }
+
+  // Atualiza header com colunas comparativas (clicáveis para sort)
   const thead=document.getElementById('ag-thead');
   if(hasComp){
     thead.innerHTML=`<tr>
-      <th onclick="sortAg('name')" id="th-name" style="text-align:left">Promotor ↕</th>
+      <th onclick="sortAg('name')" id="th-name" style="text-align:left;cursor:pointer">Promotor ↕</th>
       <th>Equipe</th>
-      <th onclick="sortAg('total_leads')" id="th-total_leads" class="td-right sorted">Total Leads ↓</th>
-      <th onclick="sortAg('ate1')" id="th-ate1" class="td-right">≤1min ↕</th>
-      <th onclick="sortAg('ate2')" id="th-ate2" class="td-right">1-2min ↕</th>
-      <th onclick="sortAg('gt2')" id="th-gt2" class="td-right">&gt;2min ↕</th>
-      <th onclick="sortAg('pctAte2')" id="th-pctAte2" class="td-right">% ≤2min ↕</th>
+      <th onclick="sortAg('total_leads')" id="th-total_leads" class="td-right sorted" style="cursor:pointer">Total Leads ↓</th>
+      <th onclick="sortAg('ate1')" id="th-ate1" class="td-right" style="cursor:pointer">≤1min ↕</th>
+      <th onclick="sortAg('ate2')" id="th-ate2" class="td-right" style="cursor:pointer">1-2min ↕</th>
+      <th onclick="sortAg('gt2')" id="th-gt2" class="td-right" style="cursor:pointer">&gt;2min ↕</th>
+      <th onclick="sortAg('pctAte2')" id="th-pctAte2" class="td-right" style="cursor:pointer">% ≤2min ↕</th>
       <th class="td-right">Status</th>
       <th class="td-right">Meta ≤2min</th>
       <th colspan="${slices.length*2}" style="text-align:center;background:#F0F4F8;border-left:3px solid #CBD5E0;font-size:10px;color:#64748B;font-weight:700;letter-spacing:.7px">
@@ -1247,11 +1327,14 @@ function renderAgTable(){
     <tr>
       <th colspan="9" style="border-bottom:1px solid #E2E8F0"></th>
       ${slices.map((s,i)=>`
-        <th class="td-right" style="border-left:${i===0?'3px solid #CBD5E0':'1px solid #E2E8F0'};background:${s.isCur?'#F0FDF4':'#F8FAFC'};font-size:9px;color:${s.isCur?'#10B981':'#94A3B8'};padding:4px 8px">
-          <div style="font-weight:800;color:#1A2332">${s.label}</div>
-          <div>${s.short}</div>
+        <th onclick="sortComp(${i},'leads')" class="td-right" style="border-left:${i===0?'3px solid #CBD5E0':'1px solid #E2E8F0'};background:${s.isCur?'#F0FDF4':'#F8FAFC'};font-size:9px;color:${s.isCur?'#10B981':'#1A2332'};padding:4px 8px;cursor:pointer" title="Ordenar por leads">
+          <div style="font-weight:800">${s.label}</div>
+          <div style="color:#94A3B8">${s.short}</div>
+          <div style="color:#CBD5E0">${compSortSlice===i&&compSortField==='leads'?(compSortDir===-1?'↓':'↑'):'↕'}</div>
         </th>
-        <th class="td-right" style="background:${s.isCur?'#F0FDF4':'#F8FAFC'};font-size:9px;color:#94A3B8;padding:4px 8px">%≤2min</th>
+        <th onclick="sortComp(${i},'pct')" class="td-right" style="background:${s.isCur?'#F0FDF4':'#F8FAFC'};font-size:9px;padding:4px 8px;cursor:pointer;color:#1A2332" title="Ordenar por %≤2min">
+          %≤2min ${compSortSlice===i&&compSortField==='pct'?(compSortDir===-1?'↓':'↑'):'↕'}
+        </th>
       `).join('')}
     </tr>`;
   } else {

@@ -280,36 +280,20 @@
   <!-- EQUIPE BUTTONS -->
   <div class="equipe-btns" id="equipe-btns-1"></div>
 
-  <!-- COMPARATIVO SEMANAL DISPONIBILIDADE -->
-  <div id="av-comparativo"></div>
-
   <div class="kpi-grid" id="av-kpis"></div>
 
-  <!-- TOP 10 DISPONIBILIDADE -->
-  <div class="top10-grid">
-    <div class="top10-card">
-      <div class="top10-header" style="background:#D1FAE5">
-        <div class="top10-strip" style="background:#10B981"></div>
-        <div class="top10-title">Top 10 Mais Disponíveis</div>
-        <div class="top10-sub">maior média diária de horas</div>
-      </div>
-      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Total h</div><div style="text-align:right">Média/dia</div></div>
-      <div id="av-top10-best"></div>
+  <!-- SEARCH + TABLE -->
+  <div class="search-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="av-search" placeholder="Buscar promotor..." oninput="avPage=0;renderAvTable()">
     </div>
-    <div class="top10-card">
-      <div class="top10-header" style="background:#FEE2E2">
-        <div class="top10-strip" style="background:#EF4444"></div>
-        <div class="top10-title">Top 10 Menos Disponíveis</div>
-        <div class="top10-sub">menor média diária de horas</div>
-      </div>
-      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Total h</div><div style="text-align:right">Média/dia</div></div>
-      <div id="av-top10-worst"></div>
-    </div>
+    <span style="font-size:12px;color:var(--sub)" id="av-count-label"></span>
   </div>
 
-  <div class="table-wrap">
+  <div class="table-wrap" style="overflow-x:auto">
     <table>
-      <thead>
+      <thead id="av-thead">
         <tr>
           <th onclick="sortAv('name')" id="av-th-name" style="text-align:left">Promotor ↕</th>
           <th>Equipe</th>
@@ -339,7 +323,7 @@
 // ── GOOGLE SHEETS ─────────────────────────────────────────────────────────────
 const SHEET_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vROvS5snM-Nr6L1KRvAhEVyUyyRx6n2bOo7Lq-ZqEuaOBofFUOWqKAgO7LX-o4aJHJuKTR3olNA9Lsj/pub";
 // Equipes removidas (sem dados)
-const EQUIPES_REMOVIDAS = ['ADM','ADMINISTRATIVO','BENVE'];
+const EQUIPES_REMOVIDAS = ['ADM','BENVE'];
 
 // ── RUNTIME DATA ──────────────────────────────────────────────────────────────
 let RAW_BY_DAY = [];
@@ -487,7 +471,7 @@ async function loadData() {
     RAW_BY_DAY = [];
     prRows.forEach(r => {
       const vendedor = (r['VENDEDOR'] || '').trim();
-      const sup      = (r['SUPERVISOR'] || '').trim();
+      const sup      = normSup((r['SUPERVISOR'] || '').trim());
       // Coluna D = DATA DE ATRIBUICAO — fonte unica para filtro de data
       const date     = fmtDate(r['DATA DE ATRIBUIÇÃO'] || r['DATA DE ATRIBUICAO'] || '');
 
@@ -522,37 +506,28 @@ async function loadData() {
     console.log('[Dashboard] RAW_BY_DAY registros (deve ser ~193):', RAW_BY_DAY.length);
 
     // ── DISPONIBILIDADE ───────────────────────────────────────────────────────
-    // Colunas: Agent Name, Date, HORARIO, Reason, SITUAÇÃO, PF OU PME, SUPERVISOR, TEMPO LOGADO, ...
-    // avail_hours = soma de TEMPO LOGADO onde SITUAÇÃO === 'Disponível', por agente+sup+data
     const { rows: avRows } = parseCSV(avText);
     console.log('[Dashboard] disponibilidade linhas:', avRows.length);
     if (avRows.length > 0) console.log('[Dashboard] disponibilidade linha 1:', JSON.stringify(avRows[0]));
 
-    // Estrutura real da planilha Disponibilidade:
-    // Agent Name | Date (DD/MM/YYYY) | HORARIO | Reason | SITUAÇÃO | PF OU PME | SUPERVISOR | TEMPO LOGADO | Tempo de um status para outro
-    // A disponibilidade é calculada somando "Tempo de um status para outro" onde SITUAÇÃO === 'Disponível'
-    // por agente + supervisor + data (1 dia = 1 registro agrupado)
+    // Inclui TODOS os agentes — soma horas somente onde SITUAÇÃO = Disponível
+    // mas regista o agente mesmo se nunca tiver status Disponível
     const avMap = {};
     avRows.forEach(r => {
       const agent = (r['Agent Name'] || '').trim();
-      // SUPERVISOR está na coluna 7 (índice 6)
-      const sup   = (r['SUPERVISOR'] || '').trim();
-      // Date vem como DD/MM/YYYY
+      const sup   = normSup((r['SUPERVISOR'] || '').trim());
       const date  = fmtDate(r['Date'] || '');
-      // SITUAÇÃO: filtramos somente 'Disponível'
-      const sit   = (r['SITUAÇÃO'] || r['SITUACAO'] || r['SITUA\u00c7\u00c3O'] || '').trim().toLowerCase();
-      // Tempo real: última coluna "Tempo de um status para outro"
+      const sit   = (r['SITUAÇÃO'] || r['SITUACAO'] || r['SITUA\u00c7\u00c3O'] || '').trim();
       const tempo = (r['Tempo de um status para outro'] || r['TEMPO LOGADO'] || '').trim();
 
       if (!agent || !date) return;
-      // Ignora agente sem supervisor válido
       if (EQUIPES_REMOVIDAS.includes(sup.toUpperCase())) return;
 
-      const key = agent + '|' + sup + '|' + date;
+      const key = agent + '|' + date;
       if (!avMap[key]) avMap[key] = { POWER_BI: agent, SUPERVISOR: sup, date_str: date, avail_hours: 0 };
-      // Soma somente registros com situação Disponível
+
       const sitNorm = sit.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-      if (sitNorm === 'disponivel' || sitNorm === 'disponível' || sit === 'disponível' || sit === 'disponivel') {
+      if (sitNorm === 'disponivel') {
         avMap[key].avail_hours += hmsToH(tempo);
       }
     });
@@ -563,7 +538,8 @@ async function loadData() {
     const dateSet = new Set([...RAW_BY_DAY.map(r=>r.date_str), ...RAW_AVAIL.map(r=>r.date_str)]);
     ALL_DATES = [...dateSet].filter(Boolean).sort();
     const supSet = new Set([...RAW_BY_DAY.map(r=>r.SUPERVISOR), ...RAW_AVAIL.map(r=>r.SUPERVISOR)]);
-    ALL_SUPS = [...supSet].filter(s=>s && !EQUIPES_REMOVIDAS.includes(s.toUpperCase())).sort();
+    const supArr=[...supSet].filter(s=>s&&!EQUIPES_REMOVIDAS.includes(s.toUpperCase()));
+    ALL_SUPS=[...SUPS_ORDER.filter(o=>supArr.includes(o)),...supArr.filter(s=>!SUPS_ORDER.includes(s))];
 
     console.log('[Dashboard] ALL_DATES:', ALL_DATES);
     console.log('[Dashboard] ALL_SUPS:', ALL_SUPS);
@@ -605,10 +581,23 @@ function showError(msg) {
 }
 
 // ── SUP COLORS ────────────────────────────────────────────────────────────────
+function normSup(s){
+  if(!s) return '';
+  const u=s.trim().toUpperCase();
+  if(u.includes('HUMBERTO'))    return 'HUMBERTO BANQUERI';
+  if(u.includes('LUIZ'))        return 'LUIZ ROBERTO';
+  if(u.includes('BENVE'))       return 'REBECA BENVE';
+  if(u.includes('REBECA'))      return 'REBECA';
+  if(u.includes('ADMIN'))       return 'ADMINISTRATIVO';
+  return s.trim();
+}
+const SUPS_ORDER=['HUMBERTO BANQUERI','LUIZ ROBERTO','REBECA','REBECA BENVE','ADMINISTRATIVO'];
 const SUP_C = {
-  'EQUIPE ALFA':       {bg:'#FFF5F5',tc:'#C53030'},
-  'EQUIPE FENIX':      {bg:'#FFF8E8',tc:'#975A16'},
-  'EQUIPE GLADIADORES':{bg:'#E8F8EE',tc:'#276749'},
+  'HUMBERTO BANQUERI': {bg:'#EBF4FF',tc:'#1D4ED8'},
+  'LUIZ ROBERTO':      {bg:'#F3E8FF',tc:'#6B21A8'},
+  'REBECA':            {bg:'#FFF0F6',tc:'#BE185D'},
+  'REBECA BENVE':      {bg:'#FFF8E8',tc:'#975A16'},
+  'ADMINISTRATIVO':    {bg:'#E8F4F8',tc:'#0E7490'},
 };
 const medals=['🥇','🥈','🥉'];
 
@@ -1306,77 +1295,45 @@ function renderAvail(){
     ${k.sub?`<div class="sub" style="color:${k.accent}">${k.sub}</div>`:''}
   </div>`).join('');
 
-  // Comparativo semanal de disponibilidade quando equipe selecionada
-  const avComp=document.getElementById('av-comparativo');
-  if(avComp && state.selSup[1]!=='Todos'){
-    const sup=state.selSup[1];
-    const supRows=RAW_AVAIL.filter(r=>r.SUPERVISOR===sup&&r.date_str);
-    const weekSet={};
-    supRows.forEach(r=>{
-      const w=getWeekDates(r.date_str);
-      const key=w.from+'_'+w.to;
-      if(!weekSet[key]) weekSet[key]={from:w.from,to:w.to,rows:[]};
-      weekSet[key].rows.push(r);
-    });
-    const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1).slice(-4);
-    if(weeks.length>0){
-      avComp.innerHTML=`<div class="card" style="margin-bottom:16px">
-        <div class="card-title">📅 Comparativo Semanal Disponibilidade — ${sup}</div>
-        <div style="display:grid;grid-template-columns:repeat(${weeks.length},1fr);gap:10px">
-        ${weeks.map((w,wi)=>{
-          const agd=aggAvByAgent(w.rows);
-          const avgH=agd.length>0?agd.reduce((s,a)=>s+a.avgH,0)/agd.length:0;
-          const ideal=agd.filter(a=>a.avgH>=6).length;
-          const crit=agd.filter(a=>a.avgH<4).length;
-          const st=availStatus(avgH);
-          const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
-          const label=d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-          const isLast=wi===weeks.length-1;
-          return `<div style="background:${isLast?'#F0FDF4':'#F8FAFC'};border:2px solid ${isLast?st.color:st.color+'44'};border-radius:10px;padding:12px;text-align:center">
-            <div style="font-size:10px;color:#94A3B8;font-weight:600;margin-bottom:6px">${isLast?'SEMANA ATUAL ·':''} ${label}</div>
-            <div style="font-size:22px;font-weight:900;color:${st.color}">${avgH.toFixed(1)}h</div>
-            <div style="font-size:10px;color:#94A3B8;margin-bottom:4px">média/dia</div>
-            <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
-            <div style="margin-top:8px;display:flex;justify-content:space-around">
-              <div><div style="font-size:11px;font-weight:700;color:#10B981">${ideal}</div><div style="font-size:9px;color:#94A3B8">ideal</div></div>
-              <div><div style="font-size:11px;font-weight:700;color:#EF4444">${crit}</div><div style="font-size:9px;color:#94A3B8">crítico</div></div>
-            </div>
-          </div>`;
-        }).join('')}
-        </div>
-      </div>`;
-    } else avComp.innerHTML='';
-  } else if(avComp) avComp.innerHTML='';
-
-  // Top 10 disponibilidade
-  const sorted=[...avData].filter(a=>a.days>=1);
-  const best10=[...sorted].sort((a,b)=>b.avgH-a.avgH).slice(0,10);
-  const worst10=[...sorted].sort((a,b)=>a.avgH-b.avgH).slice(0,10);
-
-  ['best','worst'].forEach(type=>{
-    const data=type==='best'?best10:worst10;
-    const color=type==='best'?'#10B981':'#EF4444';
-    document.getElementById(`av-top10-${type}`).innerHTML=data.map((a,i)=>{
-      const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
-      const st=availStatus(a.avgH);
-      return `<div class="top10-row" style="border-left:3px solid ${i<3?color:'transparent'}">
-        <div class="top10-medal">${medals[i]||`<span style="font-size:11px;color:#94A3B8;font-weight:700">${i+1}</span>`}</div>
-        <div>
-          <div class="top10-name">${a.name}</div>
-          <span class="top10-badge" style="background:${sc.bg};color:${sc.tc}">${a.sup}</span>
-        </div>
-        <div class="top10-leads">${a.totalH.toFixed(1)}h</div>
-        <div class="top10-pct" style="color:${st.color}">${a.avgH.toFixed(1)}h</div>
-      </div>`;
-    }).join('');
-  });
-
   avPage=0;
   renderAvTable();
 }
 
+function buildAvCompSlices(){
+  const dm=state.dateMode[1];
+  if(dm!=='sem'&&dm!=='2dias') return [];
+  if(dm==='2dias'){
+    const sd=state.selDate[1], sd2=state.selDate2[1];
+    const fD=d=>new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+    return [
+      {label:fD(sd), short:'Dia 1', isCur:false, filter:r=>r.date_str===sd},
+      {label:fD(sd2),short:'Dia 2', isCur:false, filter:r=>r.date_str===sd2},
+    ];
+  }
+  // semanal: semanas com dados no mês selecionado
+  const ym=state.selMonth[1];
+  const weekSet={};
+  RAW_AVAIL.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())
+    &&(ym&&ym!=='all'?r.date_str.startsWith(ym):true))
+    .forEach(r=>{
+      const w=getWeekDates(r.date_str);
+      const key=w.from+'_'+w.to;
+      if(!weekSet[key]) weekSet[key]={from:w.from,to:w.to};
+    });
+  const todayStr=new Date().toISOString().slice(0,10);
+  return Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1)
+    .map((w,i)=>{
+      const isCur=todayStr>=w.from&&todayStr<=w.to;
+      const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
+      const lbl=d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+      return {label:lbl, short:isCur?'Atual':`S${i+1}`, isCur, filter:r=>r.date_str>=w.from&&r.date_str<=w.to};
+    });
+}
+
 function renderAvTable(){
+  const search=(document.getElementById('av-search')?.value||'').toLowerCase();
   let data=[..._avData];
+  if(search) data=data.filter(a=>a.name.toLowerCase().includes(search)||a.sup.toLowerCase().includes(search));
   data.sort((a,b)=>{
     if(avSortCol==='name')return a.name.localeCompare(b.name)*avSortDir;
     return(a[avSortCol]-b[avSortCol])*avSortDir;
@@ -1384,9 +1341,70 @@ function renderAvTable(){
   avTotalPages=Math.ceil(data.length/PAGE)||1;
   avPage=Math.min(avPage,avTotalPages-1);
   document.getElementById('av-page-info').textContent=`Pág. ${avPage+1}/${avTotalPages} · ${data.length} registros`;
+  const cntLbl=document.getElementById('av-count-label');
+  if(cntLbl) cntLbl.textContent=`${data.length} promotores`;
+
+  const slices=buildAvCompSlices();
+  const hasComp=slices.length>0;
+
+  // Update header
+  const avThead=document.getElementById('av-thead');
+  const baseHeader=`<th onclick="sortAv('name')" id="av-th-name" style="text-align:left">Promotor ↕</th>
+    <th>Equipe</th>
+    <th onclick="sortAv('totalH')" id="av-th-totalH" class="td-right">Total Horas ↕</th>
+    <th onclick="sortAv('days')"   id="av-th-days"   class="td-right">Dias ↕</th>
+    <th onclick="sortAv('avgH')"   id="av-th-avgH"   class="td-right sorted">Média Diária ↓</th>
+    <th class="td-right">Status</th>`;
+  if(avThead){
+    if(hasComp){
+      avThead.innerHTML=`<tr>${baseHeader}
+        <th colspan="${slices.length*2}" style="text-align:center;background:#F0F4F8;border-left:3px solid #CBD5E0;font-size:10px;color:#64748B;font-weight:700;letter-spacing:.7px">
+          COMPARATIVO ${state.dateMode[1]==='2dias'?'2 DIAS':'SEMANAL'}
+        </th></tr>
+        <tr><th colspan="6" style="border-bottom:1px solid #E2E8F0"></th>
+        ${slices.map((s,i)=>`
+          <th class="td-right" style="border-left:${i===0?'3px solid #CBD5E0':'1px solid #E2E8F0'};background:${s.isCur?'#F0FDF4':'#F8FAFC'};font-size:9px;color:${s.isCur?'#10B981':'#94A3B8'};padding:4px 8px">
+            <div style="font-weight:800;color:#1A2332">${s.label}</div><div>${s.short}</div>
+          </th>
+          <th class="td-right" style="background:${s.isCur?'#F0FDF4':'#F8FAFC'};font-size:9px;color:#94A3B8;padding:4px 8px">Média/dia</th>
+        `).join('')}</tr>`;
+    } else {
+      avThead.innerHTML=`<tr>${baseHeader}</tr>`;
+    }
+  }
+
   const paged=data.slice(avPage*PAGE,(avPage+1)*PAGE);
   document.getElementById('av-tbody').innerHTML=paged.map(a=>{
     const st=availStatus(a.avgH);
+
+    let compCells='';
+    if(hasComp){
+      const agRows=RAW_AVAIL.filter(r=>r.POWER_BI===a.name
+        &&(state.selSup[1]==='Todos'||r.SUPERVISOR===state.selSup[1]));
+      compCells=slices.map((sl,i)=>{
+        const rows=agRows.filter(sl.filter);
+        const agd=aggAvByAgent(rows);
+        const avgH=agd.length>0?agd.reduce((s,x)=>s+x.avgH,0)/agd.length:0;
+        const hasDays=rows.length>0;
+        const stt=hasDays?availStatus(avgH):null;
+        let delta=null;
+        if(i>0){
+          const prev=aggAvByAgent(agRows.filter(slices[i-1].filter));
+          const prevAvg=prev.length>0?prev.reduce((s,x)=>s+x.avgH,0)/prev.length:null;
+          if(prevAvg!==null&&hasDays) delta=avgH-prevAvg;
+        }
+        const bg=sl.isCur?'#F0FDF4':'';
+        const borderL=i===0?'border-left:3px solid #CBD5E0':'';
+        return `<td class="td-right" style="${borderL};background:${bg};font-weight:700;color:#4A5568">${hasDays?rows.length+'d':'–'}</td>
+          <td class="td-right" style="background:${bg}">
+            ${hasDays?`<span style="font-size:12px;font-weight:900;color:${stt.color}">${avgH.toFixed(1)}h</span>
+            <span class="status-badge" style="background:${stt.bg};color:${stt.color};margin-left:3px">${stt.label}</span>
+            ${delta!==null?`<div style="font-size:9px;font-weight:700;color:${delta>=0?'#10B981':'#EF4444'}">${delta>=0?'▲':'▼'}${Math.abs(delta).toFixed(1)}h</div>`:''}
+            `:'<span style="color:#CBD5E0">–</span>'}
+          </td>`;
+      }).join('');
+    }
+
     return `<tr>
       <td style="font-weight:700;white-space:nowrap">${a.name}</td>
       <td>${supBadge(a.sup)}</td>
@@ -1399,6 +1417,7 @@ function renderAvTable(){
         </div>
       </td>
       <td class="td-right"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></td>
+      ${compCells}
     </tr>`;
   }).join('');
   document.getElementById('av-pg-first').disabled=avPage===0;

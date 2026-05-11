@@ -506,33 +506,71 @@ async function loadData() {
     console.log('[Dashboard] RAW_BY_DAY registros (deve ser ~193):', RAW_BY_DAY.length);
 
     // ── DISPONIBILIDADE ───────────────────────────────────────────────────────
-    const { rows: avRows } = parseCSV(avText);
-    console.log('[Dashboard] disponibilidade linhas:', avRows.length);
-    if (avRows.length > 0) console.log('[Dashboard] disponibilidade linha 1:', JSON.stringify(avRows[0]));
+    const { headers: avHeaders, rows: avRows } = parseCSV(avText);
+    console.log('[AV] headers:', JSON.stringify(avHeaders));
+    console.log('[AV] total linhas:', avRows.length);
+    if (avRows.length > 0) console.log('[AV] linha 1:', JSON.stringify(avRows[0]));
 
-    // Inclui TODOS os agentes — soma horas somente onde SITUAÇÃO = Disponível
-    // mas regista o agente mesmo se nunca tiver status Disponível
+    // Coluna A = Agent Name, Coluna B = Date (DD/MM/YYYY)
+    // Regra: registra TODOS os agentes presentes na col A
+    // Datas inválidas na col B são ignoradas para agrupamento mas o agente é mantido
+    // avail_hours = soma de "Tempo de um status para outro" onde SITUAÇÃO = Disponível
+
+    // Passo 1: coleta todos os agentes únicos com seu supervisor
+    const agentSup = {};
+    avRows.forEach(r => {
+      const agent = (r['Agent Name'] || '').trim();
+      const sup   = normSup((r['SUPERVISOR'] || '').trim());
+      if (agent && sup && !EQUIPES_REMOVIDAS.includes(sup.toUpperCase())) {
+        if (!agentSup[agent]) agentSup[agent] = sup;
+      }
+    });
+
+    // Passo 2: agrupa por agente + data válida
     const avMap = {};
     avRows.forEach(r => {
       const agent = (r['Agent Name'] || '').trim();
       const sup   = normSup((r['SUPERVISOR'] || '').trim());
-      const date  = fmtDate(r['Date'] || '');
+      const dateRaw = (r['Date'] || '').trim();
+      const date  = fmtDate(dateRaw);
       const sit   = (r['SITUAÇÃO'] || r['SITUACAO'] || r['SITUA\u00c7\u00c3O'] || '').trim();
       const tempo = (r['Tempo de um status para outro'] || r['TEMPO LOGADO'] || '').trim();
 
-      if (!agent || !date) return;
+      if (!agent) return;
       if (EQUIPES_REMOVIDAS.includes(sup.toUpperCase())) return;
 
+      // Garante que o agente existe no mapa mesmo sem data válida
+      const agentKey = agent;
+      if (!avMap[agentKey + '|__agent__']) {
+        avMap[agentKey + '|__agent__'] = { POWER_BI: agent, SUPERVISOR: sup, date_str: '', avail_hours: 0, _isPlaceholder: true };
+      }
+
+      // Só agrupa por data se a data for válida (col B válida)
+      if (!date) return;
+
       const key = agent + '|' + date;
-      if (!avMap[key]) avMap[key] = { POWER_BI: agent, SUPERVISOR: sup, date_str: date, avail_hours: 0 };
+      if (!avMap[key]) avMap[key] = { POWER_BI: agent, SUPERVISOR: sup, date_str: date, avail_hours: 0, _isPlaceholder: false };
 
       const sitNorm = sit.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
       if (sitNorm === 'disponivel') {
         avMap[key].avail_hours += hmsToH(tempo);
+        // Remove placeholder se tiver dados reais
+        avMap[agentKey + '|__agent__']._hasReal = true;
       }
     });
-    RAW_AVAIL = Object.values(avMap).filter(r => r.POWER_BI && r.date_str);
-    console.log('[Dashboard] RAW_AVAIL registros:', RAW_AVAIL.length);
+
+    // Passo 3: filtra — mantém registros reais; para agentes sem nenhum dado real, mantém 1 placeholder
+    const realKeys = new Set(
+      Object.values(avMap).filter(r=>!r._isPlaceholder).map(r=>r.POWER_BI)
+    );
+    RAW_AVAIL = Object.values(avMap).filter(r => {
+      if (!r._isPlaceholder) return r.POWER_BI && r.date_str;
+      // Mantém placeholder só se o agente não tem nenhum registro real com data
+      return !realKeys.has(r.POWER_BI);
+    }).map(r => ({ POWER_BI: r.POWER_BI, SUPERVISOR: r.SUPERVISOR, date_str: r.date_str, avail_hours: r.avail_hours }));
+
+    console.log('[AV] agentes únicos:', Object.keys(agentSup).length);
+    console.log('[AV] RAW_AVAIL registros:', RAW_AVAIL.length);
 
     // ── DATAS E SUPERVISORES ──────────────────────────────────────────────────
     const dateSet = new Set([...RAW_BY_DAY.map(r=>r.date_str), ...RAW_AVAIL.map(r=>r.date_str)]);
@@ -618,10 +656,21 @@ function filterPR(t){
   });
 }
 function filterAv(t){
-  const dm=state.dateMode[t],sd=state.selDate[t],sup=state.selSup[t];
+  const dm=state.dateMode[t], sd=state.selDate[t], sd2=state.selDate2[t];
+  const rfrom=state.selRangeFrom[t], rto=state.selRangeTo[t];
+  const sup=state.selSup[t];
+  const ym=state.selMonth[t];
   return RAW_AVAIL.filter(r=>{
-    if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
-    if(dm==='dia')return r.date_str===sd;
+    if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
+    if(sup!=='Todos'&&r.SUPERVISOR!==sup) return false;
+    // Registros sem data (placeholders de agente) sempre passam
+    if(!r.date_str) return true;
+    if(ym&&ym!=='all'&&!r.date_str.startsWith(ym)) return false;
+    if(dm==='acum') return true;
+    if(dm==='dia')  return r.date_str===sd;
+    if(dm==='2dias')return r.date_str===sd||r.date_str===sd2;
+    if(dm==='sem'){const w=getWeekDates(sd);return r.date_str>=w.from&&r.date_str<=w.to;}
+    if(dm==='range')return r.date_str>=rfrom&&r.date_str<=rto;
     return true;
   });
 }
@@ -652,8 +701,10 @@ function aggAvByAgent(rows){
   const m={};
   rows.forEach(r=>{
     if(!m[r.POWER_BI])m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,totalH:0,days:0};
-    m[r.POWER_BI].totalH+=r.avail_hours;
-    m[r.POWER_BI].days++;
+    if(r.date_str){ // só conta dias com data válida
+      m[r.POWER_BI].totalH+=r.avail_hours;
+      m[r.POWER_BI].days++;
+    }
   });
   return Object.values(m).map(a=>({...a,avgH:a.days>0?a.totalH/a.days:0}));
 }
@@ -872,7 +923,7 @@ function init(){
     RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())).map(r=>r.date_str)
   )].filter(Boolean).sort();
   const avDates=[...new Set(
-    RAW_AVAIL.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())).map(r=>r.date_str)
+    RAW_AVAIL.filter(r=>r.date_str&&!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())).map(r=>r.date_str)
   )].filter(Boolean).sort();
 
   MONTHS_PR=buildMonthIndex(prDates);

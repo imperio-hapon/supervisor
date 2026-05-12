@@ -249,7 +249,11 @@ function renderKPIs() {
   const pfGlobal = activeSups.has('todos') ? VPF  : pf;
   const adeGlobal= activeSups.has('todos') ? VADE : ade;
   const pmeGlobal= activeSups.has('todos') ? VPME : pme;
-  const mtGlobal = activeSups.has('todos') ? META_TOT : mt;
+  // Meta: quando equipe selecionada, usar meta_sup (mesma fonte do card da equipe)
+  var _srcMt = (typeof APR_DATA!=='undefined')?(MES_ATIVO===4?APR_DATA:MAY_DATA):null;
+  var _singleSup = (!activeSups.has('todos') && activeSups.size===1) ? [...activeSups][0] : null;
+  var _teamMt = (_singleSup && _srcMt && _srcMt.meta_sup) ? _srcMt.meta_sup[_singleSup] : null;
+  const mtGlobal = activeSups.has('todos') ? META_TOT : (_teamMt!==null&&_teamMt!==undefined ? _teamMt : mt);
 
   const pctR = +(vtGlobal/mtGlobal*100).toFixed(1);
   const proj = Math.round(vtGlobal * PROJ_FATOR);

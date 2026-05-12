@@ -327,7 +327,7 @@
 // ── GOOGLE SHEETS ─────────────────────────────────────────────────────────────
 const SHEET_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vROvS5snM-Nr6L1KRvAhEVyUyyRx6n2bOo7Lq-ZqEuaOBofFUOWqKAgO7LX-o4aJHJuKTR3olNA9Lsj/pub";
 // Equipes removidas (sem dados)
-const EQUIPES_REMOVIDAS = ['ADM','BENVE'];
+const EQUIPES_REMOVIDAS = ['ADM','BENVE','DESLIGADO']; // removidos completamente dos dados
 const EQUIPES_OCULTAS = ['ADMINISTRATIVO']; // oculto nos comparativos e botões, mas dados mantidos
 
 // ── RUNTIME DATA ──────────────────────────────────────────────────────────────
@@ -704,13 +704,17 @@ function showError(msg) {
 // ── SUP COLORS ────────────────────────────────────────────────────────────────
 function normSup(s){
   if(!s) return '';
-  const u=s.trim().toUpperCase();
+  const t=s.trim();
+  // Ignora fórmulas e variações de "desligado"
+  if(t.startsWith('=')) return 'DESLIGADO';
+  const u=t.toUpperCase();
+  if(u.includes('DESLIGADO')) return 'DESLIGADO';
   if(u.includes('HUMBERTO'))    return 'HUMBERTO BANQUERI';
   if(u.includes('LUIZ'))        return 'LUIZ ROBERTO';
   if(u.includes('BENVE'))       return 'REBECA BENVE';
   if(u.includes('REBECA'))      return 'REBECA';
   if(u.includes('ADMIN'))       return 'ADMINISTRATIVO';
-  return s.trim();
+  return t;
 }
 const SUPS_ORDER=['HUMBERTO BANQUERI','LUIZ ROBERTO','REBECA','REBECA BENVE'];
 const SUP_C = {

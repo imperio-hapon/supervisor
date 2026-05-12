@@ -558,10 +558,12 @@ async function loadData() {
         else                    { gt2  = 1; }
       }
 
+      // total_leads = apenas leads com tempo de resposta (ate1+ate2+gt2)
+      // sem_resp e fora_horario NÃO contam no total
       const idx = RAW_BY_DAY.length;
       RAW_BY_DAY.push({
         POWER_BI: vendedor, SUPERVISOR: sup, date_str: date,
-        total_leads: contaLead ? 1 : 0,
+        total_leads: (ate1||ate2||gt2) ? 1 : 0,
         ate1, ate2, gt2, sem_resp,
         fora_horario: foraHorario ? 1 : 0,
         transferido:  transferido  ? 1 : 0,
@@ -705,23 +707,27 @@ function showError(msg) {
 function normSup(s){
   if(!s) return '';
   const t=s.trim();
-  // Ignora fórmulas e variações de "desligado"
   if(t.startsWith('=')) return 'DESLIGADO';
-  const u=t.toUpperCase();
+  const u=t.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   if(u.includes('DESLIGADO')) return 'DESLIGADO';
-  if(u.includes('HUMBERTO'))    return 'HUMBERTO BANQUERI';
-  if(u.includes('LUIZ'))        return 'LUIZ ROBERTO';
-  if(u.includes('BENVE'))       return 'REBECA BENVE';
-  if(u.includes('REBECA'))      return 'REBECA';
-  if(u.includes('ADMIN'))       return 'ADMINISTRATIVO';
+  if(u.includes('HUMBERTO'))  return 'HUMBERTO BANQUERI';
+  if(u.includes('LUIZ'))      return 'LUIZ ROBERTO';
+  if(u.includes('BENVE'))     return 'REBECA BENVE';
+  if(u.includes('REBECA'))    return 'REBECA';
+  if(u.includes('ADMIN'))     return 'ADMINISTRATIVO';
+  // Nomes de equipe que aparecem na planilha
+  if(u.includes('ALFA'))        return 'HUMBERTO BANQUERI';
+  if(u.includes('FENIX')||u.includes('FÊNIX')||u.includes('FENIX')) return 'LUIZ ROBERTO';
+  if(u.includes('GLADIADOR'))   return 'REBECA';
+  if(u.includes('TITANS')||u.includes('TITAN')) return 'REBECA BENVE';
   return t;
 }
 const SUPS_ORDER=['HUMBERTO BANQUERI','LUIZ ROBERTO','REBECA','REBECA BENVE'];
 const SUP_C = {
-  'HUMBERTO BANQUERI': {bg:'#EBF4FF',tc:'#1D4ED8'},
-  'LUIZ ROBERTO':      {bg:'#F3E8FF',tc:'#6B21A8'},
-  'REBECA':            {bg:'#FFF0F6',tc:'#BE185D'},
-  'REBECA BENVE':      {bg:'#FFF8E8',tc:'#975A16'},
+  'HUMBERTO BANQUERI': {bg:'#EFF6FF',tc:'#1D4ED8'}, // azul
+  'LUIZ ROBERTO':      {bg:'#FAF5FF',tc:'#7C3AED'}, // roxo
+  'REBECA':            {bg:'#FFF1F2',tc:'#BE123C'}, // rosa
+  'REBECA BENVE':      {bg:'#FFFBEB',tc:'#B45309'}, // âmbar
 };
 const medals=['🥇','🥈','🥉'];
 

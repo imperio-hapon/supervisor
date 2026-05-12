@@ -1058,16 +1058,7 @@ function render(){
   if(rtEl&&dm==='range')state.selRangeTo[t]=rtEl.value||'';
 
   // update header
-  const prRows0=filterPR(0);
-  const tots0=aggTotals(prRows0);
   document.getElementById('period-label').textContent=`${periodLabel()} · ${state.selSup[t]==='Todos'?'Todas as equipes':state.selSup[t]}`;
-  document.getElementById('h-leads').textContent=fmt(tots0.ate1+tots0.ate2+tots0.gt2);
-  document.getElementById('h-sem').textContent=fmt(tots0.sem_resp);
-  document.getElementById('h-sem-pct').textContent=pct(tots0.sem_resp,tots0.total_leads);
-  document.getElementById('h-ate2').textContent=fmt(tots0.ate1+tots0.ate2);
-  document.getElementById('h-ate2-pct').textContent=pct(tots0.ate1+tots0.ate2,tots0.ate1+tots0.ate2+tots0.gt2);
-  document.getElementById('h-gt2').textContent=fmt(tots0.gt2);
-  document.getElementById('h-gt2-pct').textContent=pct(tots0.gt2,tots0.ate1+tots0.ate2+tots0.gt2);
 
   if(t===0) renderPR();
   if(t===1) renderAvail();
@@ -1087,9 +1078,11 @@ function renderPR(){
   const compDiv = document.getElementById('pr-comparativo');
   const kpiDiv  = document.getElementById('pr-kpis');
 
-  // rows filtered by period only (no sup filter) for cross-team comparison
+  // rows filtered by period + month (no sup filter) — mesmos dados dos cards
   const allRows = RAW_BY_DAY.filter(r=>{
     if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
+    const ym=state.selMonth[0];
+    if(ym&&ym!=='all'&&!r.date_str.startsWith(ym)) return false;
     const dm=state.dateMode[0], sd=state.selDate[0], sd2=state.selDate2[0];
     const rfrom=state.selRangeFrom[0], rto=state.selRangeTo[0];
     if(dm==='dia')  return r.date_str===sd;
@@ -1098,6 +1091,16 @@ function renderPR(){
     if(dm==='range')return r.date_str>=rfrom&&r.date_str<=rto;
     return true;
   });
+
+  // Header usa allRows (inclui todos os supervisores, respeita mês e período)
+  const tots0all=aggTotals(allRows);
+  document.getElementById('h-leads').textContent=fmt(tots0all.ate1+tots0all.ate2+tots0all.gt2);
+  document.getElementById('h-sem').textContent=fmt(tots0all.sem_resp);
+  document.getElementById('h-sem-pct').textContent=pct(tots0all.sem_resp,tots0all.total_leads);
+  document.getElementById('h-ate2').textContent=fmt(tots0all.ate1+tots0all.ate2);
+  document.getElementById('h-ate2-pct').textContent=pct(tots0all.ate1+tots0all.ate2,tots0all.ate1+tots0all.ate2+tots0all.gt2);
+  document.getElementById('h-gt2').textContent=fmt(tots0all.gt2);
+  document.getElementById('h-gt2-pct').textContent=pct(tots0all.gt2,tots0all.ate1+tots0all.ate2+tots0all.gt2);
 
   if(isTodos){
     compDiv.style.display='block';

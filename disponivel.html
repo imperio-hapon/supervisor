@@ -516,6 +516,11 @@ async function loadData() {
     console.log('[Dashboard] primeira resposta linhas brutas:', prRows.length);
     if (prRows.length > 0) console.log('[Dashboard] primeira resposta linha 1:', JSON.stringify(prRows[0]));
 
+    // DEBUG: mostra supervisores únicos encontrados na planilha
+    const allSupsRaw=[...new Set(prRows.map(r=>(r['SUPERVISOR']||'').trim()))].filter(Boolean);
+    console.log('[PR] Supervisores únicos na planilha:', allSupsRaw);
+    console.log('[AV] Supervisores únicos disponibilidade:', [...new Set(avRows.map(r=>(r[COL_SUP]||'').trim()))].filter(Boolean));
+
     // Sem agrupamento: cada linha = 1 registro = 1 lead
     RAW_BY_DAY = [];
     PR_ROWS_RAW = [];

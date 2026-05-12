@@ -726,33 +726,6 @@ let currentTab=0;
 function fmt(n){return Math.round(n).toLocaleString('pt-BR');}
 function pct(a,b){return b>0?((a/b)*100).toFixed(1)+'%':'–';}
 
-function filterPR(t){
-  const dm=state.dateMode[t],sd=state.selDate[t],sup=state.selSup[t];
-  return RAW_BY_DAY.filter(r=>{
-    if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
-    if(dm==='dia')return r.date_str===sd;
-    return true;
-  });
-}
-function filterAv(t){
-  const dm=state.dateMode[t], sd=state.selDate[t], sd2=state.selDate2[t];
-  const rfrom=state.selRangeFrom[t], rto=state.selRangeTo[t];
-  const sup=state.selSup[t];
-  const ym=state.selMonth[t];
-  return RAW_AVAIL.filter(r=>{
-    if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
-    if(sup!=='Todos'&&r.SUPERVISOR!==sup) return false;
-    // Registros sem data (placeholders de agente) sempre passam
-    if(!r.date_str) return true;
-    if(ym&&ym!=='all'&&!r.date_str.startsWith(ym)) return false;
-    if(dm==='acum') return true;
-    if(dm==='dia')  return r.date_str===sd;
-    if(dm==='2dias')return r.date_str===sd||r.date_str===sd2;
-    if(dm==='sem'){const w=getWeekDates(sd);return r.date_str>=w.from&&r.date_str<=w.to;}
-    if(dm==='range')return r.date_str>=rfrom&&r.date_str<=rto;
-    return true;
-  });
-}
 function aggTotals(rows){
   const t={total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
   rows.forEach(r=>{t.total_leads+=r.total_leads;t.ate1+=r.ate1;t.ate2+=r.ate2;t.gt2+=r.gt2;t.sem_resp+=r.sem_resp;});

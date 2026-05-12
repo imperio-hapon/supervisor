@@ -516,11 +516,6 @@ async function loadData() {
     console.log('[Dashboard] primeira resposta linhas brutas:', prRows.length);
     if (prRows.length > 0) console.log('[Dashboard] primeira resposta linha 1:', JSON.stringify(prRows[0]));
 
-    // DEBUG: mostra supervisores únicos encontrados na planilha
-    const allSupsRaw=[...new Set(prRows.map(r=>(r['SUPERVISOR']||'').trim()))].filter(Boolean);
-    console.log('[PR] Supervisores únicos na planilha:', allSupsRaw);
-    console.log('[AV] Supervisores únicos disponibilidade:', [...new Set(avRows.map(r=>(r[COL_SUP]||'').trim()))].filter(Boolean));
-
     // Sem agrupamento: cada linha = 1 registro = 1 lead
     RAW_BY_DAY = [];
     PR_ROWS_RAW = [];
@@ -724,7 +719,9 @@ function normSup(s){
   const t=s.trim();
   if(t.startsWith('=')) return 'DESLIGADO';
   const u=t.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  if(u.includes('DESLIGADO')) return 'DESLIGADO';
+  if(u==='DESLIGADO'||u.includes('DESLIGADO')) return 'DESLIGADO';
+  // "BENVE" isolado → nome completo para exibição
+  if(u==='BENVE') return 'REBECA BENVE';
   return t; // mantém nome original da planilha
 }
 // Supervisores e cores — preenchidos dinamicamente após carregar os dados

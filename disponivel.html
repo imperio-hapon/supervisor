@@ -661,10 +661,16 @@ async function loadData() {
     const dateSet = new Set([...RAW_BY_DAY.map(r=>r.date_str), ...RAW_AVAIL.map(r=>r.date_str)]);
     ALL_DATES = [...dateSet].filter(Boolean).sort();
     const supSet = new Set([...RAW_BY_DAY.map(r=>r.SUPERVISOR), ...RAW_AVAIL.map(r=>r.SUPERVISOR)]);
-    const supArr=[...supSet].filter(s=>s&&!EQUIPES_REMOVIDAS.includes(s.toUpperCase())).sort();
-    // Ordem dinâmica: alfabética, mas supervisores com "BENVE" sempre ao final
-    SUPS_ORDER=[ ...supArr.filter(s=>!s.toUpperCase().includes('BENVE')).sort(),
-                 ...supArr.filter(s=>s.toUpperCase().includes('BENVE')).sort() ];
+    const supArr=[...supSet].filter(s=>s&&!EQUIPES_REMOVIDAS.includes(s.toUpperCase()));
+    // Ordena: não-BENVE alfabético primeiro, BENVE ao final
+    supArr.sort((a,b)=>{
+      const aB=a.toUpperCase().includes('BENVE');
+      const bB=b.toUpperCase().includes('BENVE');
+      if(aB&&!bB) return 1;
+      if(!aB&&bB) return -1;
+      return a.localeCompare(b);
+    });
+    SUPS_ORDER=supArr.slice();
     SUP_C={};
     SUPS_ORDER.forEach((s,i)=>{ SUP_C[s]=SUP_PALETTE[i%SUP_PALETTE.length]; });
     ALL_SUPS=SUPS_ORDER.slice();
@@ -718,7 +724,6 @@ function normSup(s){
 }
 // Supervisores e cores — preenchidos dinamicamente após carregar os dados
 let SUPS_ORDER=[];
-const EQUIPES_OCULTAS=['ADMINISTRATIVO'];
 
 // Paleta de cores para equipes (atribuída na ordem de aparecimento)
 const SUP_PALETTE=[

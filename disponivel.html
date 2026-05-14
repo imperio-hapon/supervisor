@@ -1190,8 +1190,68 @@ function renderPR(){
         </div>`;
       }
 
+    } else if(dm==='acum' && (!ym || ym==='all')){
+      // ── COMPARATIVO MENSAL — todas as equipes × meses ──────────────────────
+      const monthSet=[...new Set(
+        RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())&&r.total_leads>0)
+          .map(r=>r.date_str.slice(0,7))
+      )].filter(Boolean).sort();
+
+      if(!monthSet.length){
+        compDiv.innerHTML=`<div class="card"><div class="card-title">Sem dados</div></div>`;
+      } else {
+        const curYM=new Date().toISOString().slice(0,7);
+        const monthSlices=monthSet.map(ym2=>({
+          label: monthLabel(ym2),
+          ym: ym2,
+          isCur: ym2===curYM,
+          filter: r=>r.date_str.startsWith(ym2)
+        }));
+        compDiv.innerHTML=`<div class="card" style="overflow-x:auto;margin-bottom:16px">
+          <div class="card-title">📅 Comparativo Mensal — Todas as Equipes</div>
+          <table style="width:100%;border-collapse:collapse;min-width:${200+monthSlices.length*155}px">
+            <thead><tr style="background:#F7F9FC">
+              <th style="text-align:left;padding:10px 12px;font-size:10px;color:#94A3B8;font-weight:700;letter-spacing:.7px;text-transform:uppercase;border-bottom:2px solid #E2E8F0;min-width:160px">Equipe</th>
+              ${monthSlices.map(s=>`
+                <th style="text-align:center;padding:10px 8px;border-bottom:2px solid #E2E8F0;border-left:1px solid #E2E8F0;min-width:145px;background:${s.isCur?'#F0FDF4':'#F7F9FC'}">
+                  <div style="font-size:12px;font-weight:800;color:#1A2332">${s.label}</div>
+                  ${s.isCur?'<div style="font-size:9px;color:#10B981;font-weight:600">● atual</div>':''}
+                </th>`).join('')}
+            </tr></thead>
+            <tbody>${visibleSups.map(sup=>{
+              const sc=SUP_C[sup]||{bg:'#EEE',tc:'#666'};
+              const baseRows=RAW_BY_DAY.filter(r=>r.SUPERVISOR===sup&&r.total_leads>0);
+              const cells=monthSlices.map((s,si)=>{
+                const rows=baseRows.filter(s.filter);
+                const t=aggTotals(rows);
+                const lr=t.ate1+t.ate2+t.gt2;
+                const p2=lr>0?((t.ate1+t.ate2)/lr*100):0;
+                const st=lr>0?agStatus(p2):null;
+                let delta=null;
+                if(si>0){
+                  const pr=aggTotals(baseRows.filter(monthSlices[si-1].filter));
+                  const plr=pr.ate1+pr.ate2+pr.gt2;
+                  if(plr>0&&lr>0) delta=p2-((pr.ate1+pr.ate2)/plr*100);
+                }
+                return `<td style="text-align:center;padding:10px 8px;border-bottom:1px solid #F0F4F8;border-left:1px solid #F0F4F8;background:${s.isCur?'#F0FDF4':''}">
+                  ${lr>0?`
+                    <div style="font-size:20px;font-weight:900;color:${st.color}">${p2.toFixed(1)}%</div>
+                    <div style="font-size:10px;color:#94A3B8">${fmt(lr)} leads</div>
+                    <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
+                    ${delta!==null?`<div style="font-size:10px;font-weight:700;color:${delta>=0?'#10B981':'#EF4444'};margin-top:3px">${delta>=0?'▲':'▼'}${Math.abs(delta).toFixed(1)}%</div>`:''}
+                  `:'<span style="color:#CBD5E0;font-size:12px">–</span>'}
+                </td>`;
+              }).join('');
+              return `<tr onmouseover="this.style.background='#F7FAFB'" onmouseout="this.style.background=''">
+                <td style="padding:10px 12px;border-bottom:1px solid #F0F4F8">
+                  <span class="eq-badge" style="background:${sc.bg};color:${sc.tc};font-size:11px;padding:4px 8px">${sup}</span>
+                </td>${cells}</tr>`;
+            }).join('')}</tbody>
+          </table>
+        </div>`;
+      }
+
     } else {
-      // ── ACUMULADO / DIA: cards por equipe ─────────────────────────────────
       const supTots=visibleSups.map(s=>({sup:s,...aggTotals(allRows.filter(r=>r.SUPERVISOR===s&&r.total_leads>0))}));
       const maxLeads=Math.max(...supTots.map(s=>s.ate1+s.ate2+s.gt2),1);
       compDiv.innerHTML=`<div class="comp-grid">${supTots.map(s=>{

@@ -293,6 +293,7 @@
       <input type="text" id="av-search" placeholder="Buscar promotor..." oninput="avPage=0;renderAvTable()">
     </div>
     <span style="font-size:12px;color:var(--sub)" id="av-count-label"></span>
+    <button onclick="exportAvCSV()" style="margin-left:auto;padding:6px 14px;background:#2563EB;color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px">⬇ Exportar CSV</button>
   </div>
 
   <div class="table-wrap" style="overflow-x:auto">
@@ -393,6 +394,39 @@ function exportAgCSV(){
   a.click();
   URL.revokeObjectURL(url);
 }
+function exportAvCSV(){
+  const avRows = filterAv(1);
+  const avData = aggAvByAgent(avRows);
+  if (!avData.length) { alert('Nenhum dado para exportar com os filtros atuais.'); return; }
+
+  const search = (document.getElementById('av-search')?.value || '').toLowerCase();
+  const filtered = search ? avData.filter(a => a.name.toLowerCase().includes(search) || (a.sup||'').toLowerCase().includes(search)) : avData;
+
+  const headers = ['Agente','Equipe','Total Horas','Dias','Média Diária (h)','Status'];
+  const rows = filtered.map(a => [
+    a.name,
+    a.sup || '',
+    a.totalH.toFixed(2),
+    a.days,
+    a.avgH.toFixed(2),
+    a.avgH >= 7 ? 'OK' : a.avgH >= 5 ? 'Atenção' : 'Crítico'
+  ]);
+
+  const csv = [headers, ...rows]
+    .map(row => row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(','))
+    .join('\n');
+
+  const bom  = '\uFEFF';
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const today = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+  a.href     = url;
+  a.download = `disponibilidade_agentes_${today}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 let avSortCol='avgH',        avSortDir=-1, avPage=0, avTotalPages=1;
 const PAGE = 15;
 
@@ -1360,7 +1394,7 @@ function renderPR(){
     document.getElementById(`pr-top10-${type}`).innerHTML=data.map((a,i)=>{
       const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
       return `<div class="top10-row" style="border-left:3px solid ${i<3?color:'transparent'}">
-        <div class="top10-medal">${medals[i]||`<span style="font-size:11px;color:#94A3B8;font-weight:700">${i+1}</span>`}</div>
+        <div class="top10-medal">${type==='best'?(medals[i]||`<span style="font-size:11px;color:#94A3B8;font-weight:700">${i+1}</span>`):`<span style="font-size:11px;color:#94A3B8;font-weight:700">${i+1}</span>`}</div>
         <div>
           <div class="top10-name">${a.name}</div>
           <span class="top10-badge" style="background:${sc.bg};color:${sc.tc}">${a.sup}</span>

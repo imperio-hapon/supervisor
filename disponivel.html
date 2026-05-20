@@ -755,7 +755,7 @@ function normSup(s){
   const u=t.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   if(u==='DESLIGADO'||u.includes('DESLIGADO')) return 'DESLIGADO';
   // "BENVE" isolado → nome completo para exibição
-  if(u==='BENVE') return 'REBECA BENVE';
+  if(u==='BENVE') return 'BENVE';
   return t; // mantém nome original da planilha
 }
 // Supervisores e cores — preenchidos dinamicamente após carregar os dados
@@ -944,9 +944,27 @@ function setPeriod(mode,t){
     (mode==='dia'||mode==='sem')?'':'none';
   document.getElementById(`date2-wrap-${t}`).style.display=
     mode==='2dias'?'':'none';
-  // For 2dias also show primary date picker
+  // For 2dias: auto-seleciona os 2 últimos dias úteis (excluindo hoje)
   if(mode==='2dias'){
     document.getElementById(`date-wrap-${t}`).style.display='';
+    // Calcula os 2 últimos dias úteis excluindo hoje
+    const allDates=(t===0?ALL_DATES:ALL_AVAIL_DATES||ALL_DATES).filter(Boolean);
+    const todayStr=new Date().toISOString().slice(0,10);
+    // Filtra datas passadas (sem hoje) e dias úteis (seg-sex)
+    const workdays=allDates.filter(d=>{
+      if(d>=todayStr) return false; // exclui hoje e futuros
+      const wd=new Date(d+'T12:00:00').getDay();
+      return wd>=1&&wd<=5; // apenas seg(1) a sex(5)
+    }).sort();
+    const last2=workdays.slice(-2);
+    if(last2.length>=1){
+      const sd1=document.getElementById(`sel-date-${t}`);
+      const sd2=document.getElementById(`sel-date2-${t}`);
+      if(sd1) sd1.value=last2[0]||'';
+      if(sd2) sd2.value=last2[1]||last2[0]||'';
+      state.selDate[t]=last2[0]||'';
+      state.selDate2[t]=last2[1]||last2[0]||'';
+    }
   }
   const rangeShow=mode==='range';
   document.getElementById(`range-wrap-${t}`).style.display=rangeShow?'':'none';
@@ -1385,7 +1403,7 @@ function renderPR(){
   // Top 10
   const minL=5;
   const sorted=[...agData].filter(a=>(a.ate1+a.ate2+a.gt2)>=minL);
-  const best=[...sorted].sort((a,b)=>b.pctAte2-a.pctAte2).slice(0,10);
+  const best=[...sorted].filter(a=>a.pctAte2>=80).sort((a,b)=>b.pctAte2-a.pctAte2).slice(0,10);
   const worst=[...sorted].sort((a,b)=>a.pctAte2-b.pctAte2).slice(0,10);
 
   ['best','worst'].forEach(type=>{

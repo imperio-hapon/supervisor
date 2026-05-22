@@ -127,7 +127,6 @@
     </div>
     <div class="kpi-strip">
       <div class="kpi-box"><div class="kpi-val" id="h-leads" style="color:#7EB3FF">–</div><div class="kpi-label">Leads Totais</div></div>
-      <div class="kpi-box"><div class="kpi-val" id="h-sem" style="color:#FC8181">–</div><div class="kpi-label">Enc. s/ Resposta</div><div class="kpi-sub" id="h-sem-pct" style="color:#FC8181"></div></div>
       <div class="kpi-box"><div class="kpi-val" id="h-ate2" style="color:#68D391">–</div><div class="kpi-label">Respondidos ≤2min</div><div class="kpi-sub" id="h-ate2-pct" style="color:#68D391"></div></div>
       <div class="kpi-box"><div class="kpi-val" id="h-gt2" style="color:#F6AD55">–</div><div class="kpi-label">Respondidos &gt;2min</div><div class="kpi-sub" id="h-gt2-pct" style="color:#F6AD55"></div></div>
     </div>
@@ -694,7 +693,12 @@ async function loadData() {
     // ── DATAS E SUPERVISORES ──────────────────────────────────────────────────
     const dateSet = new Set([...RAW_BY_DAY.map(r=>r.date_str), ...RAW_AVAIL.map(r=>r.date_str)]);
     ALL_DATES = [...dateSet].filter(Boolean).sort();
-    const supSet = new Set([...RAW_BY_DAY.map(r=>r.SUPERVISOR), ...RAW_AVAIL.map(r=>r.SUPERVISOR)]);
+    // Só inclui supervisores que têm ao menos 1 lead válido ou 1 registro de disponibilidade
+    const supsComDados = new Set([
+      ...RAW_BY_DAY.filter(r=>r.total_leads>0||r.ate1||r.ate2||r.gt2||r.sem_resp).map(r=>r.SUPERVISOR),
+      ...RAW_AVAIL.filter(r=>r.date_str).map(r=>r.SUPERVISOR)
+    ]);
+    const supSet = supsComDados;
     const supArr=[...supSet].filter(s=>s&&!EQUIPES_REMOVIDAS.includes(s.toUpperCase()));
     // Ordena: não-BENVE alfabético primeiro, BENVE ao final
     supArr.sort((a,b)=>{
@@ -907,10 +911,19 @@ function periodLabel(){
 function renderEquipeBtns(t){
   const container=document.getElementById(`equipe-btns-${t}`);
   const cur=state.selSup[t];
-  const sups=['Todos',...ALL_SUPS.filter(s=>!EQUIPES_OCULTAS.includes(s))];
+  // Filtra equipes que têm dados reais (ao menos 1 registro)
+  const rawData=t===0?RAW_BY_DAY:RAW_AVAIL;
+  // Filtra pelo período/mês ativos — não mostra equipes sem dados no filtro atual
+  const filteredForBtns=t===0?filterPR(t).filter(r=>r.total_leads>0||r.ate1||r.ate2||r.gt2||r.sem_resp):filterAv(t).filter(r=>r.date_str);
+  const supsComDados=new Set(filteredForBtns.map(r=>r.SUPERVISOR));
+  const sups=['Todos',...ALL_SUPS.filter(s=>!EQUIPES_OCULTAS.includes(s)&&supsComDados.has(s))];
+  // Se equipe selecionada sumiu, volta para Todos
+  if(cur!=='Todos'&&!sups.includes(cur)){
+    state.selSup[t]='Todos';
+  }
   container.innerHTML=sups.map(s=>{
     const sc=s==='Todos'?{bg:'#E2E8F0',tc:'#1A2332'}:(SUP_C[s]||{bg:'#EEE',tc:'#666'});
-    const isActive=cur===s;
+    const isActive=state.selSup[t]===s;
     return `<button class="equipe-btn${isActive?' active':''}"
       style="background:${sc.bg};color:${sc.tc};border-color:${isActive?sc.tc:'transparent'}"
       onclick="selectEquipe('${s}',${t})">${s==='Todos'?'Todas as Equipes':s}</button>`;
@@ -947,14 +960,12 @@ function setPeriod(mode,t){
   // For 2dias: auto-seleciona os 2 últimos dias úteis (excluindo hoje)
   if(mode==='2dias'){
     document.getElementById(`date-wrap-${t}`).style.display='';
-    // Calcula os 2 últimos dias úteis excluindo hoje
-    const allDates=(t===0?ALL_DATES:ALL_AVAIL_DATES||ALL_DATES).filter(Boolean);
+    const allDates=(t===0?ALL_DATES:(ALL_AVAIL_DATES||ALL_DATES)).filter(Boolean);
     const todayStr=new Date().toISOString().slice(0,10);
-    // Filtra datas passadas (sem hoje) e dias úteis (seg-sex)
     const workdays=allDates.filter(d=>{
-      if(d>=todayStr) return false; // exclui hoje e futuros
+      if(d>=todayStr) return false;
       const wd=new Date(d+'T12:00:00').getDay();
-      return wd>=1&&wd<=5; // apenas seg(1) a sex(5)
+      return wd>=1&&wd<=5;
     }).sort();
     const last2=workdays.slice(-2);
     if(last2.length>=1){
@@ -1147,8 +1158,6 @@ function renderPR(){
   // Header usa allRows (inclui todos os supervisores, respeita mês e período)
   const tots0all=aggTotals(allRows);
   document.getElementById('h-leads').textContent=fmt(tots0all.ate1+tots0all.ate2+tots0all.gt2);
-  document.getElementById('h-sem').textContent=fmt(tots0all.sem_resp);
-  document.getElementById('h-sem-pct').textContent=pct(tots0all.sem_resp,tots0all.total_leads);
   document.getElementById('h-ate2').textContent=fmt(tots0all.ate1+tots0all.ate2);
   document.getElementById('h-ate2-pct').textContent=pct(tots0all.ate1+tots0all.ate2,tots0all.ate1+tots0all.ate2+tots0all.gt2);
   document.getElementById('h-gt2').textContent=fmt(tots0all.gt2);
@@ -1159,7 +1168,9 @@ function renderPR(){
     kpiDiv.style.display='none';
     const dm=state.dateMode[0];
     const ym=state.selMonth[0];
-    const visibleSups=ALL_SUPS.filter(s=>!EQUIPES_OCULTAS.includes(s));
+    // Só mostra equipes com dados reais no período/filtro ativo
+    const supsComDadosAtual=new Set(allRows.filter(r=>r.total_leads>0||r.ate1||r.ate2||r.gt2||r.sem_resp).map(r=>r.SUPERVISOR));
+    const visibleSups=ALL_SUPS.filter(s=>!EQUIPES_OCULTAS.includes(s)&&supsComDadosAtual.has(s));
 
     if(dm==='sem'||dm==='2dias'||dm==='range'){
       // ── TABELA COMPARATIVA — todas as equipes × fatias de tempo ──────────
@@ -1652,7 +1663,10 @@ function renderAvail(){
   const dm=state.dateMode[1];
 
   if(avCompDiv && isTodosAv){
-    const supsAv=SUPS_ORDER.filter(s=>!EQUIPES_OCULTAS.includes(s)&&RAW_AVAIL.some(r=>r.SUPERVISOR===s));
+    // Só mostra equipes com dados no filtro ativo de disponibilidade
+    const avRowsFiltered=filterAv(1);
+    const supsAvComDados=new Set(avRowsFiltered.filter(r=>r.date_str).map(r=>r.SUPERVISOR));
+    const supsAv=SUPS_ORDER.filter(s=>!EQUIPES_OCULTAS.includes(s)&&supsAvComDados.has(s));
 
     if(dm==='sem'||dm==='2dias'||dm==='range'){
       // ── TABELA COMPARATIVA — todas as equipes × fatias de tempo ──────────

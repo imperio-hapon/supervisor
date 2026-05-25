@@ -200,6 +200,15 @@ tbody tr:hover td{color:var(--text-dark);}
 .dkpi.eq-btn::after{content:'→ Ver Equipe';position:absolute;bottom:10px;right:12px;font-size:8px;color:rgba(255,255,255,.4);font-weight:600;pointer-events:none;transition:color .15s;}
 .dkpi.eq-btn:hover::after{color:rgba(255,255,255,.85);}
 
+/* ── PROMOTOR CHARTS ──────────────────────────────────────────── */
+.promo-chart-tabs{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.pct-btn{padding:6px 18px;border-radius:18px;border:1.5px solid var(--border-md);background:transparent;font-size:11.5px;font-weight:700;cursor:pointer;color:var(--text-soft);font-family:'Inter',sans-serif;transition:all .18s;}
+.pct-btn:hover{border-color:var(--josy);color:var(--josy);background:rgba(3,105,161,.06);}
+.pct-btn.active{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:0 2px 8px rgba(15,30,53,.2);}
+.promo-charts-wrap{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:22px;}
+.promo-chart-card{overflow:hidden;}
+.scatter-legend{display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap;}
+
 /* ── TAG DRILL-DOWN MODAL ─────────────────────────────────────── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,30,53,.6);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;animation:fadeIn .2s ease;}
@@ -394,9 +403,26 @@ tbody tr:hover td{color:var(--text-dark);}
       <table class="tag-t"><thead><tr><th>Tag</th><th class="r">Qtd</th><th class="r">%</th></tr></thead><tbody id="tbi"></tbody></table>
     </div>
   </div>
-</div>
 
-<!-- ── PAGE: SUPERVISORES ─────────────────────────────────────────────────── -->
+  <!-- PROMOTOR CHARTS -->
+  <div class="sec"><span>📊</span> Análise de Promotores</div>
+
+  <!-- Chart toggle tabs -->
+  <div class="promo-chart-tabs" id="promo-chart-tabs">
+    <button class="pct-btn active" id="pct-ofensores" onclick="switchPromoChart('ofensores')">🔴 Top Ofensores</button>
+    <button class="pct-btn" id="pct-conversao" onclick="switchPromoChart('conversao')">💰 Top Conversão</button>
+    <button class="pct-btn" id="pct-volume" onclick="switchPromoChart('volume')">📦 Maior Volume</button>
+    <div style="margin-left:auto;font-size:10px;color:var(--text-faint)" id="promo-chart-info"></div>
+  </div>
+
+  <div class="promo-charts-wrap">
+    <div class="cw promo-chart-card" style="grid-column:1/-1">
+      <div class="card-lbl light" id="promo-chart-title" style="margin-bottom:0"></div>
+      <svg id="promo-bar-chart" width="100%" viewBox="0 0 860 740" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+  </div>
+
+</div>
 <div class="page" id="page-sups">
   <div class="sec"><span>👥</span> Equipes e Promotores · Gestão Josy</div>
 
@@ -560,6 +586,7 @@ function renderAll() {
   buildTagTables(s);
   buildEquipeCards(s.supMap);
   buildSupAccordion(s.supMap, s.promoMap);
+  buildPromoCharts(data);
   renderBase();
 }
 
@@ -1220,6 +1247,344 @@ window.resetFilter=function(){
 };
 document.getElementById('dt-from').addEventListener('change',e=>{dtFrom=e.target.value;document.querySelectorAll('.pst').forEach(b=>b.classList.remove('active'));renderAll();});
 document.getElementById('dt-to').addEventListener('change',e=>{dtTo=e.target.value;document.querySelectorAll('.pst').forEach(b=>b.classList.remove('active'));renderAll();});
+
+// ── PROMOTOR CHARTS ───────────────────────────────────────────────────────
+let curPromoChart = 'ofensores';
+
+const EQ_COLORS = {
+  'EQUIPE ALFA':        '#0369a1',
+  'EQUIPE FENIX':       '#be123c',
+  'EQUIPE GLADIADORES': '#0f766e',
+  'EQUIPE BENVE':       '#b45309',
+};
+
+function getPromoStats(data) {
+  const map = {};
+  data.forEach(r => {
+    const k = r.equipe + '||' + r.promotor;
+    if(!map[k]) map[k] = {name:r.promotor, equipe:r.equipe||r.supervisor, total:0, prod:0, improd:0, aberto:0, fech:0};
+    const m = map[k]; m.total++;
+    if(r.tipo==='Produtivo') m.prod++;
+    else if(r.tipo==='Improdutivo') m.improd++;
+    else m.aberto++;
+    if(r.tag && FECH.has(r.tag)) m.fech++;
+  });
+  return Object.values(map)
+    .filter(p => p.total >= 3)
+    .map(p => ({
+      ...p,
+      pctImprod: p.total>0 ? +(p.improd/p.total*100).toFixed(1) : 0,
+      pctProd:   p.total>0 ? +(p.prod/p.total*100).toFixed(1)   : 0,
+      pctFech:   p.total>0 ? +(p.fech/p.total*100).toFixed(1)   : 0,
+    }));
+}
+
+function buildPromoCharts(data) {
+  const promos = getPromoStats(data);
+
+  const ofensores = [...promos].sort((a,b)=>b.pctImprod-a.pctImprod).slice(0,15);
+  const conversao = [...promos].sort((a,b)=>b.pctFech-a.pctFech).slice(0,15);
+  const volumeTop = [...promos].sort((a,b)=>b.total-a.total).slice(0,15);
+
+  document.getElementById('promo-chart-info').textContent =
+    promos.length + ' promotores ativos (≥3 leads) · ' + data.length.toLocaleString('pt-BR') + ' leads no período';
+
+  const barData  = curPromoChart==='ofensores' ? ofensores : curPromoChart==='conversao' ? conversao : volumeTop;
+  const barTitle = curPromoChart==='ofensores' ? 'Top 15 Ofensores — Maior % Improdutivo'
+                 : curPromoChart==='conversao'  ? 'Top 15 Conversão — Maior % Fechamentos'
+                 : 'Top 15 Volume — Mais Leads Recebidos';
+
+  document.getElementById('promo-chart-title').textContent = barTitle;
+  drawBarChart(barData);
+}
+
+function drawBarChart(data) {
+  const ns  = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('promo-bar-chart');
+
+  // Dynamic height: 52px per row + header legend + footer
+  const ROWS   = data.length;
+  const ROW_H  = 46;
+  const LEG_H  = 50;   // top legend area
+  const FOOT_H = 32;   // x-axis labels
+  const W      = 860;
+  const H      = LEG_H + ROWS * ROW_H + FOOT_H;
+  const PL     = 190;  // left labels
+  const PR     = 130;  // right stats column
+  const PT     = LEG_H;
+  const CW     = W - PL - PR;
+  const CH     = ROWS * ROW_H;
+  const BAR_H  = 22;
+  const BAR_PAD = (ROW_H - BAR_H) / 2;
+
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  svg.innerHTML = '';
+
+  function el(tag, attrs, txt) {
+    const e = document.createElementNS(ns, tag);
+    Object.entries(attrs).forEach(([k,v]) => e.setAttribute(k, v));
+    if(txt !== undefined) e.textContent = txt;
+    return e;
+  }
+  function txt(x, y, content, attrs) {
+    return el('text', { x, y, 'font-family':'Inter,sans-serif', ...attrs }, content);
+  }
+
+  // ── maxVal for scale ────────────────────────────────────────────────────
+  const maxVal = curPromoChart === 'ofensores' ? Math.max(1,...data.map(d=>d.total))
+               : curPromoChart === 'conversao'  ? Math.max(1,...data.map(d=>d.total))
+               : Math.max(1,...data.map(d=>d.total));
+  const scX = v => (v / maxVal) * CW;
+
+  // ── LEGEND at top ───────────────────────────────────────────────────────
+  const legendItems = curPromoChart === 'ofensores'
+    ? [{c:'#fbbf24',l:'Improdutivo'},{c:'#22d3ee',l:'Produtivo'},{c:'#e2e8f0',l:'Em aberto'}]
+    : curPromoChart === 'conversao'
+    ? [{c:'#7c3aed',l:'Fechados'},{c:'#22d3ee',l:'Produtivo (sem fech.)'},{c:'#fbbf24',l:'Improdutivo'},{c:'#e2e8f0',l:'Em aberto'}]
+    : [{c:'#22d3ee',l:'Produtivo'},{c:'#fbbf24',l:'Improdutivo'},{c:'#7c3aed',l:'Fechados'},{c:'#e2e8f0',l:'Em aberto'}];
+
+  // Legend background
+  svg.appendChild(el('rect',{x:0,y:0,width:W,height:LEG_H,fill:'#f8fafc',rx:'8'}));
+
+  // Title strip
+  const titleMap = {
+    ofensores:'🔴  Maiores % de Improdutivo — barras empilhadas (Improd. · Produt. · Em aberto)',
+    conversao: '💰  Maiores % de Fechamento — barras empilhadas (Fechados · Produt. · Improd. · Em aberto)',
+    volume:    '📦  Maiores Volumes — barras empilhadas (Produt. · Improd. · Em aberto)',
+  };
+  svg.appendChild(txt(PL, 16, titleMap[curPromoChart], {'font-size':'10.5','font-weight':'700',fill:'#334155'}));
+
+  let lx = PL;
+  legendItems.forEach(li => {
+    svg.appendChild(el('rect',{x:lx, y:24, width:11, height:11, fill:li.c, rx:'3'}));
+    svg.appendChild(txt(lx+15, 34, li.l, {'font-size':'10',fill:'#64748b','font-weight':'600'}));
+    lx += li.l.length * 6.5 + 30;
+  });
+
+  // Equipe legend
+  let ex = PL;
+  svg.appendChild(txt(ex, 47, 'Equipes:', {'font-size':'9.5',fill:'#94a3b8','font-weight':'700'}));
+  ex += 52;
+  Object.entries(EQ_COLORS).forEach(([eq, c]) => {
+    const label = eq.replace('EQUIPE ','');
+    svg.appendChild(el('circle',{cx:ex+4, cy:43, r:'5', fill:c}));
+    svg.appendChild(txt(ex+12, 47, label, {'font-size':'9.5',fill:c,'font-weight':'700'}));
+    ex += label.length * 6.8 + 24;
+  });
+
+  // ── CHART AREA background ────────────────────────────────────────────────
+  svg.appendChild(el('rect',{x:PL,y:PT,width:CW,height:CH,fill:'#ffffff',rx:'0'}));
+
+  // ── X AXIS LABELS & GRID ─────────────────────────────────────────────────
+  [0,.25,.5,.75,1].forEach(f => {
+    const x   = PL + f*CW;
+    const v   = Math.round(f*maxVal);
+    const lbl = curPromoChart === 'volume' ? v : v + (f>0?'':'');
+    // zebra grid bands
+    if(f>0 && f<1) {
+      svg.appendChild(el('line',{x1:x,y1:PT,x2:x,y2:PT+CH,stroke:'#e2e8f0','stroke-width':'1','stroke-dasharray':'4,4'}));
+    }
+    svg.appendChild(txt(x, PT+CH+16, lbl===0?'0':String(lbl), {'text-anchor':'middle','font-size':'9',fill:'#94a3b8'}));
+  });
+  // X axis label
+  const xLbl = curPromoChart==='volume' ? 'Número de leads'
+             : curPromoChart==='ofensores' ? 'Leads (barras empilhadas)'
+             : 'Leads (barras empilhadas)';
+  svg.appendChild(txt(PL+CW/2, PT+CH+28, xLbl, {'text-anchor':'middle','font-size':'9.5',fill:'#64748b','font-weight':'600'}));
+
+  // ── RIGHT COLUMN HEADER ───────────────────────────────────────────────────
+  const rhY = PT - 8;
+  const COL_TOTAL = W - PR + 8;
+  const COL_MAIN  = W - PR + 52;
+  const COL_FECH  = W - PR + 96;
+  svg.appendChild(txt(COL_TOTAL, rhY, 'Total', {'text-anchor':'middle','font-size':'8.5','font-weight':'700',fill:'#64748b'}));
+  const mainHdr = curPromoChart==='ofensores' ? '% Improd' : curPromoChart==='conversao' ? '% Conv.' : '% Prod';
+  svg.appendChild(txt(COL_MAIN,  rhY, mainHdr, {'text-anchor':'middle','font-size':'8.5','font-weight':'700',fill:'#64748b'}));
+  svg.appendChild(txt(COL_FECH,  rhY, 'Fechados', {'text-anchor':'middle','font-size':'8.5','font-weight':'700',fill:'#64748b'}));
+
+  // Separator line
+  svg.appendChild(el('line',{x1:W-PR+2,y1:PT-14,x2:W-PR+2,y2:PT+CH,stroke:'#e2e8f0','stroke-width':'1'}));
+
+  // ── ROWS ──────────────────────────────────────────────────────────────────
+  data.forEach((d, i) => {
+    const y      = PT + i*ROW_H;
+    const barY   = y + BAR_PAD;
+    const midY   = barY + BAR_H/2 + 3.5;
+    const eqC    = EQ_COLORS[d.equipe] || '#64748b';
+    const isEven = i % 2 === 0;
+
+    // Row background (zebra)
+    svg.appendChild(el('rect',{x:0,y,width:W,height:ROW_H,fill:isEven?'#fafbfc':'#ffffff'}));
+
+    // Rank badge
+    const rankBg = i===0?'#0369a1':i===1?'#0891b2':i===2?'#7c3aed':'#e2e8f0';
+    const rankTxt= i===0?'#fff':i===1?'#fff':i===2?'#fff':'#94a3b8';
+    svg.appendChild(el('rect',{x:4,y:barY,width:18,height:18,rx:'4',fill:rankBg}));
+    svg.appendChild(txt(13, barY+13, '#'+(i+1), {'text-anchor':'middle','font-size':'8','font-weight':'800',fill:rankTxt}));
+
+    // Equipe dot
+    svg.appendChild(el('circle',{cx:26,cy:barY+9,r:'4',fill:eqC}));
+
+    // Promotor name
+    const name = d.name.length > 22 ? d.name.slice(0,21)+'…' : d.name;
+    svg.appendChild(txt(32, barY+7, name, {'font-size':'10.5','font-weight':'700',fill:'#1e293b'}));
+    const eqLabel = d.equipe.replace('EQUIPE ','');
+    svg.appendChild(txt(32, barY+18, eqLabel, {'font-size':'8.5','font-weight':'600',fill:eqC}));
+
+    // Stacked bars
+    const totalLeads = d.total;
+    if(totalLeads > 0) {
+      // Determine segment order and colors per mode
+      let segs;
+      if(curPromoChart==='ofensores') {
+        segs = [{v:d.improd,c:'#fbbf24'},{v:d.prod,c:'#22d3ee'},{v:d.aberto,c:'#e2e8f0'}];
+      } else if(curPromoChart==='conversao') {
+        segs = [{v:d.fech,c:'#7c3aed'},{v:d.prod-d.fech,c:'#22d3ee'},{v:d.improd,c:'#fbbf24'},{v:d.aberto,c:'#e2e8f0'}];
+      } else {
+        segs = [{v:d.prod,c:'#22d3ee'},{v:d.improd,c:'#fbbf24'},{v:d.aberto,c:'#e2e8f0'}];
+      }
+
+      let cx = PL;
+      segs.forEach(s => {
+        const sw = scX(Math.max(0, s.v));
+        if(sw > 0.5) {
+          svg.appendChild(el('rect',{x:cx,y:barY,width:sw,height:BAR_H,fill:s.c,rx:'0'}));
+          cx += sw;
+        }
+      });
+
+      // Rounded corners overlay on the full bar
+      const totalW = scX(totalLeads);
+      svg.appendChild(el('rect',{x:PL,y:barY,width:Math.max(1,totalW),height:BAR_H,fill:'none',stroke:'rgba(0,0,0,.06)','stroke-width':'1',rx:'4'}));
+
+      // Inline % label inside bar if wide enough
+      const mainVal = curPromoChart==='ofensores' ? d.pctImprod
+                    : curPromoChart==='conversao'  ? d.pctFech
+                    : d.pctProd;
+      const mainW = curPromoChart==='ofensores' ? scX(d.improd)
+                  : curPromoChart==='conversao'  ? scX(d.fech)
+                  : scX(d.prod);
+      if(mainW > 26) {
+        svg.appendChild(txt(PL+mainW/2, barY+BAR_H/2+3.5, mainVal+'%',
+          {'text-anchor':'middle','font-size':'9','font-weight':'800',fill:'rgba(0,0,0,.55)'}));
+      }
+    }
+
+    // Right column stats
+    svg.appendChild(txt(COL_TOTAL, midY, d.total, {'text-anchor':'middle','font-size':'11','font-weight':'800',fill:'#0f172a'}));
+
+    const mainPct = curPromoChart==='ofensores' ? d.pctImprod+'%'
+                  : curPromoChart==='conversao'  ? d.pctFech+'%'
+                  : d.pctProd+'%';
+    const mainCol = curPromoChart==='ofensores' ? '#d97706'
+                  : curPromoChart==='conversao'  ? '#7c3aed' : '#0891b2';
+    svg.appendChild(txt(COL_MAIN, midY, mainPct,
+      {'text-anchor':'middle','font-size':'11','font-weight':'800',fill:mainCol}));
+
+    const fechC = d.fech > 0 ? '#7c3aed' : '#94a3b8';
+    svg.appendChild(txt(COL_FECH, midY, d.fech,
+      {'text-anchor':'middle','font-size':'11','font-weight':'800',fill:fechC}));
+
+    // Separator line
+    if(i < data.length-1) {
+      svg.appendChild(el('line',{x1:0,y1:y+ROW_H,x2:W,y2:y+ROW_H,stroke:'#f1f5f9','stroke-width':'1'}));
+    }
+  });
+
+  // ── BOTTOM AXIS LINE ──────────────────────────────────────────────────────
+  svg.appendChild(el('line',{x1:PL,y1:PT+CH,x2:PL+CW,y2:PT+CH,stroke:'#cbd5e1','stroke-width':'1.5'}));
+  svg.appendChild(el('line',{x1:PL,y1:PT,x2:PL,y2:PT+CH,stroke:'#cbd5e1','stroke-width':'1.5'}));
+}
+
+function drawScatterChart(data) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('promo-scatter-chart');
+  svg.innerHTML = '';
+  if(!data.length) return;
+
+  const W=560, H=380, PL=36, PR=16, PT=14, PB=40;
+  const CW=W-PL-PR, CH=H-PT-PB;
+
+  function el(tag, attrs, txt) {
+    const e = document.createElementNS(ns, tag);
+    Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));
+    if(txt!==undefined) e.textContent=txt;
+    return e;
+  }
+
+  const maxVol  = Math.max(...data.map(d=>d.total));
+  // X = % improdutivo (0-100), Y = % fechados (0-max)
+  const maxFech = Math.max(5, ...data.map(d=>d.pctFech));
+  const scX = v => PL + (v/100)*CW;
+  const scY = v => PT+CH - (v/maxFech)*CH;
+
+  // Grid
+  [0,25,50,75,100].forEach(v=>{
+    const x=scX(v);
+    svg.appendChild(el('line',{x1:x,y1:PT,x2:x,y2:PT+CH,stroke:'#f1f5f9','stroke-width':'1'}));
+    svg.appendChild(el('text',{x:x,y:PT+CH+14,'text-anchor':'middle','font-size':'8',fill:'#94a3b8','font-family':'Inter,sans-serif'},v+'%'));
+  });
+  [0,Math.round(maxFech*0.33),Math.round(maxFech*0.67),Math.round(maxFech)].forEach(v=>{
+    const y=scY(v);
+    svg.appendChild(el('line',{x1:PL,y1:y,x2:W-PR,y2:y,stroke:'#f1f5f9','stroke-width':'1'}));
+    svg.appendChild(el('text',{x:PL-4,y:y+3,'text-anchor':'end','font-size':'8',fill:'#94a3b8','font-family':'Inter,sans-serif'},v+'%'));
+  });
+
+  // Axis lines
+  svg.appendChild(el('line',{x1:PL,y1:PT,x2:PL,y2:PT+CH+1,stroke:'#cbd5e1','stroke-width':'1'}));
+  svg.appendChild(el('line',{x1:PL,y1:PT+CH,x2:W-PR,y2:PT+CH,stroke:'#cbd5e1','stroke-width':'1'}));
+
+  // Axis labels
+  svg.appendChild(el('text',{x:PL+CW/2,y:H-4,'text-anchor':'middle','font-size':'9','font-weight':'600',fill:'#64748b','font-family':'Inter,sans-serif'},'% Improdutivo →'));
+  svg.appendChild(el('text',{x:8,y:PT+CH/2,'text-anchor':'middle','font-size':'9','font-weight':'600',fill:'#64748b',transform:'rotate(-90,8,'+(PT+CH/2)+')',fontFamily:'Inter,sans-serif'},'% Fechados'));
+
+  // Quadrant reference line (median)
+  const medX = scX(50);
+  svg.appendChild(el('line',{x1:medX,y1:PT,x2:medX,y2:PT+CH,stroke:'#fbbf24','stroke-width':'1.5','stroke-dasharray':'5,4',opacity:'0.6'}));
+  svg.appendChild(el('text',{x:medX+3,y:PT+10,'font-size':'8',fill:'#d97706','font-family':'Inter,sans-serif'},'50% improd.'));
+
+  // Dots
+  data.forEach(d => {
+    const cx   = scX(d.pctImprod);
+    const cy   = scY(d.pctFech);
+    const r    = Math.max(4, Math.min(14, (d.total/maxVol)*18+3));
+    const col  = EQ_COLORS[d.equipe] || '#64748b';
+    const isOfensor = d.pctImprod >= 50;
+    const isConversor = d.pctFech >= 15;
+
+    svg.appendChild(el('circle',{cx,cy,r,fill:col,opacity:'0.75','stroke':col,'stroke-width':'1.5'}));
+
+    // Label for notable points
+    if(isOfensor || isConversor || d.total >= 60) {
+      const name = d.name.split(' ')[0];
+      const lx = cx+r+3, ly = cy+3;
+      svg.appendChild(el('text',{x:lx,y:ly,'font-size':'8.5','font-weight':'700',fill:col,'font-family':'Inter,sans-serif'},name));
+    }
+
+    // Tooltip title element for hover (SVG title)
+    const t = document.createElementNS(ns,'title');
+    t.textContent = d.name+'\nImprodutivo: '+d.pctImprod+'% ('+d.improd+')\nFechados: '+d.pctFech+'% ('+d.fech+')\nTotal: '+d.total;
+    svg.lastChild.appendChild ? svg.appendChild(t) : null;
+    const circ = svg.querySelector('circle:last-of-type') || el('circle',{});
+    // Append title to last circle
+    const circles = svg.querySelectorAll('circle');
+    if(circles.length > 0) circles[circles.length-1].appendChild(t);
+  });
+
+  // Legend corner labels
+  svg.appendChild(el('text',{x:PL+4,y:PT+12,'font-size':'8',fill:'#22d3ee','font-weight':'700','font-family':'Inter,sans-serif'},'✓ Alta conversão'));
+  svg.appendChild(el('text',{x:W-PR-4,y:PT+12,'text-anchor':'end','font-size':'8',fill:'#d97706','font-weight':'700','font-family':'Inter,sans-serif'},'⚠ Ofensor + converte'));
+  svg.appendChild(el('text',{x:PL+4,y:PT+CH-6,'font-size':'8',fill:'#94a3b8','font-weight':'700','font-family':'Inter,sans-serif'},'↓ Baixa performance'));
+  svg.appendChild(el('text',{x:W-PR-4,y:PT+CH-6,'text-anchor':'end','font-size':'8',fill:'#f87171','font-weight':'700','font-family':'Inter,sans-serif'},'🔴 Ofensor crítico'));
+}
+
+window.switchPromoChart = function(mode) {
+  curPromoChart = mode;
+  ['ofensores','conversao','volume'].forEach(k => {
+    document.getElementById('pct-'+k).classList.toggle('active', k===mode);
+  });
+  buildPromoCharts(filtered());
+};
 
 // INIT
 document.getElementById('pst-all').classList.add('active');

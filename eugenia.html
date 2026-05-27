@@ -287,17 +287,17 @@ tbody tr:hover td{color:var(--text-dark);}
 .sup-prog-f{height:100%;border-radius:99px;background:rgba(255,255,255,.9);transition:width .7s ease;}
 .sup-arrow{font-size:11px;color:rgba(255,255,255,.6);transition:transform .25s;margin-left:6px;flex-shrink:0;}
 .sup-arrow.open{transform:rotate(180deg);color:#fff;}
-.sup-body{display:none;background:#f8fafc;border-top:2px solid rgba(0,0,0,.08);}
+.sup-body{display:none;background:#f8fafc;border-top:2px solid rgba(0,0,0,.08);padding:12px;}
 .sup-body.open{display:block;animation:slideDown .25s ease;}
 @keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 .sup-body-header{padding:10px 16px 6px;font-size:8.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;border-bottom:1px solid var(--border);}
 
 /* ── PROMO CARDS — flip-card ──────────────────────────────────── */
-.promo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:14px;}
-.promo-card{height:130px;perspective:800px;cursor:pointer;}
+.promo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;padding:20px;align-items:stretch;}
+.promo-card{min-height:185px;height:auto;perspective:1000px;cursor:pointer;}
 .promo-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.4,0,.2,1);}
 .promo-card.flipped .promo-inner{transform:rotateY(180deg);}
-.promo-front,.promo-back{position:absolute;inset:0;border-radius:11px;backface-visibility:hidden;-webkit-backface-visibility:hidden;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.promo-front,.promo-back{position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.14);overflow-y:auto;}
 .promo-back{transform:rotateY(180deg);}
 
 /* front */
@@ -312,7 +312,7 @@ tbody tr:hover td{color:var(--text-dark);}
 
 /* back */
 .pb-name{font-size:10px;font-weight:800;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(0,0,0,.1);}
-.pb-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.pb-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
 .pb-item{background:rgba(255,255,255,.55);border-radius:7px;padding:6px 8px;text-align:center;}
 .pb-val{font-size:16px;font-weight:800;}
 .pb-lbl{font-size:7.5px;text-transform:uppercase;letter-spacing:.5px;opacity:.7;margin-top:1px;}

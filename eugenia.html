@@ -294,21 +294,22 @@ tbody tr:hover td{color:var(--text-dark);}
 
 /* ── PROMO CARDS — flip-card ──────────────────────────────────── */
 .promo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;padding:20px;align-items:stretch;}
-.promo-card{min-height:185px;height:auto;perspective:1000px;cursor:pointer;}
+.promo-card{height:200px;perspective:1000px;cursor:pointer;}
 .promo-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.4,0,.2,1);}
 .promo-card.flipped .promo-inner{transform:rotateY(180deg);}
-.promo-front,.promo-back{position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.14);overflow-y:auto;}
-.promo-back{transform:rotateY(180deg);}
+.promo-front,.promo-back{position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.14);overflow:hidden;}
+.promo-front{display:flex;flex-direction:column;}
+.promo-back{transform:rotateY(180deg);overflow-y:auto;}
 
 /* front */
-.pf-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.pf-name{font-size:11.5px;font-weight:800;color:#fff;line-height:1.2;flex:1;margin-right:6px;}
-.pf-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(255,255,255,.2);color:#fff;white-space:nowrap;}
+.pf-header{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:10px;}
+.pf-name{font-size:11.5px;font-weight:800;color:#fff;line-height:1.2;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.pf-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;background:rgba(255,255,255,.2);color:#fff;white-space:nowrap;flex-shrink:0;}
 .pf-total{font-size:30px;font-weight:800;color:#fff;letter-spacing:-1.5px;line-height:1;}
-.pf-total-lbl{font-size:8.5px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;}
-.pf-bar-row{margin-top:8px;display:flex;gap:3px;align-items:flex-end;height:16px;}
-.pf-seg{border-radius:2px 2px 0 0;min-width:4px;}
-.pf-hint{font-size:8px;color:rgba(255,255,255,.45);margin-top:5px;text-align:right;}
+.pf-total-lbl{font-size:8.5px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.pf-bar-row{margin-top:auto;display:flex;gap:4px;align-items:flex-end;height:36px;}
+.pf-seg{width:10px;border-radius:3px 3px 0 0;flex-shrink:0;}
+.pf-hint{font-size:8px;color:rgba(255,255,255,.45);margin-top:6px;text-align:right;}
 
 /* back */
 .pb-name{font-size:10px;font-weight:800;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(0,0,0,.1);}
@@ -1064,9 +1065,11 @@ function buildSupAccordion(supMap, promoMap) {
       const pp   = v.total > 0 ? +(v.prod   / v.total * 100).toFixed(0) : 0;
       const conv = v.total > 0 ? (v.fech / v.total * 100).toFixed(1) : '0.0';
       const badge = pp >= 40 ? '🔥 Alta' : pp >= 20 ? '📈 Média' : '❄️ Baixa';
-      const bP  = v.total > 0 ? Math.round(v.prod   / v.total * 52) : 0;
-      const bI  = v.total > 0 ? Math.round(v.improd / v.total * 52) : 0;
-      const bF  = v.total > 0 ? Math.round(v.fech   / v.total * 52) : 0;
+      // barras verticais proporcionais ao maior valor do card (altura máx 36px)
+      const bMax = Math.max(v.prod, v.improd, v.fech, 1);
+      const bP  = Math.round(v.prod   / bMax * 36);
+      const bI  = Math.round(v.improd / bMax * 36);
+      const bF  = Math.round(v.fech   / bMax * 36);
       return '<div class="promo-card" onclick="this.classList.toggle(\'flipped\')">'
         + '<div class="promo-inner">'
           + '<div class="promo-front" style="background:' + meta.front + '">'
@@ -1077,9 +1080,9 @@ function buildSupAccordion(supMap, promoMap) {
             + '<div class="pf-total">' + v.total + '</div>'
             + '<div class="pf-total-lbl">leads no período</div>'
             + '<div class="pf-bar-row">'
-              + '<div class="pf-seg" style="height:' + Math.max(4,bP) + 'px;width:' + Math.max(4,bP) + 'px;background:rgba(255,255,255,.9)"></div>'
-              + '<div class="pf-seg" style="height:' + Math.max(4,bI) + 'px;width:' + Math.max(4,bI) + 'px;background:rgba(255,255,255,.3)"></div>'
-              + '<div class="pf-seg" style="height:' + Math.max(3,bF*2) + 'px;width:' + Math.max(3,bF*2) + 'px;background:rgba(255,215,0,.85)"></div>'
+              + '<div class="pf-seg" title="Produtivos: ' + v.prod + '" style="height:' + Math.max(3,bP) + 'px;background:rgba(255,255,255,.9)"></div>'
+              + '<div class="pf-seg" title="Improdutivos: ' + v.improd + '" style="height:' + Math.max(3,bI) + 'px;background:rgba(255,255,255,.3)"></div>'
+              + '<div class="pf-seg" title="Vidas: ' + v.fech + '" style="height:' + Math.max(3,bF) + 'px;background:rgba(255,215,0,.85)"></div>'
             + '</div>'
             + '<div class="pf-hint">Toque para detalhes ↩</div>'
           + '</div>'

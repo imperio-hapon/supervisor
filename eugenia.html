@@ -1391,27 +1391,27 @@ function buildRankings(promos) {
       }).join('')
     : '<div style="padding:20px;text-align:center;color:#aaa;font-size:12px">Sem promotores com vidas no período</div>';
 
-  // Render Ofensores
-  const maxOfenImprod = Math.max(1, ...topOfen.map(p=>p.improd));
+  // Render Ofensores — mesma estrutura visual do Top Conversão
+  const maxOfenTotal = Math.max(1, ...topOfen.map(p=>p.total));
   document.getElementById('rk-ofen').innerHTML = topOfen.length
     ? topOfen.map((p, i) => {
-        const eq    = EQ_BADGE[p.equipe] || {bg:'rgba(148,163,184,.1)',c:'#64748b'};
-        const impW  = Math.round(p.improd / Math.max(1,p.total) * 100);
-        const warnClass = i < 3 ? 'warn' : 'normal';
+        const eq      = EQ_BADGE[p.equipe] || {bg:'rgba(148,163,184,.1)',c:'#64748b'};
+        const barW    = Math.round(p.total / maxOfenTotal * 100);
+        const warnCls = i < 3 ? 'warn' : 'normal';
         return '<div class="rk-row">'
-          + '<div class="rk-rank ' + warnClass + '">' + (i+1) + '</div>'
+          + '<div class="rk-rank ' + warnCls + '">' + (i+1) + '</div>'
           + '<div class="rk-info">'
             + '<div class="rk-name">' + p.name + '</div>'
             + '<span style="background:'+eq.bg+';color:'+eq.c+';padding:1px 6px;border-radius:99px;font-size:8.5px;font-weight:700">' + p.equipe.replace('EQUIPE ','') + '</span>'
           + '</div>'
           + '<div class="rk-vals">'
-            + '<div class="rk-val-item"><div class="rk-val-num" style="color:#d97706">' + p.total + '</div><div class="rk-val-lbl">Leads</div></div>'
-            + '<div class="rk-val-item"><div class="rk-val-num" style="color:#94a3b8">' + p.improd + '</div><div class="rk-val-lbl">Improd.</div></div>'
-            + '<div class="rk-val-item"><div class="rk-val-num" style="color:#be123c">' + Math.round(p.improd/p.total*100) + '%</div><div class="rk-val-lbl">% Improd.</div></div>'
+            + '<div class="rk-val-item"><div class="rk-val-num" style="color:#7c3aed">0</div><div class="rk-val-lbl">Vidas</div></div>'
+            + '<div class="rk-val-item"><div class="rk-val-num" style="color:#d97706">0%</div><div class="rk-val-lbl">Conv.</div></div>'
+            + '<div class="rk-val-item"><div class="rk-val-num" style="color:#94a3b8">' + p.total + '</div><div class="rk-val-lbl">Leads</div></div>'
           + '</div>'
           + '<div class="rk-bar-col">'
-            + '<div class="rk-minibar-bg"><div class="rk-minibar-f" style="width:'+impW+'%;background:linear-gradient(90deg,#d97706,#fbbf24)"></div></div>'
-            + '<div class="rk-minibar-lbl">' + Math.round(p.improd/p.total*100) + '% improd.</div>'
+            + '<div class="rk-minibar-bg"><div class="rk-minibar-f" style="width:'+barW+'%;background:linear-gradient(90deg,#d97706,#fbbf24)"></div></div>'
+            + '<div class="rk-minibar-lbl">' + p.total + ' leads · 0% conv.</div>'
           + '</div>'
         + '</div>';
       }).join('')

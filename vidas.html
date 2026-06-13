@@ -1094,10 +1094,18 @@ function setDiasUteis(val){
   var URLS={ ranking:url('867290851'), pf:url('0'), ade:url('719724632'), pme:url('971127286') };
   var MES_ALVO=6;
 
+  // ALIAS de nomes: resolve grafias divergentes entre planilhas (sistema x cadastro)
+  // chave = nome como aparece em alguma base; valor = nome oficial/canônico
+  var ALIAS={'ANDREZZA APARECIDA MACHINI':'ANDREZZA MACCHINI'};
+  var ALIAS_N={}; (function(){ for(var k in ALIAS){ if(ALIAS.hasOwnProperty(k)){
+    ALIAS_N[ k.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim() ]
+      = ALIAS[k].toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim(); } } })();
+
   function norm(s){ if(s==null)return '';s=String(s).toUpperCase().trim();
     s=s.replace(/\s*-\s*VENDEDOR ADM\s*$/,'');
     s=s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    return s.replace(/\s+/g,' ').trim(); }
+    s=s.replace(/\s+/g,' ').trim();
+    return ALIAS_N[s]||s; }
 
   function parseCSV(text){
     var rows=[],row=[],cur='',q=false,i,c;
@@ -1109,8 +1117,13 @@ function setDiasUteis(val){
     if(cur.length||row.length){ row.push(cur); rows.push(row); }
     return rows;
   }
-  function col(H,keys){ for(var i=0;i<H.length;i++){ var h=norm(H[i]);
-    for(var k=0;k<keys.length;k++) if(h.indexOf(keys[k])>=0) return i; } return -1; }
+  function col(H,keys){
+    for(var k=0;k<keys.length;k++){ for(var i=0;i<H.length;i++){ if(norm(H[i])===keys[k]) return i; } }
+    for(var k2=0;k2<keys.length;k2++){ for(var i2=0;i2<H.length;i2++){ var h=norm(H[i2]);
+      if(h.indexOf(keys[k2])>=0 && h.indexOf('SISTEMA')<0) return i2; } }
+    for(var k3=0;k3<keys.length;k3++){ for(var i3=0;i3<H.length;i3++){ if(norm(H[i3]).indexOf(keys[k3])>=0) return i3; } }
+    return -1; }
+  function colsAll(H,kw){ var idx=[]; kw=norm(kw); for(var i=0;i<H.length;i++){ if(norm(H[i]).indexOf(kw)>=0) idx.push(i); } return idx; }
   function num(x){ if(x==null)return 0; var s=String(x).trim().replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.');
     var n=parseFloat(s); return isNaN(n)?0:Math.round(n); }
   var EQUIPES=['HUMBERTO BANQUERI','LUIZ ROBERTO','REBECA MOURA','BENVE'];
@@ -1203,7 +1216,7 @@ function setDiasUteis(val){
           vd=col(H,['QTDE VIDAS','VIDAS']),cel=col(H,['CELULAR']),dt=col(H,['DATA DIGITACAO','DATA']),
           pl=col(H,['NOME_PLANO']); if(pl<0)pl=col(H,['NM_PLANO']); if(pl<0)pl=col(H,['PLANO']);
       var st=col(H,['STATUS OBRIGACAO','STATUS_OBRIGACAO','STATUS']);
-      for(i=1;i<rows.length;i++){ var r=rows[i]; if(!r||!(r[iProm]||'').trim()||!mes_ok(r))continue;
+      for(i=1;i<rows.length;i++){ var r=rows[i]; if(!r||!r.join('').trim())continue;
         out.push({supervisor:(r[iSup]||'').trim(),promotor:(r[iProm]||'').trim(),
           controle:c>=0?(r[c]||'').trim():'',cpf:cp>=0?(r[cp]||'').trim():'',
           nome:nm>=0?(r[nm]||'').trim():'',vidas:vd>=0?num(r[vd]):1,
@@ -1213,7 +1226,7 @@ function setDiasUteis(val){
       var cp2=col(H,['CPF']),nm2=col(H,['NM_USUARIO','NOME']),tp=col(H,['TP_USUARIO','TP_DEPENDENTE']),
           ms=col(H,['VL_MENSALIDADE']),pl2=col(H,['NM_PLANO','PLANO']),
           dt2=col(H,['DT_CADASTRAMENTO','DT_ADMISSAO','DATA']),si=col(H,['SITUACAO_USU','SITUACAO']);
-      for(i=1;i<rows.length;i++){ var r2=rows[i]; if(!r2||!(r2[iProm]||'').trim()||!mes_ok(r2))continue;
+      for(i=1;i<rows.length;i++){ var r2=rows[i]; if(!r2||!r2.join('').trim())continue;
         out.push({supervisor:(r2[iSup]||'').trim(),promotor:(r2[iProm]||'').trim(),
           cpf:cp2>=0?(r2[cp2]||'').trim():'',nome:nm2>=0?(r2[nm2]||'').trim():'',
           tp_usuario:tp>=0?(r2[tp]||'').trim():'',mensalidade:ms>=0?(r2[ms]||'').trim():'',
@@ -1223,7 +1236,7 @@ function setDiasUteis(val){
       var cd=col(H,['CODIGO']),em=col(H,['NM FANTASIA','NOME']),fo=col(H,['FONE']),
           qt=col(H,['QT.USU','QT USU','QTDE','VIDAS']),fa=col(H,['VL.FATURA','VL FATURA','FATURA']),
           dt3=col(H,['DT.VALID','DT VALID','DATA']),st3=col(H,['STATUS']);
-      for(i=1;i<rows.length;i++){ var r3=rows[i]; if(!r3||!(r3[iProm]||'').trim()||!mes_ok(r3))continue;
+      for(i=1;i<rows.length;i++){ var r3=rows[i]; if(!r3||!r3.join('').trim())continue;
         out.push({supervisor:(r3[iSup]||'').trim(),promotor:(r3[iProm]||'').trim(),
           codigo:cd>=0?(r3[cd]||'').trim():'',empresa:em>=0?(r3[em]||'').trim():'',
           fone:fo>=0?String(r3[fo]||'').replace(/\.0+$/,'').trim():'',vidas:qt>=0?num(r3[qt]):1,
@@ -1348,7 +1361,8 @@ function setDiasUteis(val){
         ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
   }
 
-  function get(u){ return fetch(u,{cache:'no-store'})
+  function get(u){ var sep=(u.indexOf('?')>=0?'&':'?'); var nu=u+sep+'_ts='+Date.now();
+    return fetch(nu,{cache:'no-store'})
       .then(function(r){ if(!r.ok)throw new Error('HTTP '+r.status); return r.text(); }); }
 
   function load(){

@@ -1154,14 +1154,18 @@ function setDiasUteis(val){
         iPF=col(H,['VIDAS PF']),iAD=col(H,['VIDAS ADE','ADESAO','ADESÃO']),
         iPM=col(H,['VIDAS PME']),iTOT=col(H,['VIDAS TOT','TOTAIS']),
         iMeta=col(H,['META']),iLeads=col(H,['LEADS']),
+        iMetaRank=col(H,['META RANKING','METARANKING','META RK','META_RANKING']),
         iDZ=col(H,['DIAS ZERADOS','DIAS ZERO','D.UTEIS S/ VENDER','D.ÚTEIS S/ VENDER','DIAS S/ VENDER','DIAS SEM VENDA','DIAS SEM VENDER']);
     if(iProm<0)return;
     var byKey={}; window.JUN_DATA.rawData.forEach(function(r){ byKey[norm(r.p)]=r; });
-    var supFF='', totPF=0,totA=0,totPME=0,totV=0,totMeta=0, found={}, metaSup={};
+    var supFF='', totPF=0,totA=0,totPME=0,totV=0,totMeta=0, found={}, metaSup={}, metaRankSup={};
     for(var r=1;r<rows.length;r++){ var row=rows[r]; if(!row)continue;
       var prom=(row[iProm]||'').trim();
       var sup=(iSup>=0?(row[iSup]||''):'').trim();
       if(sup&&sup.indexOf('Total')<0) supFF=sup;            // ffill supervisor
+      // META RANKING: capturada por supervisor (maior valor visto na coluna), independe de ter promotor
+      if(iMetaRank>=0){ var mr=num(row[iMetaRank]); var sk0=supFF;
+        if(sk0 && sk0.indexOf('Total')<0 && mr>0){ if(!metaRankSup[sk0]||mr>metaRankSup[sk0]) metaRankSup[sk0]=mr; } }
       if(!prom)continue;
       if(/total/i.test(prom)||/total/i.test(supFF))continue; // pula subtotais
       var pf=iPF>=0?num(row[iPF]):0, ad=iAD>=0?num(row[iAD]):0,
@@ -1181,8 +1185,15 @@ function setDiasUteis(val){
       if(!found[norm(rec.p)]){ rec.pf=0;rec.a=0;rec.pme=0;rec.v=0; } });
     window.JUN_DATA.vtot=totV;window.JUN_DATA.vpf=totPF;
     window.JUN_DATA.vade=totA;window.JUN_DATA.vpme=totPME;
-    // meta vem exatamente do RANKING (mesmo que 0), quando a coluna existir
-    if(iMeta>=0){
+    // meta vem do RANKING. Se houver coluna META RANKING, ela tem prioridade como meta da equipe.
+    var temMetaRank=false; for(var _k in metaRankSup){ if(metaRankSup.hasOwnProperty(_k)){ temMetaRank=true; break; } }
+    if(iMetaRank>=0 && temMetaRank){
+      // usa META RANKING por supervisor; total = soma das metas-ranking das equipes
+      var totMetaRank=0; for(var _k2 in metaRankSup){ if(metaRankSup.hasOwnProperty(_k2)) totMetaRank+=metaRankSup[_k2]; }
+      window.JUN_DATA.meta=totMetaRank;
+      window.JUN_DATA.meta_sup=metaRankSup;
+      if(typeof MES_ATIVO!=='undefined'&&MES_ATIVO===6&&typeof META_TOT!=='undefined') META_TOT=totMetaRank;
+    } else if(iMeta>=0){
       window.JUN_DATA.meta=totMeta;
       window.JUN_DATA.meta_sup=metaSup;
       if(typeof MES_ATIVO!=='undefined'&&MES_ATIVO===6&&typeof META_TOT!=='undefined') META_TOT=totMeta;

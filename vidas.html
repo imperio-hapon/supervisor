@@ -1126,6 +1126,9 @@ function setDiasUteis(val){
   function colsAll(H,kw){ var idx=[]; kw=norm(kw); for(var i=0;i<H.length;i++){ if(norm(H[i]).indexOf(kw)>=0) idx.push(i); } return idx; }
   function num(x){ if(x==null)return 0; var s=String(x).trim().replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.');
     var n=parseFloat(s); return isNaN(n)?0:Math.round(n); }
+  // versão decimal (não arredonda) — para conversão/percentuais (ex.: "42,97%" -> 42.97)
+  function numF(x){ if(x==null||x==='')return null; var s=String(x).trim().replace('%','').replace(/\s/g,'').replace(',','.');
+    var n=parseFloat(s); return isNaN(n)?null:n; }
   var EQUIPES=['HUMBERTO BANQUERI','LUIZ ROBERTO','REBECA MOURA','BENVE'];
   function equipeOk(sup){ return EQUIPES.indexOf(norm(sup))>=0; }
   // chave aproximada: 1º + 2º nome (para casar nome longo da aba com nome curto do RANKING)
@@ -1169,6 +1172,8 @@ function setDiasUteis(val){
     var iMeta=colExato(H,['META','RANKING']);
     if(iMeta<0){ for(var _im=0;_im<H.length;_im++){ var _h=norm(H[_im]);
       if(_h.indexOf('META')>=0 && _h.indexOf('DESAFIO')<0){ iMeta=_im; break; } } }
+    // CONVERSÃO: coluna que contém "CONV" (ex.: "CONVERSÃO", "% CONV.")
+    var iConv=-1; for(var _ic=0;_ic<H.length;_ic++){ if(norm(H[_ic]).indexOf('CONV')>=0){ iConv=_ic; break; } }
     if(iProm<0)return;
     var byKey={}; window.JUN_DATA.rawData.forEach(function(r){ byKey[norm(r.p)]=r; });
     var supFF='', totPF=0,totA=0,totPME=0,totV=0,totMeta=0, found={}, metaSup={};
@@ -1182,11 +1187,12 @@ function setDiasUteis(val){
           pm=iPM>=0?num(row[iPM]):0, tot=iTOT>=0?num(row[iTOT]):(pf+ad+pm);
       var metaV=iMeta>=0?num(row[iMeta]):null, leadsV=iLeads>=0?num(row[iLeads]):null;
       var dzV=iDZ>=0?num(row[iDZ]):null;
+      var convV=iConv>=0?numF(row[iConv]):null;
       var key=norm(prom), rec=byKey[key];
       if(rec){ rec.pf=pf;rec.a=ad;rec.pme=pm;rec.v=tot;
                if(metaV!==null)rec.meta=metaV; if(leadsV!==null)rec.leads=leadsV;
-               if(dzV!==null)rec.dz=dzV; found[key]=1; }
-      else { rec={s:supFF,p:prom,pf:pf,a:ad,pme:pm,v:tot,meta:metaV||0,leads:leadsV||0,dz:dzV||0,cv:null};
+               if(dzV!==null)rec.dz=dzV; if(convV!==null)rec.cv=convV; found[key]=1; }
+      else { rec={s:supFF,p:prom,pf:pf,a:ad,pme:pm,v:tot,meta:metaV||0,leads:leadsV||0,dz:dzV||0,cv:(convV!==null?convV:null)};
              window.JUN_DATA.rawData.push(rec); byKey[key]=rec; found[key]=1; }
       totPF+=pf;totA+=ad;totPME+=pm;totV+=tot;
       if(metaV!==null){ totMeta+=metaV; var sk=supFF; metaSup[sk]=(metaSup[sk]||0)+metaV; }
@@ -1203,7 +1209,8 @@ function setDiasUteis(val){
     }
     if(window.console){ console.log('[DIAG META] META individual (col G) idx='+iMeta+
       (iMeta>=0?(' ("'+H[iMeta]+'")'):'')+' | META DESAFIO idx='+iMetaDes+
-      (iMetaDes>=0?(' ("'+H[iMetaDes]+'")'):'')+' | meta_sup(equipe=soma)='+JSON.stringify(window.JUN_DATA.meta_sup)); }
+      (iMetaDes>=0?(' ("'+H[iMetaDes]+'")'):'')+' | CONVERSAO idx='+iConv+
+      (iConv>=0?(' ("'+H[iConv]+'")'):'')+' | meta_sup(equipe=soma)='+JSON.stringify(window.JUN_DATA.meta_sup)); }
     if(typeof MES_ATIVO!=='undefined'&&MES_ATIVO===6){
       if(typeof VTOT!=='undefined'){VTOT=totV;VPF=totPF;VADE=totA;VPME=totPME;}
       if(typeof rawData!=='undefined'){

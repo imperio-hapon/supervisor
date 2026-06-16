@@ -136,8 +136,34 @@ td{padding:6px 8px;font-size:12px;border-bottom:1px solid #f5f5f5;vertical-align
 </style>
 </head>
 <body>
-<h1>📊 Painel de Performance — Equipe Império Hap-on</h1>
+<h1 id="sup-title" onclick="secretTap()" style="cursor:default">📊 Painel de Performance — Equipe Império Hap-on</h1>
 <p class="subtitle"><span id="header-date">Atualizado em 02/06/2026</span></p>
+
+<!-- ===== PAINEL SECRETO: FECHAMENTO DE MÊS ===== -->
+<div id="admin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:14px;max-width:480px;width:100%;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.3);max-height:90vh;overflow:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <strong style="font-size:16px;color:#1a1a2e">🔒 Administração de meses</strong>
+      <button onclick="fecharAdmin()" style="border:none;background:#eee;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:16px">✕</button>
+    </div>
+    <p style="font-size:12.5px;color:#666;margin:0 0 16px">Salve um retrato do mês atual (ranking + base + metas) num arquivo para guardar. Depois você pode recarregar esse arquivo para conferir ou corrigir.</p>
+
+    <div style="background:#f0f4ff;border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:700;color:#4361ee;margin-bottom:8px">💾 Fechar / salvar mês</div>
+      <label style="font-size:12px;color:#555;display:block;margin-bottom:4px">Nome do mês (ex.: 2026-06 Junho)</label>
+      <input id="admin-mes-nome" type="text" placeholder="2026-06 Junho" style="width:100%;padding:8px;border:1px solid #ccd;border-radius:7px;font-size:13px;margin-bottom:10px;box-sizing:border-box">
+      <button onclick="salvarMes()" style="width:100%;padding:10px;background:#4361ee;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">⬇ Baixar arquivo do mês</button>
+    </div>
+
+    <div style="background:#fff7ed;border-radius:10px;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:#b45309;margin-bottom:8px">✏️ Carregar / corrigir mês salvo</div>
+      <p style="font-size:11.5px;color:#777;margin:0 0 8px">Selecione um arquivo salvo para recarregar os dados na tela (caso tenha salvo errado ou queira revisar).</p>
+      <input id="admin-file" type="file" accept="application/json,.json" style="width:100%;font-size:12px;margin-bottom:10px">
+      <button onclick="carregarMes()" style="width:100%;padding:10px;background:#f59e0b;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">⬆ Carregar arquivo na tela</button>
+      <div id="admin-msg" style="font-size:12px;margin-top:10px;color:#666"></div>
+    </div>
+  </div>
+</div>
 
 <div class="mes-wrap">
   <span class="mes-lbl">Período:</span>
@@ -847,6 +873,75 @@ function sortBy(col,el){
   if(el)el.textContent=el.textContent+(sortDir===-1?' ↓':' ↑');
   render();
 }
+
+// ===== PAINEL SECRETO: FECHAMENTO / ARQUIVAMENTO DE MÊS =====
+var _secretTaps=0, _secretTimer=null;
+function secretTap(){
+  _secretTaps++;
+  if(_secretTimer) clearTimeout(_secretTimer);
+  _secretTimer=setTimeout(function(){ _secretTaps=0; }, 1200); // janela de 1,2s entre toques
+  if(_secretTaps>=5){ _secretTaps=0; abrirAdmin(); }
+}
+function abrirAdmin(){
+  var meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var d=new Date(), nome=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+' '+meses[d.getMonth()];
+  var inp=document.getElementById('admin-mes-nome'); if(inp&&!inp.value) inp.value=nome;
+  document.getElementById('admin-msg').textContent='';
+  document.getElementById('admin-modal').style.display='flex';
+}
+function fecharAdmin(){ document.getElementById('admin-modal').style.display='none'; }
+function salvarMes(){
+  try{
+    var nome=(document.getElementById('admin-mes-nome').value||'mes').trim();
+    var nomeArq=nome.replace(/[^\w\-]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+    // snapshot completo: tudo que está em JUN_DATA (ranking, base PF/ADE/PME, metas, etc.)
+    var snap={
+      _tipo:'fechamento_mes_imperio',
+      _versao:1,
+      _mes:nome,
+      _salvo_em:new Date().toISOString(),
+      dias_uteis:DIAS_UTEIS_MES,
+      dados: window.JUN_DATA
+    };
+    var blob=new Blob([JSON.stringify(snap,null,2)], {type:'application/json'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download='fechamento_'+(nomeArq||'mes')+'.json';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+    document.getElementById('admin-msg').textContent='✓ Arquivo do mês "'+nome+'" gerado. Guarde-o em local seguro.';
+    document.getElementById('admin-msg').style.color='#2a9d8f';
+  }catch(e){
+    document.getElementById('admin-msg').textContent='Erro ao salvar: '+e.message;
+    document.getElementById('admin-msg').style.color='#e63946';
+  }
+}
+function carregarMes(){
+  var f=document.getElementById('admin-file').files[0];
+  var msg=document.getElementById('admin-msg');
+  if(!f){ msg.textContent='Selecione um arquivo primeiro.'; msg.style.color='#e63946'; return; }
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var obj=JSON.parse(ev.target.result);
+      var dados = (obj && obj._tipo==='fechamento_mes_imperio' && obj.dados) ? obj.dados : obj;
+      if(!dados || !dados.rawData){ throw new Error('Arquivo não parece um fechamento válido (faltam dados de ranking).'); }
+      window.JUN_DATA = dados;
+      // espelha nas variáveis que a base lê ao vivo
+      window._RAW_PF = dados.rawPF||[]; window._RAW_ADE = dados.rawADE||[]; window._RAW_PME = dados.rawPME||[];
+      if(obj._mes){ var n=document.getElementById('admin-mes-nome'); if(n) n.value=obj._mes; }
+      if(obj.dias_uteis){ DIAS_UTEIS_MES=obj.dias_uteis; var _m0=(MES_ATIVO===4?3:MES_ATIVO===5?4:5); DIAS_TRAB=calcDiasTrab(DIAS_UTEIS_MES,_m0,2026); RITMO_ESP=DIAS_TRAB/DIAS_UTEIS_MES; ESP_PCT=+(RITMO_ESP*100).toFixed(1); PROJ_FATOR=DIAS_TRAB>0?DIAS_UTEIS_MES/DIAS_TRAB:1; }
+      if(typeof render==='function') render();
+      msg.textContent='✓ Dados do mês "'+(obj._mes||f.name)+'" carregados na tela. Confira e, se precisar corrigir, salve de novo.';
+      msg.style.color='#2a9d8f';
+    }catch(e){
+      msg.textContent='Erro ao carregar: '+e.message;
+      msg.style.color='#e63946';
+    }
+  };
+  reader.readAsText(f);
+}
+
 function render(){
   renderHeader();
   // Determinar conjunto de supervisores do filtro de equipe

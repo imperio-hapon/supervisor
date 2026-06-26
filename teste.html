@@ -99,6 +99,26 @@
   .twhead h3{margin:0;font-size:13.5px;font-weight:720}
   .twhead .cnt{font-size:12.5px;color:var(--muted);white-space:nowrap}
   .twtools{display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+  .rankwrap{margin-bottom:20px}
+  .rkhint{color:var(--muted);font-weight:600;font-size:12px}
+  .ranktable td,.ranktable th{white-space:nowrap}
+  .ranktable .pos{font-weight:800;color:var(--brand);width:46px;text-align:center;font-variant-numeric:tabular-nums}
+  .ranktable .pos.top{color:#fff}
+  .ranktable tr.r1 .pos{background:linear-gradient(135deg,#f6c454,#d99e12);border-radius:8px;color:#fff}
+  .ranktable tr.r2 .pos{background:linear-gradient(135deg,#cfd6e2,#9aa6bd);border-radius:8px;color:#fff}
+  .ranktable tr.r3 .pos{background:linear-gradient(135deg,#e0a37e,#b97443);border-radius:8px;color:#fff}
+  .ranktable .nm{font-weight:650}
+  .ranktable .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  .ranktable .ativas{color:var(--green)}
+  .ranktable .pend{color:var(--amber)}
+  .ranktable .minibar{display:inline-block;height:8px;border-radius:5px;background:linear-gradient(90deg,#27c08a,var(--green));vertical-align:middle;margin-left:8px}
+  .colfilters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--paper)}
+  .colfilters input,.colfilters select{font:inherit;font-size:12.5px;color:var(--ink);background:var(--card);
+    border:1px solid var(--line-strong);border-radius:8px;padding:7px 10px;min-width:0}
+  .colfilters input{width:120px}
+  .colfilters select{cursor:pointer;max-width:200px}
+  .colfilters input:focus,.colfilters select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(31,157,107,.14)}
+  .colfilters .clearcol{font:inherit;font-size:12px;font-weight:650;color:var(--green);background:none;border:0;cursor:pointer;margin-left:auto;white-space:nowrap}
   .search{display:flex;align-items:center;gap:7px;background:var(--paper);border:1px solid var(--line-strong);
     border-radius:9px;padding:6px 11px;color:var(--muted);min-width:230px}
   .search:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px rgba(31,111,235,.12);color:var(--brand)}
@@ -157,6 +177,15 @@
     </div>
     <div class="kpis" id="kpisFiibo"></div>
     <div id="chartsFiibo"></div>
+
+    <div class="tablewrap rankwrap">
+      <div class="twhead">
+        <h3>Ranking de vidas ativas <span class="rkhint">por vendedor</span></h3>
+        <span class="cnt" id="rankCount"></span>
+      </div>
+      <div class="scroll"><table id="tblRank" class="ranktable"><thead></thead><tbody></tbody></table></div>
+    </div>
+
     <div class="tablewrap">
       <div class="twhead">
         <h3>Listagem de orçamentos</h3>
@@ -195,6 +224,17 @@
           <span class="cnt" id="tblCountLeads"></span>
         </div>
       </div>
+      <div class="colfilters" id="leadsColFilters">
+        <select id="lfOrigem" data-col="origem"><option value="">Origem: todas</option><option value="Zenvia">Zenvia</option><option value="Nuvia">Nuvia</option><option value="GUP">GUP</option></select>
+        <input type="search" id="lfLead" data-col="lead" placeholder="Lead">
+        <input type="search" id="lfGestao" data-col="gestao" placeholder="Gestão">
+        <input type="search" id="lfSupervisor" data-col="supervisor" placeholder="Supervisor">
+        <input type="search" id="lfAgente" data-col="agente" placeholder="Agente">
+        <input type="search" id="lfTelefone" data-col="telefone" placeholder="Telefone">
+        <select id="lfStatus" data-col="status"><option value="">Status: todos</option></select>
+        <select id="lfEncerr" data-col="encerr"><option value="">Encerramento: todos</option></select>
+        <button type="button" class="clearcol" id="lfClear">Limpar colunas</button>
+      </div>
       <div class="scroll"><table id="tblLeads"><thead></thead><tbody></tbody></table></div>
     </div>
   </section>
@@ -213,25 +253,30 @@ function norm(s){
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/\s+/g,' ').trim().toLowerCase();
 }
-HIER.forEach(h => h.names.forEach(n => { const k=norm(n); if(k) nameIndex.set(k, {gestao:h.gestao, supervisor:h.supervisor}); }));
+function titleCase(s){ return String(s).replace(/\S+/g, w=> w.charAt(0).toUpperCase()+w.slice(1).toLowerCase() ); }
+HIER.forEach(h => {
+  // nome mais curto (menos caracteres) entre os nomes da pessoa, com capitalização amigável
+  const raw = h.names.filter(Boolean).slice().sort((a,b)=>a.length-b.length)[0] || '';
+  const short = titleCase(raw);
+  h.names.forEach(n => { const k=norm(n); if(k) nameIndex.set(k, {gestao:h.gestao, supervisor:h.supervisor, short}); });
+});
 const GESTOES = [...new Set(HIER.map(h=>h.gestao).filter(Boolean))].sort();
 const SUP_BY_GESTAO = {};
 HIER.forEach(h=>{ (SUP_BY_GESTAO[h.gestao]=SUP_BY_GESTAO[h.gestao]||new Set()).add(h.supervisor); });
 
 function resolveHier(agentName){
   const k = norm(agentName);
-  if(!k) return {gestao:'(Sem hierarquia)', supervisor:'(Sem supervisor)'};
+  if(!k) return {gestao:'(Sem hierarquia)', supervisor:'(Sem supervisor)', short:''};
   if(nameIndex.has(k)) return nameIndex.get(k);
-  // tentativa parcial: um nome contém o outro como sequência de palavras
   let best=null, bestLen=0;
   for(const [n,v] of nameIndex){
     if(!n) continue;
     if((n===k) || (n.includes(k)||k.includes(n))){
       const L=Math.min(n.length,k.length);
-      if(L>bestLen && L>=4){ best=v; bestLen=L; } // pega o casamento mais específico
+      if(L>bestLen && L>=4){ best=v; bestLen=L; }
     }
   }
-  return best || {gestao:'(Sem hierarquia)', supervisor:'(Sem supervisor)'};
+  return best || {gestao:'(Sem hierarquia)', supervisor:'(Sem supervisor)', short: titleCase(agentName||'')};
 }
 
 /* ---------- Config das bases ---------- */
@@ -406,6 +451,33 @@ function leadsRows(){
   return out;
 }
 
+/* valores por coluna de um item de lead (usados na tabela e nos filtros) */
+const leadVal = {
+  origem:    it=>it.__origem,
+  lead:      it=>pickField(it.r,['Nome completo','Customer Name','contact_name','Nome Completo']),
+  gestao:    it=>rowHier(it.__base,it.r).gestao,
+  supervisor:it=>rowHier(it.__base,it.r).supervisor,
+  agente:    it=>rowAgent(it.__base,it.r),
+  telefone:  it=>pickField(it.r,['Telefone','Customer Mobile','contact_phone','Phone']),
+  status:    it=>pickField(it.r,['Estado','Session Staus','status']),
+  encerr:    it=>pickField(it.r,['Motivo do fechamento','Tag de encerramento','step_closed']),
+};
+
+/* filtros por coluna da listagem de leads */
+const LF = {origem:'',lead:'',gestao:'',supervisor:'',agente:'',telefone:'',status:'',encerr:''};
+function applyLeadColFilters(items){
+  return items.filter(it=>{
+    for(const c in LF){
+      const term=LF[c]; if(!term) continue;
+      const cell=norm(leadVal[c](it));
+      // selects (origem/status/encerr) casam exato; campos de texto casam por trecho
+      if(c==='origem'||c==='status'||c==='encerr'){ if(cell!==norm(term)) return false; }
+      else { if(!cell.includes(norm(term))) return false; }
+    }
+    return true;
+  });
+}
+
 function rebuildFilterOptions(){
   const fb=BASES.fiibo;
   setSel('fGestao', GESTOES, F.gestao, 'Todas as gestões');
@@ -453,14 +525,12 @@ function renderFiibo(){
   const b=BASES.fiibo, rows=fiiboRows();
   dot('dotFiibo', rows.length?'ok':(b.rows.length?'amber':'err'));
   document.getElementById('cntFiibo').textContent = rows.length+' orçamento(s)';
-  const val = rows.reduce((s,r)=>{ const v=parseFloat(String(fiiboVal(r,['Valor'])).replace(/[^\d.,-]/g,'').replace(/\.(?=\d{3})/g,'').replace(',','.')); return s+(isNaN(v)?0:v); },0);
   const sit=t=>rows.filter(r=>norm(fiiboVal(r,['Situação','Situacao']))===t).length;
   document.getElementById('kpisFiibo').innerHTML=
     kpi('', rows.length,'Orçamentos','filtrados')+
     kpi('g', sit('ativo'),'Ativos', rows.length?((sit('ativo')/rows.length*100).toFixed(0)+'% do total'):'')+
     kpi('a', sit('pendente'),'Pendentes','')+
-    kpi('r', sit('cancelado'),'Cancelados','')+
-    kpi('', moneyBR(val).replace('R$','R$ '),'Valor total','soma de Valor');
+    kpi('r', sit('cancelado'),'Cancelados','');
   document.getElementById('chartsFiibo').innerHTML='<div class="grid2">'+
     barBlock('Por Situação','distribuição', countBy(rows,r=>fiiboVal(r,['Situação','Situacao'])), situacaoClass)+
     barBlock('Por Status','etapa do orçamento', countBy(rows,r=>fiiboVal(r,['Status'])))+
@@ -481,46 +551,92 @@ function renderFiibo(){
     ['Status',r=>esc(pickField(r,['Status']))],
   ];
   fillTable('tblFiibo','tblCountFiibo', cols, rows, r=>r, F.q);
+  renderRank(rows, b);
+}
+
+/* Ranking de vidas ativas por vendedor (nome curto da hierarquia) + coluna de pendentes */
+function renderRank(rows, b){
+  const map=new Map(); // chave: nome curto -> {short, ativas, pend, total}
+  rows.forEach(r=>{
+    const h=rowHier(b,r);
+    const key=h.short || rowAgent(b,r) || '(sem vendedor)';
+    const sit=norm(fiiboVal(r,['Situação','Situacao']));
+    const e=map.get(key)||{short:key, ativas:0, pend:0, total:0};
+    if(sit==='ativo') e.ativas++;
+    else if(sit==='pendente') e.pend++;
+    e.total++;
+    map.set(key,e);
+  });
+  // ordena por vidas ativas (desc), depois por total
+  const list=[...map.values()].sort((a,b)=> b.ativas-a.ativas || b.total-a.total);
+  document.getElementById('rankCount').textContent = list.length+' vendedor(es)';
+  const maxA=Math.max(1,...list.map(x=>x.ativas));
+  const thead=document.querySelector('#tblRank thead'), tbody=document.querySelector('#tblRank tbody');
+  thead.innerHTML='<tr><th>#</th><th>Vendedor</th><th style="text-align:right">Vidas ativas</th><th style="text-align:right">Vidas pendentes</th></tr>';
+  if(!list.length){ tbody.innerHTML='<tr><td colspan="4"><div class="empty"><b>Sem dados</b>Nenhum orçamento para os filtros atuais.</div></td></tr>'; return; }
+  tbody.innerHTML=list.slice(0,100).map((x,i)=>{
+    const rcls = i<3 ? ' class="r'+(i+1)+'"' : '';
+    const w=Math.round(x.ativas/maxA*90);
+    return '<tr'+rcls+'><td class="pos">'+(i+1)+'</td>'+
+      '<td class="nm">'+esc(x.short)+'</td>'+
+      '<td class="num ativas">'+x.ativas+'<span class="minibar" style="width:'+w+'px"></span></td>'+
+      '<td class="num pend">'+x.pend+'</td></tr>';
+  }).join('');
 }
 
 /* ===== Seção 2: Base de Leads consolidada ===== */
 function renderLeads(){
-  const items=leadsRows();
+  const all=leadsRows();                 // após hierarquia + origem (filtro principal)
+  populateLeadSelects(all);              // opções de Status/Encerramento conforme dados
+  const items=applyLeadColFilters(all);  // após filtros por coluna
   dot('dotLeads', items.length?'ok':'err');
   document.getElementById('cntLeads').textContent = items.length+' lead(s)';
-  const agents=new Set(items.map(it=>rowAgent(it.__base,it.r)).filter(Boolean));
+  const agents=new Set(items.map(it=>leadVal.agente(it)).filter(Boolean));
   const porOrigem=countBy(items,it=>it.__origem);
-  const porSup=countBy(items,it=>rowHier(it.__base,it.r).supervisor);
-  const porGest=countBy(items,it=>rowHier(it.__base,it.r).gestao);
+  const porSup=countBy(items,it=>leadVal.supervisor(it));
+  const porGest=countBy(items,it=>leadVal.gestao(it));
   const baseLabel = F.origem ? (BASES[F.origem]?BASES[F.origem].label:F.origem) : 'Zenvia + Nuvia + GUP';
   document.getElementById('kpisLeads').innerHTML=
     kpi('', items.length,'Leads', baseLabel)+
     kpi('', agents.size,'Agentes','com leads')+
     kpi('', porGest.length,'Gestões','representadas')+
     kpi('', porSup.length,'Supervisores','representados');
-  // com uma base selecionada, "Por Origem" é redundante → mostra "Por Status"
   const firstChart = F.origem
-    ? barBlock('Por Status','situação do atendimento', countBy(items,it=>pickField(it.r,['Estado','Session Staus','status'])))
+    ? barBlock('Por Status','situação do atendimento', countBy(items,it=>leadVal.status(it)))
     : barBlock('Por Origem','base de captação', porOrigem);
   document.getElementById('chartsLeads').innerHTML='<div class="grid2">'+
     firstChart+
     barBlock('Por Gestão','volume de leads', porGest)+
     '</div><div class="grid2">'+
     barBlock('Por Supervisor','volume de leads', porSup)+
-    barBlock('Por Agente','top 8', countBy(items,it=>rowAgent(it.__base,it.r)))+
+    barBlock('Por Agente','top 8', countBy(items,it=>leadVal.agente(it)))+
     '</div>';
 
   const cols=[
-    ['Origem',it=>'<span class="tag neu">'+esc(it.__origem)+'</span>'],
-    ['Lead',it=>esc(pickField(it.r,['Nome completo','Customer Name','contact_name','Nome Completo']))],
-    ['Gestão',it=>esc(rowHier(it.__base,it.r).gestao)],
-    ['Supervisor',it=>esc(rowHier(it.__base,it.r).supervisor)],
-    ['Agente',it=>esc(rowAgent(it.__base,it.r))],
-    ['Telefone',it=>esc(pickField(it.r,['Telefone','Customer Mobile','contact_phone','Phone']))],
-    ['Status',it=>esc(pickField(it.r,['Estado','Session Staus','status']))],
-    ['Encerramento',it=>esc(pickField(it.r,['Motivo do fechamento','Tag de encerramento','step_closed']))],
+    ['Origem',it=>'<span class="tag neu">'+esc(leadVal.origem(it))+'</span>'],
+    ['Lead',it=>esc(leadVal.lead(it))],
+    ['Gestão',it=>esc(leadVal.gestao(it))],
+    ['Supervisor',it=>esc(leadVal.supervisor(it))],
+    ['Agente',it=>esc(leadVal.agente(it))],
+    ['Telefone',it=>esc(leadVal.telefone(it))],
+    ['Status',it=>esc(leadVal.status(it))],
+    ['Encerramento',it=>esc(leadVal.encerr(it))],
   ];
   fillTable('tblLeads','tblCountLeads', cols, items, it=>it, F.q);
+}
+
+/* popula os selects de Status e Encerramento com os valores existentes (preserva seleção) */
+function populateLeadSelects(items){
+  const fill=(id,getter,key)=>{
+    const sel=document.getElementById(id); if(!sel) return;
+    const cur=LF[key];
+    const vals=[...new Set(items.map(getter).filter(Boolean))].sort();
+    const label=sel.options[0]?sel.options[0].textContent:'';
+    sel.innerHTML='<option value="">'+label+'</option>'+vals.map(v=>'<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(v)+'</option>').join('');
+    sel.value=cur||'';
+  };
+  fill('lfStatus', leadVal.status, 'status');
+  fill('lfEncerr', leadVal.encerr, 'encerr');
 }
 
 /* preenche uma tabela; getRow extrai o objeto passado às colunas; q = termo de busca */
@@ -549,6 +665,10 @@ function fillTable(tblId, cntId, cols, data, getRow, q){
     const map={fGestao:'gestao',fSupervisor:'supervisor',fSituacao:'situacao',fSubstatus:'substatus',fStatus:'status',fOrigem:'origem'};
     F[map[id]]=e.target.value;
     if(id==='fGestao') F.supervisor='';
+    if(id==='fOrigem'){ // espelha no seletor de coluna
+      const rev={zenvia:'Zenvia',nuvia:'Nuvia',gup:'GUP','':''};
+      const lf=document.getElementById('lfOrigem'); if(lf) lf.value=rev[e.target.value]||'';
+    }
     render();
   });
 });
@@ -557,9 +677,33 @@ document.getElementById('btnClear').onclick=()=>{
   document.getElementById('fOrigem').value='';
   document.getElementById('qFiibo').value='';
   document.getElementById('qLeads').value='';
+  clearLeadColFilters();
   render();
 };
 document.getElementById('btnRefresh').onclick=loadAll;
+
+/* ---------- Filtros por coluna da listagem de leads ---------- */
+function clearLeadColFilters(){
+  Object.keys(LF).forEach(k=>LF[k]='');
+  document.querySelectorAll('#leadsColFilters input,#leadsColFilters select').forEach(el=>el.value='');
+}
+document.querySelectorAll('#leadsColFilters [data-col]').forEach(el=>{
+  const evt = el.tagName==='SELECT' ? 'change' : 'input';
+  el.addEventListener(evt, e=>{
+    const col=el.getAttribute('data-col');
+    LF[col]=e.target.value;
+    // Origem da barra de coluna e o seletor "Base" do cabeçalho são a mesma coisa → sincroniza
+    if(col==='origem'){
+      const map={'Zenvia':'zenvia','Nuvia':'nuvia','GUP':'gup','':''};
+      F.origem = map[e.target.value] ?? '';
+      LF.origem='';                                  // a filtragem de origem fica a cargo de F.origem
+      document.getElementById('fOrigem').value=F.origem;
+      render(); return;                              // re-renderiza tudo (origem afeta KPIs/gráficos)
+    }
+    renderLeads();
+  });
+});
+document.getElementById('lfClear').onclick=()=>{ clearLeadColFilters(); F.origem=''; document.getElementById('fOrigem').value=''; render(); };
 
 /* busca unificada — um termo só, espelhado nos dois campos, filtra as duas listagens */
 /* busca unificada: digitar em qualquer campo filtra as DUAS listagens ao mesmo tempo */

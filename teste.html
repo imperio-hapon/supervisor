@@ -161,7 +161,7 @@
       <div class="twhead">
         <h3>Listagem de orçamentos</h3>
         <div class="twtools">
-          <div class="search"><svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M11.3 10.3a5 5 0 1 0-1 1l3.2 3.2 1-1zM3 7a4 4 0 1 1 8 0 4 4 0 0 1-8 0"/></svg><input type="search" id="qFiibo" placeholder="Buscar nesta listagem…"></div>
+          <div class="search"><svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M11.3 10.3a5 5 0 1 0-1 1l3.2 3.2 1-1zM3 7a4 4 0 1 1 8 0 4 4 0 0 1-8 0"/></svg><input type="search" id="qFiibo" placeholder="Buscar nas duas listagens…"></div>
           <span class="cnt" id="tblCountFiibo"></span>
         </div>
       </div>
@@ -191,7 +191,7 @@
       <div class="twhead">
         <h3>Listagem de leads</h3>
         <div class="twtools">
-          <div class="search"><svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M11.3 10.3a5 5 0 1 0-1 1l3.2 3.2 1-1zM3 7a4 4 0 1 1 8 0 4 4 0 0 1-8 0"/></svg><input type="search" id="qLeads" placeholder="Buscar nesta listagem…"></div>
+          <div class="search"><svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M11.3 10.3a5 5 0 1 0-1 1l3.2 3.2 1-1zM3 7a4 4 0 1 1 8 0 4 4 0 0 1-8 0"/></svg><input type="search" id="qLeads" placeholder="Buscar nas duas listagens…"></div>
           <span class="cnt" id="tblCountLeads"></span>
         </div>
       </div>
@@ -360,7 +360,7 @@ function setStatus(kind,txt){
 }
 
 /* ---------- Filtros ---------- */
-const F = {gestao:'',supervisor:'',situacao:'',substatus:'',status:'',origem:'',qFiibo:'',qLeads:''};
+const F = {gestao:'',supervisor:'',situacao:'',substatus:'',status:'',origem:'',q:''};
 function resetFilters(){ Object.keys(F).forEach(k=>F[k]=''); }
 function setSel(id,opts,val,allLabel){
   const s=document.getElementById(id); s.innerHTML='';
@@ -480,7 +480,7 @@ function renderFiibo(){
     ['Substatus',r=>esc(pickField(r,['Substatus']))],
     ['Status',r=>esc(pickField(r,['Status']))],
   ];
-  fillTable('tblFiibo','tblCountFiibo', cols, rows, r=>r, F.qFiibo);
+  fillTable('tblFiibo','tblCountFiibo', cols, rows, r=>r, F.q);
 }
 
 /* ===== Seção 2: Base de Leads consolidada ===== */
@@ -518,8 +518,9 @@ function renderLeads(){
     ['Agente',it=>esc(rowAgent(it.__base,it.r))],
     ['Telefone',it=>esc(pickField(it.r,['Telefone','Customer Mobile','contact_phone','Phone']))],
     ['Status',it=>esc(pickField(it.r,['Estado','Session Staus','status']))],
+    ['Encerramento',it=>esc(pickField(it.r,['Motivo do fechamento','Tag de encerramento','step_closed']))],
   ];
-  fillTable('tblLeads','tblCountLeads', cols, items, it=>it, F.qLeads);
+  fillTable('tblLeads','tblCountLeads', cols, items, it=>it, F.q);
 }
 
 /* preenche uma tabela; getRow extrai o objeto passado às colunas; q = termo de busca */
@@ -560,9 +561,17 @@ document.getElementById('btnClear').onclick=()=>{
 };
 document.getElementById('btnRefresh').onclick=loadAll;
 
-/* buscas por listagem — re-renderizam só a seção, sem mexer nos selects (mantém o foco) */
-document.getElementById('qFiibo').addEventListener('input',e=>{ F.qFiibo=e.target.value; renderFiibo(); });
-document.getElementById('qLeads').addEventListener('input',e=>{ F.qLeads=e.target.value; renderLeads(); });
+/* busca unificada — um termo só, espelhado nos dois campos, filtra as duas listagens */
+/* busca unificada: digitar em qualquer campo filtra as DUAS listagens ao mesmo tempo */
+function onSearch(val){
+  F.q = val;
+  const a=document.getElementById('qFiibo'), b=document.getElementById('qLeads');
+  if(a && a.value!==val) a.value=val;   // espelha nos dois campos
+  if(b && b.value!==val) b.value=val;
+  renderFiibo(); renderLeads();         // re-renderiza as duas tabelas
+}
+document.getElementById('qFiibo').addEventListener('input',e=>onSearch(e.target.value));
+document.getElementById('qLeads').addEventListener('input',e=>onSearch(e.target.value));
 
 loadAll();
 </script>

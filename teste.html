@@ -188,8 +188,13 @@
 
     <div class="tablewrap rankwrap">
       <div class="twhead">
-        <h3>Ranking de vidas ativas <span class="rkhint">por vendedor</span></h3>
-        <span class="cnt" id="rankCount"></span>
+        <h3>Ranking de vidas ativas <span class="rkhint">por vendedor · assinatura digital</span></h3>
+        <div class="twtools">
+          <label class="inlinefield"><span>Mês</span>
+            <select id="rkMonth"><option value="">Todos os meses</option></select>
+          </label>
+          <span class="cnt" id="rankCount"></span>
+        </div>
       </div>
       <div class="scroll"><table id="tblRank" class="ranktable"><thead></thead><tbody></tbody></table></div>
     </div>
@@ -595,11 +600,9 @@ function renderFiibo(){
 
   const cols=[
     ['Nome',r=>esc(pickField(r,['Nome']))],
-    ['Gestão',r=>esc(rowHier(b,r).gestao)],
     ['Supervisor',r=>esc(rowHier(b,r).supervisor)],
     ['Vendedor',r=>esc(pickField(r,['Vendedor','Responsável']))],
     ['Plano',r=>esc(pickField(r,['Plano']))],
-    ['Valor',r=>'<span class="nowrap-money">'+esc(pickField(r,['Valor']))+'</span>'],
     ['Situação',r=>situacaoTag(pickField(r,['Situação','Situacao']))],
     ['Substatus',r=>esc(pickField(r,['Substatus']))],
     ['Status',r=>esc(pickField(r,['Status']))],
@@ -645,10 +648,26 @@ function populateFiiboSelects(){
   fill('ffStatus',['Status'],'status');
 }
 
-/* Ranking de vidas ativas por vendedor (nome curto da hierarquia) + coluna de pendentes */
+/* mês (aaaa-mm) a partir de uma data dd/mm/aaaa; '' se vazia/inválida */
+function monthKey(s){ const d=parseBR(s); return d ? d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0') : ''; }
+function monthLabel(k){ const [y,m]=k.split('-'); const nomes=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']; return nomes[+m-1]+'/'+y; }
+let rkMonth=''; // mês selecionado no ranking
+
+/* Ranking de vidas por vendedor — contagem pela data de ASSINATURA DIGITAL, com filtro de mês dinâmico */
 function renderRank(rows, b){
-  const map=new Map(); // chave: nome curto -> {short, ativas, pend, total}
-  rows.forEach(r=>{
+  // meses disponíveis (conforme aparecem nos dados de assinatura) — atualiza o seletor
+  const meses=[...new Set(rows.map(r=>monthKey(fiiboVal(r,['Assinatura Digital']))).filter(Boolean))].sort();
+  const sel=document.getElementById('rkMonth');
+  if(sel){
+    if(rkMonth && !meses.includes(rkMonth)) rkMonth=''; // mês some se filtros o eliminaram
+    sel.innerHTML='<option value="">Todos os meses</option>'+meses.map(k=>'<option value="'+k+'"'+(k===rkMonth?' selected':'')+'>'+monthLabel(k)+'</option>').join('');
+    sel.value=rkMonth||'';
+  }
+  // aplica o mês escolhido (pela assinatura digital)
+  const base = rkMonth ? rows.filter(r=>monthKey(fiiboVal(r,['Assinatura Digital']))===rkMonth) : rows;
+
+  const map=new Map();
+  base.forEach(r=>{
     const h=rowHier(b,r);
     const key=h.short || rowAgent(b,r) || '(sem vendedor)';
     const sit=norm(fiiboVal(r,['Situação','Situacao']));
@@ -658,9 +677,9 @@ function renderRank(rows, b){
     e.total++;
     map.set(key,e);
   });
-  // ordena por vidas ativas (desc), depois por total
   const list=[...map.values()].sort((a,b)=> b.ativas-a.ativas || b.total-a.total);
-  document.getElementById('rankCount').textContent = list.length+' vendedor(es)';
+  const mlabel = rkMonth ? (' · '+monthLabel(rkMonth)) : '';
+  document.getElementById('rankCount').textContent = list.length+' vendedor(es)'+mlabel;
   const maxA=Math.max(1,...list.map(x=>x.ativas));
   const thead=document.querySelector('#tblRank thead'), tbody=document.querySelector('#tblRank tbody');
   thead.innerHTML='<tr><th>#</th><th>Vendedor</th><th style="text-align:right">Vidas ativas</th><th style="text-align:right">Vidas pendentes</th><th style="text-align:right">Total</th></tr>';
@@ -808,6 +827,7 @@ document.querySelectorAll('#fiiboColFilters [data-col]').forEach(el=>{
   el.addEventListener(evt, e=>{ FF[el.getAttribute('data-col')]=e.target.value; renderFiibo(); });
 });
 document.getElementById('ffClear').onclick=()=>{ clearFiiboColFilters(); renderFiibo(); };
+document.getElementById('rkMonth').addEventListener('change',e=>{ rkMonth=e.target.value; renderFiibo(); });
 
 /* busca unificada — um termo só, espelhado nos dois campos, filtra as duas listagens */
 /* busca unificada: digitar em qualquer campo filtra as DUAS listagens ao mesmo tempo */

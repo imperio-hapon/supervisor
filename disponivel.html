@@ -666,6 +666,8 @@ async function loadData() {
     }
 
     const COL_AGENT  = findAvCol(['Agent Name'])    || avHeaders[0];
+    console.log('[AV] headers:', JSON.stringify(avHeaders));
+    if(avRows[0]) console.log('[AV] row1:', JSON.stringify(avRows[0]));
     const COL_DATE   = findAvCol(['Date'])           || avHeaders[1];
     const COL_HORARIO= findAvCol(['HORARIO','Horario','horario']) || avHeaders[2]; // col C: timestamp do evento
     const COL_REASON = findAvCol(['Reason'])         || avHeaders[3];

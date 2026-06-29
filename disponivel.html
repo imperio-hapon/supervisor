@@ -669,8 +669,8 @@ async function loadData() {
     const COL_DATE   = findAvCol(['Date'])           || avHeaders[1];
     const COL_HORARIO= findAvCol(['HORARIO','Horario','horario']) || avHeaders[2]; // col C: timestamp do evento
     const COL_REASON = findAvCol(['Reason'])         || avHeaders[3];
-    const COL_SUP    = findAvCol(['SUPERVISOR'])     || avHeaders[6];
-    const COL_TEMPO  = findAvCol(['Tempo de um status para outro','Tempo de um status','TEMPO LOGADO']) || avHeaders[8] || avHeaders[7];
+    const COL_SUP    = findAvCol(['SUPERVISOR'])     || avHeaders[5];
+    const COL_TEMPO  = findAvCol(['Tempo de um status para outro','Tempo de um status','TEMPO LOGADO']) || avHeaders[6] || avHeaders[7];
 
     console.log('[AV] colunas:', {COL_AGENT,COL_DATE,COL_HORARIO,COL_REASON,COL_SUP,COL_TEMPO});
 

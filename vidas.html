@@ -1247,81 +1247,36 @@ function setDiasUteis(val){
 
   // ── RANKING -> agregados por promotor ────────────────────────────────────
   function applyRanking(text){
+    // MODO META-ONLY: puxa da planilha online APENAS a meta individual de cada promotor.
+    // NÃO altera vidas, contratos, leads, conversão, bases, nem a meta de equipe (cards travados).
     if(!window.JUN_DATA||!window.JUN_DATA.rawData)return;
     var rows=parseCSV(text); if(rows.length<2)return;
     var H=rows[0];
-    var iSup=col(H,['SUPERVISOR']),iProm=col(H,['PROMOTOR']),
-        iPF=col(H,['VIDAS PF']),iAD=col(H,['VIDAS ADE','ADESAO','ADESÃO']),
-        iPM=col(H,['VIDAS PME']),iTOT=col(H,['VIDAS TOT','TOTAIS']),
-        iLeads=col(H,['LEADS']),
-        iDZ=col(H,['DIAS ZERADOS','DIAS ZERO','D.UTEIS S/ VENDER','D.ÚTEIS S/ VENDER','DIAS S/ VENDER','DIAS SEM VENDA','DIAS SEM VENDER']);
-    // Estrutura real do ranking:
-    //  - META RANKING (col G) = meta INDIVIDUAL de cada promotor -> rec.meta
-    //  - META DESAFIO (col H) = desafio individual
-    //  - meta da EQUIPE = SOMA das META RANKING de todos os promotores do supervisor
-    function colExato(H, must){ // todas as palavras de 'must' presentes no cabeçalho normalizado
-      for(var i=0;i<H.length;i++){ var h=norm(H[i]); var ok=true;
+    var iProm=col(H,['PROMOTOR']);
+    function colExato(H, must){ for(var i=0;i<H.length;i++){ var h=norm(H[i]); var ok=true;
         for(var w=0;w<must.length;w++){ if(h.indexOf(must[w])<0){ ok=false; break; } }
-        if(ok) return i; }
-      return -1; }
-    var iMetaDes =colExato(H,['META','DESAFIO']);
-    // META individual = META RANKING (col G). Se não houver, cai numa coluna META que não seja DESAFIO.
+        if(ok) return i; } return -1; }
     var iMeta=colExato(H,['META','RANKING']);
     if(iMeta<0){ for(var _im=0;_im<H.length;_im++){ var _h=norm(H[_im]);
       if(_h.indexOf('META')>=0 && _h.indexOf('DESAFIO')<0){ iMeta=_im; break; } } }
-    // CONVERSÃO: coluna que contém "CONV" (ex.: "CONVERSÃO", "% CONV.")
-    var iConv=-1; for(var _ic=0;_ic<H.length;_ic++){ if(norm(H[_ic]).indexOf('CONV')>=0){ iConv=_ic; break; } }
-    if(iProm<0)return;
+    if(iProm<0||iMeta<0)return;
     var byKey={}; window.JUN_DATA.rawData.forEach(function(r){ byKey[norm(r.p)]=r; });
-    var supFF='', totPF=0,totA=0,totPME=0,totV=0,totMeta=0, found={}, metaSup={};
+    var upd=0;
     for(var r=1;r<rows.length;r++){ var row=rows[r]; if(!row)continue;
-      var prom=(row[iProm]||'').trim();
-      var sup=(iSup>=0?(row[iSup]||''):'').trim();
-      if(sup&&sup.indexOf('Total')<0) supFF=sup;            // ffill supervisor
-      if(!prom)continue;
-      if(/total/i.test(prom)||/total/i.test(supFF))continue; // pula subtotais
-      var pf=iPF>=0?num(row[iPF]):0, ad=iAD>=0?num(row[iAD]):0,
-          pm=iPM>=0?num(row[iPM]):0, tot=iTOT>=0?num(row[iTOT]):(pf+ad+pm);
-      var metaV=iMeta>=0?num(row[iMeta]):null, leadsV=iLeads>=0?num(row[iLeads]):null;
-      var dzV=iDZ>=0?num(row[iDZ]):null;
-      var convV=iConv>=0?numF(row[iConv]):null;
-      var key=norm(prom), rec=byKey[key];
-      if(rec){ rec.pf=pf;rec.a=ad;rec.pme=pm;rec.v=tot;
-               if(metaV!==null)rec.meta=metaV; if(leadsV!==null)rec.leads=leadsV;
-               if(dzV!==null)rec.dz=dzV; if(convV!==null)rec.cv=convV; found[key]=1; }
-      else { rec={s:supFF,p:prom,pf:pf,a:ad,pme:pm,v:tot,meta:metaV||0,leads:leadsV||0,dz:dzV||0,cv:(convV!==null?convV:null)};
-             window.JUN_DATA.rawData.push(rec); byKey[key]=rec; found[key]=1; }
-      totPF+=pf;totA+=ad;totPME+=pm;totV+=tot;
-      if(metaV!==null){ totMeta+=metaV; var sk=supFF; metaSup[sk]=(metaSup[sk]||0)+metaV; }
+      var prom=(row[iProm]||'').trim(); if(!prom||/total/i.test(prom))continue;
+      var metaV=num(row[iMeta]);
+      var rec=byKey[norm(prom)];
+      if(rec&&metaV!==null){ rec.meta=metaV; upd++; }   // SÓ a meta individual
     }
-    window.JUN_DATA.rawData.forEach(function(rec){
-      if(!found[norm(rec.p)]){ rec.pf=0;rec.a=0;rec.pme=0;rec.v=0; } });
-    window.JUN_DATA.vtot=totV;window.JUN_DATA.vpf=totPF;
-    window.JUN_DATA.vade=totA;window.JUN_DATA.vpme=totPME;
-    // META individual = coluna META RANKING (col G). Meta da EQUIPE = soma das metas dos promotores.
-    if(iMeta>=0){
-      window.JUN_DATA.meta=totMeta;
-      window.JUN_DATA.meta_sup=metaSup;
-      if(typeof MES_ATIVO!=='undefined'&&MES_ATIVO===6&&typeof META_TOT!=='undefined') META_TOT=totMeta;
-    }
-    if(window.console){ console.log('[DIAG META] META individual (col G) idx='+iMeta+
-      (iMeta>=0?(' ("'+H[iMeta]+'")'):'')+' | META DESAFIO idx='+iMetaDes+
-      (iMetaDes>=0?(' ("'+H[iMetaDes]+'")'):'')+' | CONVERSAO idx='+iConv+
-      (iConv>=0?(' ("'+H[iConv]+'")'):'')+' | meta_sup(equipe=soma)='+JSON.stringify(window.JUN_DATA.meta_sup)); }
-    if(typeof MES_ATIVO!=='undefined'&&MES_ATIVO===6){
-      if(typeof VTOT!=='undefined'){VTOT=totV;VPF=totPF;VADE=totA;VPME=totPME;}
-      if(typeof rawData!=='undefined'){
-        rawData.length=0;
-        window.JUN_DATA.rawData.forEach(function(r){rawData.push(r);});
-        // Recalcular derivados após atualizar da planilha (senão ritmo/pct zeram)
-        rawData.forEach(function(r){
-          r.pct  = r.meta>0?+(r.v/r.meta*100).toFixed(1):0;
-          r.gap  = r.v-r.meta;
-          r.proj = Math.round(r.v * PROJ_FATOR);
-          r.projPct = r.meta>0?+(r.proj/r.meta*100).toFixed(1):0;
-          r.cvDisp = r.cv!==null&&r.cv!==undefined ? r.cv.toFixed(2)+'%' : '—';
-        });
-      }
+    if(window.console)console.log('[META-ONLY] metas individuais atualizadas da planilha: '+upd);
+    // Recalcula apenas os derivados que dependem da meta individual (não toca em vidas/conversão)
+    if(typeof MES_ATIVO!=='undefined'&&MES_ATIVO===6&&typeof rawData!=='undefined'){
+      rawData.forEach(function(r){
+        r.pct  = r.meta>0?+(r.v/r.meta*100).toFixed(1):0;
+        r.gap  = r.v-r.meta;
+        r.proj = Math.round(r.v * PROJ_FATOR);
+        r.projPct = r.meta>0?+(r.proj/r.meta*100).toFixed(1):0;
+      });
     }
   }
 
@@ -1506,9 +1461,20 @@ function setDiasUteis(val){
       .catch(function(e){ console.warn('Falha geral, mantendo dados embutidos:',e.message); });
   }
 
-  window.atualizarDaPlanilha=load;
-  // Auto-carregamento da planilha Google DESLIGADO — dados vêm do arquivo importado.
-  // Para atualizar manualmente da fonte online, rode no console: atualizarDaPlanilha()
+  // META-ONLY: busca apenas o RANKING e aplica só as metas individuais (não toca em vidas/bases/conversão).
+  function loadMetas(){
+    return get(URLS.ranking)
+      .then(applyRanking)
+      .then(function(){ if(typeof rerender==='function') rerender(); })
+      .catch(function(e){ console.warn('Metas não carregadas (mantendo atuais):', e.message); });
+  }
+
+  window.atualizarDaPlanilha=load;        // (completo) sobrescreve tudo — uso raro
+  window.atualizarMetasDaPlanilha=loadMetas; // (recomendado) só metas individuais dos promotores
+  // Auto-carregamento completo DESLIGADO — vidas/bases/conversão vêm do arquivo importado.
+  // Puxar SOMENTE as metas individuais da planilha online, ao abrir:
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', loadMetas);
+  else loadMetas();
 })();
 
 // ─── INIT ─────────────────────────────────────────────────────────────────

@@ -211,7 +211,8 @@
       <input type="text" id="ag-search" placeholder="Buscar promotor..." oninput="agPage=0;renderAgTable()">
     </div>
     <span style="font-size:12px;color:var(--sub)"><b id="ag-count"></b> promotores</span>
-    <button onclick="exportAgCSV()" style="margin-left:auto;padding:6px 14px;background:#2563EB;color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px">⬇ Exportar CSV</button>
+    <button onclick="exportAgResumoExcel()" style="margin-left:auto;padding:6px 14px;background:#10B981;color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px">📊 Exportar Resumo (Excel)</button>
+    <button onclick="exportAgCSV()" style="padding:6px 14px;background:#2563EB;color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px">⬇ Exportar CSV</button>
   </div>
   <div class="table-wrap" style="overflow-x:auto">
     <table id="ag-table">
@@ -323,6 +324,7 @@
 
 </div><!-- /main -->
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 // ── GOOGLE SHEETS ─────────────────────────────────────────────────────────────
 const SHEET_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTugCcib-1W1OBydQ1ziRLaVEM_CCikBOP3AKilAsXOreHRffJF6Rt-lOAL5jgV8y-2bGr4on0a9E39/pub";
@@ -363,6 +365,64 @@ function sortComp(sliceIdx, field){
   }
   agPage=0;
   renderAgTable();
+}
+
+// ── EXPORTAR RESUMO (EXCEL) — Promotor x % atendido em até 2min no período selecionado ──
+function exportAgResumoExcel(){
+  if(!_agData || !_agData.length){ alert('Nenhum dado para exportar com os filtros atuais.'); return; }
+
+  const search = (document.getElementById('ag-search')?.value || '').toLowerCase();
+  const filtered = search
+    ? _agData.filter(a => a.name.toLowerCase().includes(search) || (a.sup||'').toLowerCase().includes(search))
+    : _agData;
+
+  if(!filtered.length){ alert('Nenhum dado para exportar com os filtros atuais.'); return; }
+
+  const sorted = [...filtered].sort((a,b)=>b.pctAte2-a.pctAte2);
+
+  const rows = sorted.map(a=>{
+    const leadsResp = a.ate1 + a.ate2 + a.gt2;
+    const st = agStatus(a.pctAte2);
+    return {
+      'Promotor': a.name,
+      'Equipe': a.sup,
+      'Total Leads': leadsResp,
+      '% Atendido em até 2min': Number((a.pctAte2/100).toFixed(4)),
+      'Status': st.label
+    };
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [ {wch:28}, {wch:16}, {wch:13}, {wch:22}, {wch:12} ];
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for(let R=range.s.r+1; R<=range.e.r; R++){
+    const cellRef = XLSX.utils.encode_cell({r:R, c:3});
+    if(ws[cellRef]) ws[cellRef].z = '0.0%';
+  }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Resumo Primeira Resposta');
+
+  const equipeLabel = state.selSup[0]==='Todos' ? 'Todas as Equipes' : state.selSup[0];
+  const infoRows = [
+    ['Central de Performance — Resumo de Primeira Resposta'],
+    ['Período:', periodLabel()],
+    ['Equipe:', equipeLabel],
+    ['Gerado em:', new Date().toLocaleString('pt-BR')],
+    []
+  ];
+  XLSX.utils.sheet_add_aoa(ws, infoRows, {origin:'A1'});
+  XLSX.utils.sheet_add_json(ws, rows, {origin:'A6', skipHeader:false});
+  ws['!cols'] = [ {wch:28}, {wch:16}, {wch:13}, {wch:22}, {wch:12} ];
+  const range2 = XLSX.utils.decode_range(ws['!ref']);
+  for(let R=6; R<=range2.e.r; R++){
+    const cellRef = XLSX.utils.encode_cell({r:R, c:3});
+    if(ws[cellRef] && typeof ws[cellRef].v === 'number') ws[cellRef].z = '0.0%';
+  }
+
+  const today = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+  const supFile = state.selSup[0]==='Todos' ? 'todas-equipes' : state.selSup[0].replace(/\s+/g,'-').toLowerCase();
+  XLSX.writeFile(wb, `resumo_primeira_resposta_${supFile}_${today}.xlsx`);
 }
 
 function exportAgCSV(){

@@ -3,38 +3,1434 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel EugenIA — Gestão Josy</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<title>Análise Regional — PF × PME × Adesão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --navy:#0f1e35;--navy2:#162540;--navy3:#1c2f4f;
-  --body-bg:#f0f4f9;--surface:#fff;
-  --blue:#2563eb;--blue-lt:#3b82f6;--blue-xlt:#eff6ff;
-  --orange:#f97316;--orange-lt:#fb923c;
-  --cyan:#0891b2;--amber:#d97706;
-  --teal:#0d9488;--teal-lt:#2dd4bf;
-  --purple:#7c3aed;--purple-lt:#a78bfa;
-  --josy:#0369a1;--josy2:#0ea5e9;--josy-lt:#7dd3fc;
-  --text-dark:#0f172a;--text-mid:#334155;--text-soft:#64748b;--text-faint:#94a3b8;
-  --border:rgba(203,213,225,.8);--border-md:rgba(148,163,184,.5);
-  --shadow-sm:0 1px 3px rgba(15,30,53,.06);
-  --shadow-md:0 4px 16px rgba(15,30,53,.08),0 2px 6px rgba(15,30,53,.05);
-  --nb:rgba(255,255,255,.08);--nb2:rgba(255,255,255,.14);
-  --nt2:#93aed0;--nt3:#4d6d90;
-}
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{font-family:'Inter',sans-serif;background:var(--body-bg);color:var(--text-dark);min-height:100vh;font-size:13px;overflow-x:hidden;}
+  :root{
+    --bg:#F5F6FA;
+    --panel:#FFFFFF;
+    --ink:#0E1B33;
+    --muted:#5B6785;
+    --line:#E4E7F0;
+    --pme:#3D5AFE;
+    --pme-soft:#E8EAFF;
+    --pf:#00A896;
+    --pf-soft:#DDF6F1;
+    --adesao:#FF6B35;
+    --adesao-soft:#FFE8DD;
+    --navy:#0E1B33;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px 80px;}
+  header.top{
+    background:var(--navy);
+    color:#fff;
+    padding:52px 28px 40px;
+    margin-bottom:44px;
+  }
+  header.top .wrap{padding:0;display:flex;flex-direction:column;gap:6px;max-width:1180px;margin:0 auto;padding:0 28px;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#8FA3D6;
+    margin:0 0 10px;
+  }
+  h1{
+    font-family:'Sora',sans-serif;
+    font-weight:800;
+    font-size:clamp(28px,4vw,42px);
+    line-height:1.08;
+    margin:0 0 14px;
+    letter-spacing:-0.01em;
+  }
+  .lede{
+    font-size:16px;
+    color:#B9C4E0;
+    max-width:640px;
+    line-height:1.55;
+    margin:0;
+  }
+  .legend-row{
+    display:flex;
+    gap:22px;
+    margin-top:26px;
+    flex-wrap:wrap;
+  }
+  .legend-chip{
+    display:flex;align-items:center;gap:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:#DCE3F5;
+  }
+  .dot{width:10px;height:10px;border-radius:2px;display:inline-block;}
+  h2.section-title{
+    font-family:'Sora',sans-serif;
+    font-weight:700;
+    font-size:22px;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .section-sub{
+    color:var(--muted);
+    font-size:14.5px;
+    margin:0 0 24px;
+  }
+  section{margin-bottom:56px;}
+  /* Region cards */
+  .region-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:16px;
+  }
+  .region-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 20px;
+    position:relative;
+    overflow:hidden;
+  }
+  .region-card .rname{
+    font-family:'Sora',sans-serif;
+    font-weight:700;
+    font-size:16.5px;
+    margin:0 0 2px;
+  }
+  .region-card .rtotal{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--muted);
+    font-size:12px;
+    margin-bottom:16px;
+  }
+  .winner-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:.03em;
+    padding:5px 10px;
+    border-radius:20px;
+    margin-bottom:16px;
+  }
+  .bars{display:flex;flex-direction:column;gap:9px;}
+  .barline{display:flex;align-items:center;gap:10px;}
+  .barlabel{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--muted);
+    width:54px;
+    flex-shrink:0;
+  }
+  .bartrack{
+    flex:1;height:8px;background:#F0F1F6;border-radius:4px;overflow:hidden;
+  }
+  .barfill{height:100%;border-radius:4px;}
+  .barval{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    font-weight:600;
+    width:38px;
+    text-align:right;
+    flex-shrink:0;
+  }
+  /* Table */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    font-size:14px;
+  }
+  thead th{
+    text-align:left;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--muted);
+    padding:14px 16px;
+    border-bottom:1px solid var(--line);
+    background:#FAFBFD;
+  }
+  tbody td{
+    padding:12px 16px;
+    border-bottom:1px solid var(--line);
+    vertical-align:middle;
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FAFBFD;}
+  td.num{font-family:'JetBrains Mono',monospace;text-align:right;}
+  td.uf{font-weight:700;font-family:'JetBrains Mono',monospace;}
+  .region-tag{
+    font-size:11px;
+    font-family:'JetBrains Mono',monospace;
+    color:var(--muted);
+  }
+  .mini-winner{
+    display:inline-block;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    font-weight:700;
+    padding:3px 8px;
+    border-radius:20px;
+  }
+  /* Filial detail (per-region collapsibles) */
+  .filial-block{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    margin-bottom:14px;
+    overflow:hidden;
+  }
+  .filial-block summary{
+    list-style:none;
+    cursor:pointer;
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    font-family:'Sora',sans-serif;
+  }
+  .filial-block summary::-webkit-details-marker{display:none;}
+  .filial-block summary .fb-left{display:flex;align-items:center;gap:12px;}
+  .filial-block summary .fb-region{font-weight:700;font-size:16px;}
+  .filial-block summary .fb-count{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    color:var(--muted);
+    font-weight:500;
+  }
+  .filial-block summary .fb-total{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .filial-block summary .fb-chevron{
+    font-size:12px;
+    color:var(--muted);
+    transition:transform .15s ease;
+  }
+  .filial-block[open] summary .fb-chevron{transform:rotate(90deg);}
+  .filial-block table{border:none;border-radius:0;border-top:1px solid var(--line);}
+  .filial-block td.filial-name{font-weight:600;font-size:13.5px;}
+  .fb-tops{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    padding:0 20px 16px;
+    border-top:1px solid var(--line);
+    padding-top:14px;
+  }
+  .fb-tops .fb-tops-label{
+    width:100%;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:2px;
+  }
+  .fb-top-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--seg-soft);
+    border-radius:10px;
+    padding:8px 12px;
+    flex:1 1 200px;
+  }
+  .fb-top-item .fb-top-seg{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--seg-color);
+    background:var(--panel);
+    border-radius:6px;
+    padding:3px 6px;
+    flex-shrink:0;
+  }
+  .fb-top-item .fb-top-name{
+    font-family:'Sora',sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    color:var(--ink);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .fb-top-item .fb-top-val{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--seg-color);
+    margin-left:auto;
+    flex-shrink:0;
+  }
+  .fb-top-item.fb-top-empty{opacity:.55;}
+  .fb-top-item.fb-top-empty .fb-top-name{font-weight:500;color:var(--muted);}
+  /* Detalhamento por estado (UF) — collapsible with vendedor + supervisor list */
+  .uf-region-sub{
+    font-weight:500;
+    font-size:12.5px;
+    color:var(--muted);
+    margin-left:6px;
+  }
+  .uf-stats{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:18px;
+    padding:14px 20px;
+    border-top:1px solid var(--line);
+    background:#FAFBFD;
+  }
+  .uf-stat{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .uf-stat i{
+    display:inline-block;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+  }
+  .uf-stat b{
+    font-size:13px;
+    color:var(--ink);
+    font-weight:700;
+  }
+  /* Vendedor explorer (search + filter + sortable table) */
+  .vx-controls{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .vx-search{
+    flex:1;
+    min-width:200px;
+    max-width:320px;
+    padding:10px 14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    background:var(--panel);
+    color:var(--ink);
+  }
+  .vx-search:focus{outline:none;border-color:var(--pf);}
+  .vx-pills{display:flex;gap:6px;flex-wrap:wrap;}
+  .vx-pill{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    font-weight:600;
+    padding:8px 14px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--muted);
+    cursor:pointer;
+    transition:all .12s ease;
+  }
+  .vx-pill:hover{border-color:var(--pf);}
+  .vx-pill.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .vx-pill .vx-pill-total{
+    font-weight:700;
+    margin-left:6px;
+    opacity:.75;
+  }
+  .vx-controls-sup{margin-top:-6px;}
+  .vx-filter-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--muted);
+    flex-shrink:0;
+  }
+  .vx-count{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+    margin-left:auto;
+  }
+  table.vx-table thead th{cursor:pointer;user-select:none;}
+  table.vx-table thead th:hover{color:var(--ink);}
+  table.vx-table thead th.sorted::after{content:' ▾';font-size:9px;}
+  table.vx-table thead th.sorted-asc::after{content:' ▴';font-size:9px;}
+  td.vend-name{font-weight:600;font-size:13.5px;}
+  td.sup-name{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+  .vx-empty{padding:32px 16px;text-align:center;color:var(--muted);font-size:13.5px;}
+  /* Grouped header: region spans 3 sub-columns (PME/PF/Adesão) */
+  table.vx-table-grouped{font-size:12.5px;table-layout:auto;}
+  table.vx-table-grouped thead th{white-space:nowrap;padding:12px 8px;}
+  table.vx-table-grouped tbody td{padding:9px 6px;}
+  table.vx-table-grouped tbody td.vend-name, table.vx-table-grouped tbody td.sup-name{padding:9px 10px;}
+  table.vx-table-grouped .vx-regiongroup{
+    text-align:center;
+    font-family:'Sora',sans-serif;
+    font-weight:700;
+    font-size:12px;
+    padding:10px 4px;
+    border-left:1px solid var(--line);
+  }
+  table.vx-table-grouped .vx-subrow th{
+    font-size:9.5px;
+    padding:6px 5px;
+    text-align:right;
+    font-weight:600;
+    border-left:1px solid transparent;
+  }
+  table.vx-table-grouped .vx-regiongroup.vx-regiongroup-a{background:#FAFBFD;}
+  table.vx-table-grouped .vx-subrow th.vx-zebra{background:#FAFBFD;}
+  table.vx-table-grouped td.vx-cell-group-start{border-left:1px solid var(--line);}
+  table.vx-table-grouped td.vx-zebra{background:#FAFBFD;}
+  table.vx-table-grouped td.vx-dim{color:var(--line);}
+  table.vx-table-grouped .vx-regiongroup{cursor:pointer;transition:background .12s ease,color .12s ease;}
+  table.vx-table-grouped .vx-regiongroup:hover{background:var(--pme-soft);color:var(--pme);}
+  table.vx-table-grouped .vx-regiongroup.vx-region-active{background:var(--navy);color:#fff;}
+  table.vx-table-grouped .vx-subrow th.vx-region-active-col{background:#EEF1FA;}
+  table.vx-table-grouped td.vx-region-active-col{background:#F5F7FE;}
+  /* Frozen header + frozen team-total footer inside a scrollable table area */
+  .vx-table-scroll{
+    max-height:640px;
+    overflow:auto;
+    border:1px solid var(--line);
+    border-radius:14px;
+  }
+  table.vx-table-grouped{
+    border:none;
+    border-radius:0;
+    overflow:visible;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+  table.vx-table-grouped thead th{position:sticky;z-index:3;}
+  table.vx-table-grouped thead tr.vx-grouprow th{top:0;}
+  .vx-total-row td{
+    position:sticky;
+    bottom:0;
+    z-index:4;
+    background:var(--navy);
+    color:#fff;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    font-weight:700;
+    padding:10px 6px;
+    border-top:2px solid var(--navy);
+    border-bottom:none;
+    white-space:nowrap;
+  }
+  .vx-total-row td.vx-total-label{
+    font-family:'Sora',sans-serif;
+    font-size:13.5px;
+    text-align:left;
+  }
+  .vx-total-row td.vx-total-meta{
+    font-weight:500;
+    color:#B9C4E0;
+  }
+  .vx-region-hint{
+    font-size:12.5px;
+    color:var(--muted);
+    margin:0 0 12px;
+  }
+  .vx-region-insight{
+    background:var(--navy);
+    color:#fff;
+    border-radius:14px;
+    padding:18px 22px;
+    margin-bottom:16px;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:22px;
+  }
+  .vx-region-insight .vri-title{
+    font-family:'Sora',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    flex-shrink:0;
+  }
+  .vx-region-insight .vri-sub{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:#8FA3D6;
+    display:block;
+    margin-top:2px;
+  }
+  .vx-region-insight .vri-stats{
+    display:flex;
+    flex-wrap:wrap;
+    gap:20px;
+    flex:1;
+  }
+  .vx-region-insight .vri-stat{min-width:150px;}
+  .vx-region-insight .vri-stat .vri-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    opacity:.65;
+    display:block;
+    margin-bottom:3px;
+  }
+  .vx-region-insight .vri-stat .vri-name{
+    font-family:'Sora',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    display:block;
+  }
+  .vx-region-insight .vri-stat .vri-count{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    opacity:.8;
+  }
+  .vx-region-insight .vri-close{
+    cursor:pointer;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:#8FA3D6;
+    flex-shrink:0;
+    padding:6px 10px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,.2);
+  }
+  .vx-region-insight .vri-close:hover{background:rgba(255,255,255,.1);color:#fff;}
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:12.5px;
+    font-family:'JetBrains Mono',monospace;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+    margin-top:56px;
+  }
+  @media (max-width:640px){
+    header.top{padding:38px 20px 32px;}
+    .wrap{padding:0 16px 60px;}
+    table{font-size:12.5px;}
+    thead th, tbody td{padding:10px 8px;}
+  }
 
-/* TOPBAR */
-.topbar{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);border-bottom:1px solid var(--nb);display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;position:sticky;top:0;z-index:200;box-shadow:0 4px 24px rgba(0,0,0,.35);}
-.brand{display:flex;align-items:center;gap:14px;}
-.brand-bar{width:4px;height:36px;border-radius:2px;background:linear-gradient(180deg,var(--teal-lt),var(--josy-lt));}
-.brand-title{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.3px;}
-.brand-title em{font-style:normal;color:var(--teal-lt);}
-.brand-sub{font-size:9px;color:var(--nt3);letter-spacing:2px;text-transform:uppercase;font-weight:500;margin-top:3px;}
-.topbar-kpis{display:flex;gap:5px;}
+  .data-status{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:16px;padding:11px 16px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:10px;font-size:13px;line-height:1.4;}
+  .ds-dot{width:9px;height:9px;border-radius:50%;background:#9aa5b1;flex:none;}
+  .ds-dot.loading{background:#c7cdd6;animation:ds-pulse 1s ease-in-out infinite;}
+  .ds-dot.ok{background:#3ddc84;}
+  .ds-dot.warn{background:#ffb648;}
+  .ds-dot.error{background:#ff6b6b;}
+  @keyframes ds-pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .ds-text{color:#eef1f5;opacity:.92;flex:1 1 320px;}
+  .ds-badge{padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;}
+  .ds-badge-ok{background:rgba(61,220,132,.18);color:#3ddc84;}
+  .ds-badge-warn{background:rgba(255,182,72,.2);color:#ffb648;}
+  .ds-refresh{margin-left:auto;padding:6px 13px;border-radius:8px;border:1px solid rgba(255,255,255,.28);background:transparent;color:#eef1f5;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .ds-refresh:hover{background:rgba(255,255,255,.12);}
+  @media (max-width:640px){.data-status{font-size:12px;} .ds-refresh{margin-left:0;order:99;width:100%;}}
+  .ds-empty{padding:36px 20px;text-align:center;color:var(--muted);font-size:14px;background:var(--panel);border:1px dashed var(--line);border-radius:12px;}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">Relatório de Vendas · Regional</p>
+    <h1>PF, PME ou Adesão:<br>quem lidera em cada região?</h1>
+    <p class="lede">Comparativo de volume de vidas por região do Brasil, cruzando as bases PME (nm_filial), PF (NOME_FILIAL) e Adesão (NM_FILIAL) a partir da filial de cada operação.</p>
+    <div class="legend-row">
+      <span class="legend-chip"><span class="dot" style="background:var(--pme)"></span>PME</span>
+      <span class="legend-chip"><span class="dot" style="background:var(--pf)"></span>PF</span>
+      <span class="legend-chip"><span class="dot" style="background:var(--adesao)"></span>Adesão</span>
+    </div>
+    <div class="data-status" id="dataStatus">
+      <span class="ds-dot loading" id="dsDot"></span>
+      <span class="ds-text" id="dsText">Carregando dados atualizados da planilha...</span>
+      <span class="ds-badge" id="dsValidation" hidden></span>
+      <button type="button" class="ds-refresh" id="dsRefreshBtn">Atualizar agora</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+  <section>
+    <h2 class="section-title">Panorama por região</h2>
+    <p class="section-sub">Volume de vidas por segmento (PME e PF somam as vidas de cada contrato; Adesão conta usuários ativos) — o selo indica o segmento líder em cada região.</p>
+    <div class="region-grid" id="regionGrid"></div>
+  </section>
+  <section>
+    <h2 class="section-title">Detalhamento por estado (UF)</h2>
+    <p class="section-sub">Abertura da mesma leitura por unidade federativa, ordenada por região e volume total — clique para ver os vendedores de cada UF e o supervisor de cada um.</p>
+    <div id="ufSection"></div>
+  </section>
+  <section>
+    <h2 class="section-title">Filiais por região</h2>
+    <p class="section-sub">Nomes das filiais e volume de vidas por segmento em cada região — clique para abrir.</p>
+    <div id="filialSection"></div>
+  </section>
+  <section>
+    <h2 class="section-title">Vendas por vendedor, região e segmento</h2>
+    <p class="section-sub">Uma linha por vendedor, com PME / PF / Adesão (em vidas) abertos em cada região e o total geral. Busque pelo nome ou filtre por supervisor; clique nos cabeçalhos para ordenar.</p>
+    <div class="vx-controls">
+      <input type="text" id="vxSearch" class="vx-search" placeholder="Buscar vendedor...">
+      <span class="vx-count" id="vxCount"></span>
+    </div>
+    <div class="vx-controls vx-controls-sup">
+      <span class="vx-filter-label">Supervisor:</span>
+      <div class="vx-pills" id="vxSupPills"></div>
+    </div>
+    <p class="vx-region-hint">Clique no nome de uma região no cabeçalho da tabela para ver quem mais vende nela, geral e por segmento.</p>
+    <div id="vxRegionInsight" class="vx-region-insight" hidden></div>
+    <div class="vx-table-scroll">
+    <table class="vx-table vx-table-grouped">
+      <thead>
+        <tr class="vx-grouprow">
+          <th rowspan="2" data-key="vend">Vendedor</th>
+          <th rowspan="2" data-key="sup">Supervisor</th>
+          <th colspan="3" class="vx-regiongroup vx-regiongroup-a" data-region="Sudeste">Sudeste</th>
+          <th colspan="3" class="vx-regiongroup vx-regiongroup-b" data-region="Nordeste">Nordeste</th>
+          <th colspan="3" class="vx-regiongroup vx-regiongroup-a" data-region="Centro-Oeste">Centro-Oeste</th>
+          <th colspan="3" class="vx-regiongroup vx-regiongroup-b" data-region="Sul">Sul</th>
+          <th colspan="3" class="vx-regiongroup vx-regiongroup-a" data-region="Norte">Norte</th>
+          <th rowspan="2" data-key="total" style="text-align:right">Total</th>
+        </tr>
+        <tr class="vx-subrow" id="vxSubHeaderRow"></tr>
+      </thead>
+      <tbody id="vxBody"></tbody>
+      <tfoot>
+        <tr class="vx-total-row" id="vxTotalRow"></tr>
+      </tfoot>
+    </table>
+    </div>
+  </section>
+  <footer>Base: ANALISE_REGIÃO.xlsx · abas PME, PF e ADESÃO · filial mapeada por cidade → UF → região</footer>
+</div>
+<script>
+const REGION_ORDER = ["Sudeste","Nordeste","Centro-Oeste","Sul","Norte"];
+const COLORS = { PME: "#3D5AFE", PF: "#00A896", ADESAO: "#FF6B35" };
+const SOFT   = { PME: "#E8EAFF", PF: "#DDF6F1", ADESAO: "#FFE8DD" };
+const LABELS = { PME: "PME", PF: "PF", ADESAO: "Adesão" };
+function leader(d){
+  const entries = [["PME",d.PME],["PF",d.PF],["ADESAO",d.ADESAO]];
+  entries.sort((a,b)=>b[1]-a[1]);
+  return entries[0][0];
+}
+
+// ============================================================
+// Live data pipeline: fetch BASE_PF / BASE PME / BASE ADESAO
+// (published Google Sheets CSVs) on every page load, filter to
+// GESTAO = JOSY (this team's scope), aggregate, and render.
+// RANKING_CONSIDERADO8 is fetched only to cross-check PME/PF
+// totals against the business's own pivot.
+// If the live fetch fails for any reason (no internet, sheet
+// unpublished, etc.) the dashboard falls back to the last
+// snapshot saved inside this file and says so clearly.
+// ============================================================
+const SHEET_PUB_ID = '2PACX-1vT7BxVg_7T-BqPEAPFfneLlnKxBPIw5tvxgwBAnJAQ6ZZK3ICE1K4fRevRHCPlAYEtmaZZdesrTcv3D';
+const GIDS = { PF: '529816935', PME: '864350627', ADESAO: '1228665504', RANKING: '142954678' };
+const TEAM_FILTER = 'JOSY';
+function sheetCsvUrl(gid){
+  return `https://docs.google.com/spreadsheets/d/e/${SHEET_PUB_ID}/pub?output=csv&single=true&gid=${gid}&_=${Date.now()}`;
+}
+
+const FILIAL_TO_UF = {"AMERICANA - NDI SP": "SP", "CAMPINAS - NDI SP": "SP", "JUNDIAI - NDI SP": "SP", "LIMEIRA": "SP", "MOGI DAS CRUZES - NDI SP": "SP", "PIRACICABA": "SP", "PIRASSUNUNGA": "SP", "RIBEIRAO PRETO": "SP", "RIBEIRAO PRETO LNHA 2": "SP", "SANTOS- NDI SP": "SP", "SAO B. DO CAMPO - NDI SP": "SP", "SAO PAULO - NDI SP": "SP", "SERTAOZINHO": "SP", "SOROCABA - NDI SP": "SP", "SÃO CARLOS": "SP", "SÃO JOSE DOS CAMPOS": "SP", "SÃO JOSE DOS CAMPOS - NDI SP": "SP", "ARARAQUARA": "SP", "BAURU": "SP", "FRANCA": "SP", "JABOTICABAL": "SP", "LINS": "SP", "MARÍLIA": "SP", "BELO HORIZONTE": "MG", "BELO HORIZONTE - NDI MINAS": "MG", "BELO HORIZONTE LINHA 2": "MG", "DIVINOPOLIS - NDI MINAS": "MG", "UBERABA": "MG", "UBERLANDIA": "MG", "RIO DE JANEIRO- NDI SP": "RJ", "NATAL": "RN", "MOSSORO": "RN", "SALVADOR": "BA", "FEIRA DE SANTANA": "BA", "CAMACARI": "BA", "JUAZEIRO": "BA", "RECIFE": "PE", "MACEIO": "AL", "FORTALEZA": "CE", "TERESINA": "PI", "SAO LUIS": "MA", "ARACAJU": "SE", "JOAO PESSOA": "PB", "CAMPINA GRANDE": "PB", "GOIANIA": "GO", "GOIANIA LINHA2": "GO", "ANAPOLIS": "GO", "RIO VERDE": "GO", "QUIRINÓPOLIS": "GO", "BRASILIA": "DF", "CAMPO GRANDE": "MS", "TRÊS LAGOAS": "MS", "CUIABA": "MT", "RONDONÓPOLIS": "MT", "CURITIBA - CLINIPAM": "PR", "LONDRINA - CLINIPAM": "PR", "PORTO ALEGRE - CCG": "RS", "CANOAS - CCG": "RS", "NOVO HAMBURGO - CCG": "RS", "SAO LEOPOLDO - CCG": "RS", "BALN CAMBORIU - CLINIPAM": "SC", "JOINVILLE": "SC", "BELEM": "PA", "PARAUAPEBAS": "PA", "MANAUS": "AM"};
+const UF_TO_REGION = {"SP": "Sudeste", "MG": "Sudeste", "RJ": "Sudeste", "RN": "Nordeste", "BA": "Nordeste", "PE": "Nordeste", "AL": "Nordeste", "CE": "Nordeste", "PI": "Nordeste", "MA": "Nordeste", "SE": "Nordeste", "PB": "Nordeste", "GO": "Centro-Oeste", "DF": "Centro-Oeste", "MS": "Centro-Oeste", "MT": "Centro-Oeste", "PR": "Sul", "RS": "Sul", "SC": "Sul", "PA": "Norte", "AM": "Norte"};
+
+function canonFilial(f){
+  f = (f==null ? '' : f.toString()).trim();
+  if(f.toUpperCase() === 'RIBEIRAO PRETO LNHA 2') return 'RIBEIRAO PRETO';
+  return f;
+}
+
+// ---- CSV parsing (quoted fields, escaped quotes, CRLF/LF) ----
+function parseCSV(text){
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(text[i+1] === '"'){ field += '"'; i++; }
+        else { inQuotes = false; }
+      } else {
+        field += c;
+      }
+    } else {
+      if(c === '"'){ inQuotes = true; }
+      else if(c === ','){ row.push(field); field = ''; }
+      else if(c === '\r'){ /* ignore, \n closes the row */ }
+      else if(c === '\n'){ row.push(field); field = ''; rows.push(row); row = []; }
+      else { field += c; }
+    }
+  }
+  if(field.length > 0 || row.length > 0){ row.push(field); rows.push(row); }
+  while(rows.length && rows[rows.length-1].every(c => (c||'').trim() === '')) rows.pop();
+  const header = rows.shift() || [];
+  return { header, rows };
+}
+
+// trim + strip accents + collapse punctuation/whitespace -> tolerant header key
+function normHeader(s){
+  return (s == null ? '' : s.toString())
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .trim().toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function pickCol(header, candidates){
+  const normed = header.map(normHeader);
+  for(const cand of candidates){
+    const idx = normed.indexOf(normHeader(cand));
+    if(idx >= 0) return idx;
+  }
+  return -1;
+}
+
+// tolerant pt-BR / plain numeric parsing (handles "1.234,56", "12,5" and plain "123")
+function parseNum(raw){
+  if(raw == null) return 0;
+  let s = raw.toString().trim();
+  if(s === '') return 0;
+  s = s.replace(/[^\d,.\-]/g, '');
+  if(s === '' || s === '-') return 0;
+  const hasComma = s.includes(',');
+  const hasDot = s.includes('.');
+  if(hasComma && hasDot){
+    if(s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.');
+    else s = s.replace(/,/g, '');
+  } else if(hasComma){
+    s = s.replace(',', '.');
+  }
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+async function fetchCSV(url){
+  const res = await fetch(url, { cache: 'no-store' });
+  if(!res.ok) throw new Error(`HTTP ${res.status} ao buscar a planilha`);
+  const text = await res.text();
+  return parseCSV(text);
+}
+
+// ---- Build per-record rows from the three raw sheets, scoped to GESTAO=JOSY ----
+function buildRecords(pfTable, pmeTable, adesaoTable){
+  const records = [];
+  const unmapped = new Set();
+
+  function process(table, seg, filialCands, promCands, supCands, qtyCands, mode){
+    if(!table || !table.header) return;
+    const header = table.header;
+    const idxGestao = pickCol(header, ['GESTAO', 'GESTÃO']);
+    const idxFilial = pickCol(header, filialCands);
+    const idxProm = pickCol(header, promCands);
+    const idxSup = pickCol(header, supCands);
+    const idxQty = qtyCands ? pickCol(header, qtyCands) : -1;
+    if(idxFilial < 0 || idxProm < 0){
+      console.warn(`[live-data] colunas esperadas nao encontradas na aba ${seg}`, header);
+      return;
+    }
+    (table.rows || []).forEach(row => {
+      if(idxGestao >= 0){
+        const gestao = (row[idxGestao] || '').toString().trim().toUpperCase();
+        if(gestao !== TEAM_FILTER) return;
+      }
+      const filial = canonFilial(row[idxFilial]);
+      const vend = (row[idxProm] || '').toString().trim();
+      const sup = idxSup >= 0 ? (row[idxSup] || '').toString().trim() : '';
+      if(!filial || !vend) return;
+      const uf = FILIAL_TO_UF[filial.toUpperCase()];
+      if(!uf){ unmapped.add(filial); return; }
+      const reg = UF_TO_REGION[uf];
+      const vidas = mode === 'count' ? 1 : parseNum(idxQty >= 0 ? row[idxQty] : 0);
+      records.push({ seg, vend, sup, filial, uf, reg, vidas });
+    });
+  }
+
+  process(pfTable, 'PF', ['NOME_FILIAL', 'NOME FILIAL'], ['PROMOTOR'], ['SUPERVISOR'], [' QTDE VIDAS', 'QTDE VIDAS', 'QTD VIDAS'], 'sum');
+  process(pmeTable, 'PME', ['nm_filial', 'NM_FILIAL'], ['PROMOTOR'], ['SUPERVISOR'], ['Qt.Usu', 'QT USU', 'QT.USU'], 'sum');
+  process(adesaoTable, 'ADESAO', ['NM_FILIAL', 'nm_filial'], ['PROMOTOR'], ['SUPERVISOR'], null, 'count');
+
+  return { records, unmapped };
+}
+
+// ---- Aggregate raw records into every shape the report renders ----
+function aggregate(records){
+  const regioes = {}; REGION_ORDER.forEach(r => regioes[r] = { PME: 0, PF: 0, ADESAO: 0 });
+  const ufAgg = {};
+  const filialAgg = {};
+  const ufVendAgg = {};
+  const pivotAgg = {};
+
+  records.forEach(rec => {
+    const { seg, vend, sup, filial, uf, reg, vidas } = rec;
+    regioes[reg][seg] += vidas;
+
+    if(!ufAgg[uf]) ufAgg[uf] = { regiao: reg, PME: 0, PF: 0, ADESAO: 0 };
+    ufAgg[uf][seg] += vidas;
+
+    if(!filialAgg[reg]) filialAgg[reg] = {};
+    if(!filialAgg[reg][filial]) filialAgg[reg][filial] = { PME: 0, PF: 0, ADESAO: 0 };
+    filialAgg[reg][filial][seg] += vidas;
+
+    const vendKey = vend.toUpperCase();
+    if(!ufVendAgg[uf]) ufVendAgg[uf] = {};
+    if(!ufVendAgg[uf][vendKey]) ufVendAgg[uf][vendKey] = { nome: vend, sup, PME: 0, PF: 0, ADESAO: 0 };
+    ufVendAgg[uf][vendKey][seg] += vidas;
+
+    if(!pivotAgg[vendKey]) pivotAgg[vendKey] = { nome: vend, sup, byReg: {} };
+    if(!pivotAgg[vendKey].byReg[reg]) pivotAgg[vendKey].byReg[reg] = { PME: 0, PF: 0, ADESAO: 0 };
+    pivotAgg[vendKey].byReg[reg][seg] += vidas;
+  });
+
+  const ufRows = Object.keys(ufAgg).map(uf => {
+    const d = ufAgg[uf];
+    const total = d.PME + d.PF + d.ADESAO;
+    return [uf, d.regiao, d.PME, d.PF, d.ADESAO, total];
+  }).sort((a, b) => {
+    const ra = REGION_ORDER.indexOf(a[1]), rb = REGION_ORDER.indexOf(b[1]);
+    if(ra !== rb) return ra - rb;
+    if(b[5] !== a[5]) return b[5] - a[5];
+    return a[0].localeCompare(b[0]);
+  });
+
+  const filialRows = {};
+  REGION_ORDER.forEach(reg => {
+    const map = filialAgg[reg] || {};
+    filialRows[reg] = Object.keys(map).map(f => {
+      const d = map[f]; const total = d.PME + d.PF + d.ADESAO;
+      return [f, d.PME, d.PF, d.ADESAO, total];
+    }).sort((a, b) => b[4] - a[4] || a[0].localeCompare(b[0]));
+  });
+
+  const ufVendedores = {};
+  Object.keys(ufVendAgg).forEach(uf => {
+    ufVendedores[uf] = Object.values(ufVendAgg[uf]).map(d => {
+      const total = d.PME + d.PF + d.ADESAO;
+      return [d.nome, d.sup, d.PME, d.PF, d.ADESAO, total];
+    }).sort((a, b) => b[5] - a[5] || a[0].localeCompare(b[0]));
+  });
+
+  const vendedorPivot = Object.values(pivotAgg).map(d => {
+    let grandTotal = 0;
+    const regCells = REGION_ORDER.map(reg => {
+      const c = d.byReg[reg];
+      if(!c) return null;
+      const total = c.PME + c.PF + c.ADESAO;
+      grandTotal += total;
+      return [c.PME, c.PF, c.ADESAO, total];
+    });
+    return [d.nome, d.sup, regCells, grandTotal];
+  }).sort((a, b) => b[3] - a[3] || a[0].localeCompare(b[0]));
+
+  const grandTotal = Object.values(regioes).reduce((s, d) => s + d.PME + d.PF + d.ADESAO, 0);
+
+  return { REGIOES: regioes, UF_ROWS: ufRows, FILIAL_ROWS: filialRows, UF_VENDEDORES: ufVendedores, VENDEDOR_PIVOT: vendedorPivot, grandTotal };
+}
+
+// ---- Best-effort cross-check against RANKING_CONSIDERADO8's own pivot ----
+// The sheet is a two-block pivot glued side by side (left: TIPO DE CONTRATO=Varios
+// itens -> PF/ADESAO/PME/TOTAIS; right: TIPO DE CONTRATO=SINTRO -> Total) and the
+// right block is shorter, so its own "Total Geral" row lands in the *middle* of the
+// left block's data, sharing a spreadsheet row with an unrelated left-block record.
+// Both "Total Geral" labels must be matched by column (under each block's own
+// SUPERVISOR header), not just anywhere in the row, or the wrong one gets picked up.
+function validateAgainstRanking(table, model){
+  try {
+    if(!table) return { available: false, reason: 'Aba RANKING nao carregada.' };
+    const grid = [table.header, ...(table.rows || [])];
+    let headerRowIdx = -1, colSupLeft = -1, colSupRight = -1, colPF = -1, colPME = -1, colADESAO = -1, colTotalRight = -1;
+    for(let i = 0; i < grid.length; i++){
+      const normed = grid[i].map(normHeader);
+      const pfIdx = normed.findIndex(h => h === 'vidas pf');
+      const pmeIdx = normed.findIndex(h => h === 'vidas pme');
+      if(pfIdx >= 0 && pmeIdx >= 0){
+        headerRowIdx = i; colPF = pfIdx; colPME = pmeIdx;
+        colADESAO = normed.findIndex(h => h === 'vidas adesao');
+        colSupLeft = normed.indexOf('supervisor');
+        colSupRight = colSupLeft >= 0 ? normed.indexOf('supervisor', colSupLeft + 1) : -1;
+        colTotalRight = normed.indexOf('total', Math.max(colPME, colADESAO) + 1);
+        break;
+      }
+    }
+    if(headerRowIdx < 0 || colSupLeft < 0) return { available: false, reason: 'Cabecalho do Ranking nao encontrado.' };
+
+    let totalRowIdx = -1;
+    for(let i = headerRowIdx + 1; i < grid.length; i++){
+      if(normHeader(grid[i][colSupLeft]) === 'total geral'){ totalRowIdx = i; break; }
+    }
+    if(totalRowIdx < 0) return { available: false, reason: 'Linha "Total Geral" nao encontrada no Ranking.' };
+
+    const row = grid[totalRowIdx];
+    const officialPme = colPME >= 0 ? parseNum(row[colPME]) : null;
+    const officialPf = colPF >= 0 ? parseNum(row[colPF]) : null;
+    const officialAdesaoNarrow = colADESAO >= 0 ? parseNum(row[colADESAO]) : null;
+
+    let officialSintro = null;
+    if(colSupRight >= 0 && colTotalRight >= 0){
+      for(let i = headerRowIdx + 1; i < grid.length; i++){
+        if(normHeader(grid[i][colSupRight]) === 'total geral'){
+          officialSintro = parseNum(grid[i][colTotalRight]);
+          break;
+        }
+      }
+    }
+    const officialAdesao = (officialAdesaoNarrow != null && officialSintro != null) ? (officialAdesaoNarrow + officialSintro) : officialAdesaoNarrow;
+
+    const computedPme = Object.values(model.REGIOES).reduce((s, d) => s + d.PME, 0);
+    const computedPf = Object.values(model.REGIOES).reduce((s, d) => s + d.PF, 0);
+    const computedAdesao = Object.values(model.REGIOES).reduce((s, d) => s + d.ADESAO, 0);
+
+    return {
+      available: true,
+      officialPme, officialPf, officialAdesao,
+      computedPme, computedPf, computedAdesao,
+      pmeOk: officialPme != null && officialPme === computedPme,
+      pfOk: officialPf != null && officialPf === computedPf,
+    };
+  } catch(e){
+    return { available: false, reason: e.message };
+  }
+}
+
+
+// ---- status bar UI ----
+const dsDot = document.getElementById('dsDot');
+const dsText = document.getElementById('dsText');
+const dsValidation = document.getElementById('dsValidation');
+const dsRefreshBtn = document.getElementById('dsRefreshBtn');
+dsRefreshBtn.addEventListener('click', () => location.reload());
+
+function setStatus(kind, text){
+  dsDot.className = 'ds-dot ' + kind;
+  dsText.textContent = text;
+}
+
+// Shown only when the live fetch fails — this report has no baked-in data of its
+// own anymore, so on failure every section is cleared and explains why instead of
+// showing a number that might not reflect the current spreadsheet.
+function renderEmptyState(message){
+  const empty = `<p class="ds-empty">${message}</p>`;
+  document.getElementById('regionGrid').innerHTML = empty;
+  document.getElementById('ufSection').innerHTML = empty;
+  document.getElementById('filialSection').innerHTML = empty;
+  document.getElementById('vxSupPills').innerHTML = '';
+  document.getElementById('vxCount').textContent = '';
+  document.getElementById('vxSubHeaderRow').innerHTML = '';
+  document.getElementById('vxTotalRow').innerHTML = '';
+  const totalCols = 2 + REGION_ORDER.length * 3 + 1;
+  document.getElementById('vxBody').innerHTML = `<tr><td colspan="${totalCols}" class="vx-empty">${message}</td></tr>`;
+}
+
+function renderValidationBadge(v){
+  if(!v || !v.available){ dsValidation.hidden = true; return; }
+  const ok = v.pmeOk && v.pfOk;
+  dsValidation.hidden = false;
+  dsValidation.className = 'ds-badge ' + (ok ? 'ds-badge-ok' : 'ds-badge-warn');
+  const parts = [];
+  parts.push(`PME ${v.computedPme}${v.officialPme != null ? ` vs ${v.officialPme} (Ranking)` : ''}${v.pmeOk ? ' \u2713' : ' \u26a0'}`);
+  parts.push(`PF ${v.computedPf}${v.officialPf != null ? ` vs ${v.officialPf} (Ranking)` : ''}${v.pfOk ? ' \u2713' : ' \u26a0'}`);
+  dsValidation.textContent = parts.join(' \u00b7 ');
+  dsValidation.title = (ok ? 'PME e PF batem com o RANKING_CONSIDERADO8. ' : 'PME e/ou PF nao batem com o RANKING_CONSIDERADO8 - confira se a planilha foi atualizada. ')
+    + (v.officialAdesao != null ? `Adesao (soma Adesao+Sintro no Ranking): ${v.computedAdesao} vs ${v.officialAdesao}.` : '');
+}
+
+// ============================================================
+// Rendering: builds every section of the report from a data
+// model shaped like { REGIOES, UF_ROWS, FILIAL_ROWS, UF_VENDEDORES, VENDEDOR_PIVOT }.
+// Called at most once per page load, only after a successful live fetch -
+// a manual refresh simply reloads the page rather than re-running this,
+// which keeps all the search/sort/filter state below safe to wire up once.
+// ============================================================
+function renderAll(model){
+  const REGIOES = model.REGIOES, UF_ROWS = model.UF_ROWS, FILIAL_ROWS = model.FILIAL_ROWS,
+        UF_VENDEDORES = model.UF_VENDEDORES, VENDEDOR_PIVOT = model.VENDEDOR_PIVOT;
+  document.getElementById('regionGrid').innerHTML = '';
+  document.getElementById('ufSection').innerHTML = '';
+  document.getElementById('filialSection').innerHTML = '';
+// ---- Region cards ----
+const grid = document.getElementById('regionGrid');
+REGION_ORDER.forEach(reg=>{
+  const d = REGIOES[reg];
+  if(!d) return;
+  const total = d.PME + d.PF + d.ADESAO;
+  const lead = leader(d);
+  const max = Math.max(d.PME, d.PF, d.ADESAO, 1);
+  const card = document.createElement('div');
+  card.className = 'region-card';
+  card.innerHTML = `
+    <p class="rname">${reg}</p>
+    <p class="rtotal">${total.toLocaleString('pt-BR')} vidas no total</p>
+    <span class="winner-badge" style="background:${SOFT[lead]};color:${COLORS[lead]}">● ${LABELS[lead]} lidera</span>
+    <div class="bars">
+      ${["PME","PF","ADESAO"].map(k=>`
+        <div class="barline">
+          <span class="barlabel">${LABELS[k]}</span>
+          <div class="bartrack"><div class="barfill" style="width:${(d[k]/max*100).toFixed(1)}%;background:${COLORS[k]}"></div></div>
+          <span class="barval" style="color:${COLORS[k]}">${d[k]}</span>
+        </div>`).join('')}
+    </div>
+  `;
+  grid.appendChild(card);
+});
+// ---- Detalhamento por estado (UF) — collapsible, com vendedores + supervisor ----
+const ufSection = document.getElementById('ufSection');
+UF_ROWS.forEach(([uf, regiao, pme, pf, adesao, total], i)=>{
+  const lead = leader({PME:pme, PF:pf, ADESAO:adesao});
+  const vendedores = UF_VENDEDORES[uf] || [];
+  const details = document.createElement('details');
+  details.className = 'filial-block';
+  if(i === 0) details.open = true;
+  const vendRowsHtml = vendedores.map(([nome, sup, vpme, vpf, vadesao, vtotal])=>{
+    const vlead = leader({PME:vpme, PF:vpf, ADESAO:vadesao});
+    return `
+    <tr>
+      <td class="filial-name">${nome}</td>
+      <td class="region-tag">${sup}</td>
+      <td class="num" style="color:${COLORS.PME}">${vpme}</td>
+      <td class="num" style="color:${COLORS.PF}">${vpf}</td>
+      <td class="num" style="color:${COLORS.ADESAO}">${vadesao}</td>
+      <td class="num" style="font-weight:700">${vtotal}</td>
+      <td><span class="mini-winner" style="background:${SOFT[vlead]};color:${COLORS[vlead]}">${LABELS[vlead]}</span></td>
+    </tr>`;
+  }).join('');
+  details.innerHTML = `
+    <summary>
+      <div class="fb-left">
+        <span class="fb-chevron">▶</span>
+        <span class="fb-region">${uf}<span class="uf-region-sub">· ${regiao}</span></span>
+        <span class="fb-count">${vendedores.length} vendedor${vendedores.length===1?'':'es'}</span>
+      </div>
+      <span class="fb-total">${total.toLocaleString('pt-BR')} vidas</span>
+    </summary>
+    <div class="uf-stats">
+      <span class="uf-stat"><i style="background:${COLORS.PME}"></i>PME <b>${pme}</b></span>
+      <span class="uf-stat"><i style="background:${COLORS.PF}"></i>PF <b>${pf}</b></span>
+      <span class="uf-stat"><i style="background:${COLORS.ADESAO}"></i>Adesão <b>${adesao}</b></span>
+      <span class="mini-winner" style="background:${SOFT[lead]};color:${COLORS[lead]}">${LABELS[lead]} lidera</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Vendedor</th>
+          <th>Supervisor</th>
+          <th style="text-align:right">PME</th>
+          <th style="text-align:right">PF</th>
+          <th style="text-align:right">Adesão</th>
+          <th style="text-align:right">Total</th>
+          <th>Líder</th>
+        </tr>
+      </thead>
+      <tbody>${vendRowsHtml}</tbody>
+    </table>
+  `;
+  ufSection.appendChild(details);
+});
+// ---- Filiais por região (collapsible detail) ----
+const filialSection = document.getElementById('filialSection');
+const FB_SEGMENTS = [
+  {key:'pme', idx:0, colorKey:'PME', label:'PME'},
+  {key:'pf', idx:1, colorKey:'PF', label:'PF'},
+  {key:'adesao', idx:2, colorKey:'ADESAO', label:'Adesão'},
+];
+function topSellersByRegion(reg){
+  const ridx = REGION_ORDER.indexOf(reg);
+  const result = {};
+  FB_SEGMENTS.forEach(seg=>{
+    let best = null;
+    VENDEDOR_PIVOT.forEach(([vend, sup, regCells])=>{
+      const cell = regCells[ridx];
+      if(!cell) return;
+      const v = cell[seg.idx];
+      if(v > 0 && (!best || v > best.v)) best = {name: vend, sup, v};
+    });
+    result[seg.key] = best;
+  });
+  return result;
+}
+REGION_ORDER.forEach(reg=>{
+  const rows = FILIAL_ROWS[reg] || [];
+  const regTotal = rows.reduce((s,r)=>s+r[4],0);
+  const details = document.createElement('details');
+  details.className = 'filial-block';
+  if(reg === REGION_ORDER[0]) details.open = true;
+  const rowsHtml = rows.map(([nome, pme, pf, adesao, total])=>{
+    const lead = leader({PME:pme, PF:pf, ADESAO:adesao});
+    return `
+      <tr>
+        <td class="filial-name">${nome}</td>
+        <td class="num" style="color:${COLORS.PME}">${pme}</td>
+        <td class="num" style="color:${COLORS.PF}">${pf}</td>
+        <td class="num" style="color:${COLORS.ADESAO}">${adesao}</td>
+        <td class="num" style="font-weight:700">${total}</td>
+        <td><span class="mini-winner" style="background:${SOFT[lead]};color:${COLORS[lead]}">${LABELS[lead]}</span></td>
+      </tr>`;
+  }).join('');
+  const tops = topSellersByRegion(reg);
+  const fbTopsHtml = `
+    <div class="fb-tops">
+      <span class="fb-tops-label">Quem mais vende em ${reg}, por segmento</span>
+      ${FB_SEGMENTS.map(seg=>{
+        const best = tops[seg.key];
+        const color = COLORS[seg.colorKey];
+        const soft = SOFT[seg.colorKey];
+        if(!best){
+          return `
+            <div class="fb-top-item fb-top-empty" style="--seg-color:${color};--seg-soft:${soft}">
+              <span class="fb-top-seg">${seg.label}</span>
+              <span class="fb-top-name">Sem vidas</span>
+            </div>`;
+        }
+        return `
+          <div class="fb-top-item" style="--seg-color:${color};--seg-soft:${soft}">
+            <span class="fb-top-seg">${seg.label}</span>
+            <span class="fb-top-name" title="${best.name} · ${best.sup}">${best.name}</span>
+            <span class="fb-top-val">${best.v}</span>
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+  details.innerHTML = `
+    <summary>
+      <div class="fb-left">
+        <span class="fb-chevron">▶</span>
+        <span class="fb-region">${reg}</span>
+        <span class="fb-count">${rows.length === 1 ? '1 filial' : rows.length + ' filiais'}</span>
+      </div>
+      <span class="fb-total">${regTotal.toLocaleString('pt-BR')} vidas</span>
+    </summary>
+    ${fbTopsHtml}
+    <table>
+      <thead>
+        <tr>
+          <th>Filial</th>
+          <th style="text-align:right">PME</th>
+          <th style="text-align:right">PF</th>
+          <th style="text-align:right">Adesão</th>
+          <th style="text-align:right">Total</th>
+          <th>Líder</th>
+        </tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+  `;
+  filialSection.appendChild(details);
+});
+// ---- Vendedor explorer: one row per vendedor, region as columns, search + supervisor filter, sortable ----
+(function(){
+  // VENDEDOR_PIVOT: [vend, sup, [ [pme,pf,adesao,total] | null, ... one per REGION_ORDER ], grandTotal]
+  const rows = VENDEDOR_PIVOT.map(([vend, sup, regCells, grandTotal])=>({vend, sup, regCells, grandTotal}));
+  const search = document.getElementById('vxSearch');
+  const supPillsWrap = document.getElementById('vxSupPills');
+  const countEl = document.getElementById('vxCount');
+  const tbody = document.getElementById('vxBody');
+  const groupHeaderRow = document.querySelector('table.vx-table thead tr.vx-grouprow');
+  const subHeaderRow = document.getElementById('vxSubHeaderRow');
+  const SEG_KEYS = ['pme','pf','adesao'];
+  const SEG_LABELS = {pme:'PME', pf:'PF', adesao:'Adesão'};
+  const TOTAL_COLS = 2 + REGION_ORDER.length*3 + 1;
+
+  const SUPERVISORES = [...new Set(rows.map(r=>r.sup))].sort();
+  const insightPanel = document.getElementById('vxRegionInsight');
+
+  let activeSupervisor = 'Todos';
+  let activeInsightRegion = null;
+  let sortKey = 'total';
+  let sortDir = 'desc';
+  let lastFiltered = rows;
+
+  const norm = s => (s||'').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const fmt = n => n.toLocaleString('pt-BR');
+
+  // build sub-header row: PME / PF / Adesão under each region group, once, statically
+  subHeaderRow.innerHTML = REGION_ORDER.map((reg, ridx)=>{
+    const zebra = ridx % 2 === 0 ? '' : ' vx-zebra';
+    return SEG_KEYS.map(seg=>`<th class="${zebra}" data-key="${reg}_${seg}">${SEG_LABELS[seg]}</th>`).join('');
+  }).join('');
+
+  // the sub-header row's sticky offset must equal the rendered height of the row above it —
+  // measured live so it stays correct across browsers/zoom/font-load instead of a guessed pixel value
+  function syncStickyOffsets(){
+    const h = groupHeaderRow.getBoundingClientRect().height;
+    subHeaderRow.querySelectorAll('th').forEach(th=>{ th.style.top = h + 'px'; });
+  }
+  syncStickyOffsets();
+  window.addEventListener('load', syncStickyOffsets);
+  window.addEventListener('resize', syncStickyOffsets);
+
+  supPillsWrap.addEventListener('click', (e)=>{
+    const pill = e.target.closest('.vx-pill');
+    if(!pill) return;
+    activeSupervisor = pill.dataset.sup;
+    render();
+  });
+
+  [...groupHeaderRow.querySelectorAll('th[data-key]'), ...subHeaderRow.querySelectorAll('th[data-key]')].forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if(sortKey === key){
+        sortDir = sortDir === 'desc' ? 'asc' : 'desc';
+      } else {
+        sortKey = key;
+        sortDir = (key==='vend' || key==='sup') ? 'asc' : 'desc';
+      }
+      render();
+    });
+  });
+
+  search.addEventListener('input', render);
+
+  // region header click: toggle the "who sells most here" insight panel
+  groupHeaderRow.addEventListener('click', (e)=>{
+    const th = e.target.closest('.vx-regiongroup');
+    if(!th) return;
+    const reg = th.dataset.region;
+    activeInsightRegion = (activeInsightRegion === reg) ? null : reg;
+    render();
+  });
+  insightPanel.addEventListener('click', (e)=>{
+    if(e.target.closest('.vri-close')){
+      activeInsightRegion = null;
+      render();
+    }
+  });
+
+  function computeInsight(reg, dataset){
+    const idx = REGION_ORDER.indexOf(reg);
+    const withCell = dataset.filter(r=>r.regCells[idx]);
+    function topBy(fn){
+      let best = null;
+      withCell.forEach(r=>{
+        const v = fn(r);
+        if(v > 0 && (!best || v > best.v)) best = {name: r.vend, sup: r.sup, v};
+      });
+      return best;
+    }
+    return {
+      total: topBy(r=>r.regCells[idx][3]),
+      pme: topBy(r=>r.regCells[idx][0]),
+      pf: topBy(r=>r.regCells[idx][1]),
+      adesao: topBy(r=>r.regCells[idx][2]),
+    };
+  }
+
+  function renderInsight(){
+    // header highlight (works even when panel is hidden, so leaving a region selected on an empty result stays visible)
+    groupHeaderRow.querySelectorAll('.vx-regiongroup').forEach(th=>{
+      th.classList.toggle('vx-region-active', th.dataset.region === activeInsightRegion);
+    });
+    subHeaderRow.querySelectorAll('th[data-key]').forEach(th=>{
+      const reg = th.dataset.key.slice(0, th.dataset.key.lastIndexOf('_'));
+      th.classList.toggle('vx-region-active-col', reg === activeInsightRegion);
+    });
+
+    if(!activeInsightRegion){
+      insightPanel.hidden = true;
+      insightPanel.innerHTML = '';
+      return;
+    }
+
+    const insight = computeInsight(activeInsightRegion, lastFiltered);
+    const stat = (label, best) => `
+      <div class="vri-stat">
+        <span class="vri-label">${label}</span>
+        ${best ? `<span class="vri-name">${best.name}</span><span class="vri-count">${fmt(best.v)} vidas · ${best.sup}</span>` : `<span class="vri-name" style="opacity:.6">—</span>`}
+      </div>`;
+    insightPanel.hidden = false;
+    insightPanel.innerHTML = `
+      <div>
+        <span class="vri-title">Quem mais vende em ${activeInsightRegion}</span>
+        <span class="vri-sub">${activeSupervisor!=='Todos' ? `filtrado por ${activeSupervisor}` : 'todos os supervisores'}${search.value.trim() ? ` · busca "${search.value.trim()}"` : ''}</span>
+      </div>
+      <div class="vri-stats">
+        ${stat('Geral (todos os segmentos)', insight.total)}
+        ${stat('Líder em PME', insight.pme)}
+        ${stat('Líder em PF', insight.pf)}
+        ${stat('Líder em Adesão', insight.adesao)}
+      </div>
+      <span class="vri-close">Fechar ✕</span>
+    `;
+  }
+
+  function sortValue(r, key){
+    if(key === 'vend' || key === 'sup') return norm(r[key]);
+    if(key === 'total') return r.grandTotal;
+    // "<Região>_<seg>" e.g. "Sudeste_pme"
+    const lastUnderscore = key.lastIndexOf('_');
+    const reg = key.slice(0, lastUnderscore);
+    const seg = key.slice(lastUnderscore+1);
+    const idx = REGION_ORDER.indexOf(reg);
+    const cell = idx >= 0 ? r.regCells[idx] : null;
+    if(!cell) return 0;
+    const segIdx = {pme:0, pf:1, adesao:2}[seg];
+    return cell[segIdx];
+  }
+
+  const totalRowEl = document.getElementById('vxTotalRow');
+  function renderTotalRow(filtered, grandTotal){
+    const sums = REGION_ORDER.map((reg, ridx)=>{
+      const s = {pme:0, pf:0, adesao:0};
+      filtered.forEach(r=>{
+        const cell = r.regCells[ridx];
+        if(cell){ s.pme += cell[0]; s.pf += cell[1]; s.adesao += cell[2]; }
+      });
+      return s;
+    });
+    const cellsHtml = sums.map((s, ridx)=>{
+      const activeCol = REGION_ORDER[ridx] === activeInsightRegion ? ' vx-region-active-col' : '';
+      return SEG_KEYS.map((seg, sidx)=>{
+        const groupStart = sidx === 0 ? ' vx-cell-group-start' : '';
+        return `<td class="${groupStart}${activeCol}" style="text-align:right">${fmt(s[seg])}</td>`;
+      }).join('');
+    }).join('');
+    const label = activeSupervisor === 'Todos' ? 'TOTAL DA EQUIPE' : `TOTAL — ${activeSupervisor}`;
+    totalRowEl.innerHTML = `
+      <td class="vx-total-label">${label}</td>
+      <td class="vx-total-meta">${filtered.length} vendedor${filtered.length===1?'':'es'}</td>
+      ${cellsHtml}
+      <td style="text-align:right">${fmt(grandTotal)}</td>
+    `;
+  }
+
+  function render(){
+    const q = norm(search.value.trim());
+
+    // rows matching search only — used to compute the totals shown on each supervisor pill
+    const bySearch = rows.filter(r=> !q || norm(r.vend).includes(q));
+
+    // rebuild supervisor pills with totals for the current search context
+    const supTotals = {};
+    SUPERVISORES.forEach(s=>supTotals[s]=0);
+    bySearch.forEach(r=>{ supTotals[r.sup] = (supTotals[r.sup]||0) + r.grandTotal; });
+    const totalAll = bySearch.reduce((s,r)=>s+r.grandTotal, 0);
+
+    const supPillsHtml = [['Todos', totalAll], ...SUPERVISORES.map(s=>[s, supTotals[s]||0])]
+      .map(([name, total])=>`<span class="vx-pill${name===activeSupervisor?' active':''}" data-sup="${name}">${name}<span class="vx-pill-total">${fmt(total)}</span></span>`)
+      .join('');
+    supPillsWrap.innerHTML = supPillsHtml;
+
+    // final filter: search + supervisor
+    let filtered = bySearch.filter(r=>{
+      if(activeSupervisor !== 'Todos' && r.sup !== activeSupervisor) return false;
+      return true;
+    });
+    filtered.sort((a,b)=>{
+      let av = sortValue(a, sortKey), bv = sortValue(b, sortKey);
+      if(typeof av === 'string'){ if(av < bv) return sortDir==='asc'?-1:1; if(av > bv) return sortDir==='asc'?1:-1; return 0; }
+      return sortDir === 'asc' ? av - bv : bv - av;
+    });
+
+    [...groupHeaderRow.querySelectorAll('th[data-key]'), ...subHeaderRow.querySelectorAll('th[data-key]')].forEach(th=>{
+      th.classList.remove('sorted','sorted-asc');
+      if(th.dataset.key === sortKey) th.classList.add(sortDir === 'desc' ? 'sorted' : 'sorted-asc');
+    });
+
+    const filteredTotal = filtered.reduce((s,r)=>s+r.grandTotal, 0);
+    countEl.textContent = `${filtered.length} de ${rows.length} vendedores · ${fmt(filteredTotal)} vidas`;
+
+    lastFiltered = filtered;
+    renderInsight();
+    renderTotalRow(filtered, filteredTotal);
+
+    if(filtered.length === 0){
+      tbody.innerHTML = `<tr><td colspan="${TOTAL_COLS}" class="vx-empty">Nenhum vendedor encontrado.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(r=>{
+      const cellsHtml = REGION_ORDER.map((reg, ridx)=>{
+        const cell = r.regCells[ridx];
+        const zebra = ridx % 2 === 0 ? '' : ' vx-zebra';
+        const activeCol = reg === activeInsightRegion ? ' vx-region-active-col' : '';
+        return SEG_KEYS.map((seg, sidx)=>{
+          const val = cell ? cell[sidx] : null;
+          const groupStart = sidx === 0 ? ' vx-cell-group-start' : '';
+          const cls = `num${zebra}${groupStart}${activeCol}${val === 0 || val === null ? ' vx-dim' : ''}`;
+          return `<td class="${cls}">${val === null ? '–' : val}</td>`;
+        }).join('');
+      }).join('');
+      return `
+        <tr>
+          <td class="vend-name">${r.vend}</td>
+          <td class="sup-name">${r.sup}</td>
+          ${cellsHtml}
+          <td class="num" style="font-weight:700">${r.grandTotal}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  render();
+})();
+}
+
+// ---- orchestration ----
+async function loadLiveData(){
+  setStatus('loading', 'Carregando dados atualizados da planilha...');
+  try {
+    const [pf, pme, adesao] = await Promise.all([
+      fetchCSV(sheetCsvUrl(GIDS.PF)),
+      fetchCSV(sheetCsvUrl(GIDS.PME)),
+      fetchCSV(sheetCsvUrl(GIDS.ADESAO)),
+    ]);
+    const { records, unmapped } = buildRecords(pf, pme, adesao);
+    if(records.length === 0) throw new Error('Nenhum registro encontrado para GESTAO = JOSY nas abas publicadas.');
+    const model = aggregate(records);
+
+    let validation = null;
+    try {
+      const ranking = await fetchCSV(sheetCsvUrl(GIDS.RANKING));
+      validation = validateAgainstRanking(ranking, model);
+    } catch(e){
+      console.warn('[live-data] validacao com RANKING_CONSIDERADO8 indisponivel:', e);
+    }
+
+    renderAll(model);
+    renderValidationBadge(validation);
+
+    const stamp = new Date().toLocaleString('pt-BR');
+    let msg = `Dados ao vivo carregados as ${stamp} \u00b7 ${model.grandTotal.toLocaleString('pt-BR')} vidas (equipe JOSY)`;
+    if(unmapped.size){
+      msg += ` \u00b7 \u26a0 ${unmapped.size} filial(is) sem UF mapeada: ${[...unmapped].join(', ')}`;
+      setStatus('warn', msg);
+    } else {
+      setStatus('ok', msg);
+    }
+  } catch(err){
+    console.error('[live-data] falha ao carregar dados ao vivo:', err);
+    renderValidationBadge(null);
+    const msg = `Nao foi possivel carregar os dados da planilha online agora (${err.message}). Nada e exibido para evitar mostrar numeros desatualizados \u2014 verifique sua conexao ou se as abas continuam publicadas, e clique em "Atualizar agora" para tentar de novo.`;
+    setStatus('error', msg);
+    renderEmptyState(msg);
+  }
+}
+
+loadLiveData();
+</script>
+</body>
+</html>.topbar-kpis{display:flex;gap:5px;}
 .tk{background:var(--navy3);border:1px solid var(--nb2);border-radius:8px;padding:5px 13px;text-align:center;min-width:102px;position:relative;overflow:hidden;transition:transform .18s;}
 .tk::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
 .tk.teal::before{background:var(--teal-lt);}

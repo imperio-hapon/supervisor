@@ -196,6 +196,10 @@ License: MIT
   .status-banner.show{ display:flex; }
   .status-banner.error{ background: var(--coral-tint); color: var(--coral-deep); border: 1px solid #F6C7C9; }
   .status-banner.loading{ background: var(--blue-tint); color: var(--blue-deep); border: 1px solid var(--line); }
+  .status-banner.warn{ background: #FFF8E8; color: #8A6A16; border: 1px solid #F3E2AE; align-items:flex-start; }
+  .status-banner.warn ul{ margin: 4px 0 0; padding-left: 18px; }
+  .status-banner.warn li{ margin-bottom: 2px; }
+  .status-banner.warn strong{ color: #6B4E0E; }
 
   /* ---------- header ---------- */
   header.page{
@@ -581,6 +585,8 @@ License: MIT
     <h1>Controle de acionamentos</h1>
     <p>Acompanhamento do funil de disparos via WhatsApp: do envio até a resposta do contato.</p>
   </header>
+
+  <div class="status-banner warn" id="completenessBanner"></div>
 
   <div class="hero">
     <div class="hero-main">
@@ -1034,8 +1040,44 @@ License: MIT
     return agg;
   }
 
+  function computeCompletenessWarnings(names){
+    const semTelefones = [];
+    const semRespostas = [];
+    names.forEach(name => {
+      const d = DISPAROS[name];
+      if(!d) return;
+      if(d.baseContatos === 0){
+        semTelefones.push(name);
+      } else if((d.falarAgora + d.naoInteresse) === 0){
+        semRespostas.push(name);
+      }
+    });
+    return { semTelefones, semRespostas };
+  }
+
+  function renderCompletenessBanner(names){
+    const el = document.getElementById('completenessBanner');
+    const { semTelefones, semRespostas } = computeCompletenessWarnings(names);
+    if(semTelefones.length === 0 && semRespostas.length === 0){
+      el.classList.remove('show');
+      el.innerHTML = '';
+      return;
+    }
+    let html = '<div>⚠ <strong>Alguns disparos selecionados estão incompletos:</strong><ul>';
+    if(semTelefones.length){
+      html += `<li>Falta cadastrar os <strong>telefones na aba BASE</strong> de: ${semTelefones.join(', ')}.</li>`;
+    }
+    if(semRespostas.length){
+      html += `<li>Ainda não há <strong>respostas por botão na aba RELATORIO</strong> para: ${semRespostas.join(', ')} (não precisa ser de todos os contatos, mas ao menos alguns registros).</li>`;
+    }
+    html += '</ul></div>';
+    el.innerHTML = html;
+    el.classList.add('show');
+  }
+
   function render(selection){
     const names = [...selection];
+    renderCompletenessBanner(names);
     const d = names.length === 1 ? (DISPAROS[names[0]] || aggregateSelected(names)) : aggregateSelected(names);
     const cliques = d.falarAgora + d.naoInteresse;
     const semResposta = Math.max(d.lido - cliques, 0);

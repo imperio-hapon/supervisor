@@ -126,6 +126,13 @@ License: MIT
     padding: 16px;
     z-index: 20;
   }
+  .picker-search{ margin-bottom:12px; }
+  .picker-search input{
+    width:100%;
+    font-family:'Inter',sans-serif; font-size:13px;
+    padding: 8px 12px; border:1px solid var(--line); border-radius:7px; background: var(--bg); color: var(--ink);
+  }
+  .picker-search input:focus-visible{ outline:2px solid var(--blue); outline-offset:1px; }
   .picker-date-filter{ display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
   .picker-date-filter label{ font-size:11px; font-weight:700; color:var(--muted); }
   .picker-date-filter input{
@@ -544,6 +551,9 @@ License: MIT
           <span id="disparoPickerLabel">Todos os disparos</span><span class="picker-caret">▾</span>
         </button>
         <div class="picker-panel" id="disparoPickerPanel" hidden>
+          <div class="picker-search">
+            <input type="search" id="pickerSearch" placeholder="Buscar disparo por palavra-chave…">
+          </div>
           <div class="picker-date-filter">
             <label for="pickerDateFilter">Filtrar lista por data de disparo</label>
             <input type="date" id="pickerDateFilter">
@@ -664,7 +674,7 @@ License: MIT
   <div id="tab-telefones" class="tabpanel">
     <header class="page" style="margin-bottom:28px;">
       <h1 style="font-size:26px;">Telefones</h1>
-      <p>Relação de contatos de todos os disparos, com a resposta de cada um (quando houve).</p>
+      <p>Relação de contatos de todos os disparos.</p>
     </header>
 
     <section class="block">
@@ -672,12 +682,6 @@ License: MIT
         <input type="search" id="phoneSearch" placeholder="Buscar por telefone…">
         <select id="phoneDisparoFilter">
           <option value="todos">Todos os disparos</option>
-        </select>
-        <select id="respFilter">
-          <option value="todas">Todas as respostas</option>
-          <option value="falar_agora">Falar agora</option>
-          <option value="nao_interesse">Não tenho interesse</option>
-          <option value="sem_resposta">Sem resposta</option>
         </select>
         <div class="field">
           <label>De</label>
@@ -693,7 +697,7 @@ License: MIT
       <div class="data-table-wrap">
         <table class="data-table">
           <thead>
-            <tr><th>Telefone</th><th>Disparo</th><th>Data de envio</th><th>Resposta</th></tr>
+            <tr><th>Telefone</th><th>Disparo</th><th>Data de envio</th></tr>
           </thead>
           <tbody id="phoneTableBody"></tbody>
         </table>
@@ -924,11 +928,16 @@ License: MIT
 
   function renderPickerList(){
     const dateFilter = document.getElementById('pickerDateFilter').value;
+    const searchTerm = document.getElementById('pickerSearch').value.trim().toLowerCase();
     const list = document.getElementById('pickerList');
-    const names = Object.keys(DISPAROS).filter(n => !dateFilter || DISPAROS[n].dataEnvio === dateFilter);
+    const names = Object.keys(DISPAROS).filter(n => {
+      if(dateFilter && DISPAROS[n].dataEnvio !== dateFilter) return false;
+      if(searchTerm && !n.toLowerCase().includes(searchTerm)) return false;
+      return true;
+    });
 
     if(names.length === 0){
-      list.innerHTML = '<div class="picker-empty">Nenhum disparo nessa data.</div>';
+      list.innerHTML = '<div class="picker-empty">Nenhum disparo encontrado.</div>';
       return;
     }
     list.innerHTML = names.map(n => `
@@ -963,6 +972,7 @@ License: MIT
     }
   });
   document.getElementById('pickerDateFilter').addEventListener('change', renderPickerList);
+  document.getElementById('pickerSearch').addEventListener('input', renderPickerList);
   document.getElementById('pickerSelectAll').addEventListener('click', () => {
     document.querySelectorAll('#pickerList input[type="checkbox"]').forEach(cb => cb.checked = true);
   });
@@ -1144,25 +1154,8 @@ License: MIT
   });
 
   // ---------------------------------------------------------------
-  // Formatação de telefone (BR): 55 + DDD + número
+  // Datas
   // ---------------------------------------------------------------
-  function formatPhone(p){
-    const s = String(p);
-    if(s.startsWith('55') && (s.length===12 || s.length===13)){
-      const ddd = s.slice(2,4);
-      const rest = s.slice(4);
-      if(rest.length===9) return `+55 (${ddd}) ${rest.slice(0,5)}-${rest.slice(5)}`;
-      if(rest.length===8) return `+55 (${ddd}) ${rest.slice(0,4)}-${rest.slice(4)}`;
-    }
-    return '+'+s;
-  }
-
-  function respBadge(resposta){
-    if(!resposta) return '<span class="badge badge-sem">Sem resposta</span>';
-    if(isFalarAgora(resposta)) return '<span class="badge badge-interesse">Falar agora</span>';
-    return '<span class="badge badge-nao">Não tenho interesse</span>';
-  }
-
   function formatDateBR(iso){
     const [y,m,d] = iso.split('-');
     return `${d}/${m}/${y}`;
@@ -1174,20 +1167,13 @@ License: MIT
   const PAGE_SIZE = 50;
   let phonePage = 1;
 
-  function respCategory(resposta){
-    if(!resposta) return 'sem_resposta';
-    return isFalarAgora(resposta) ? 'falar_agora' : 'nao_interesse';
-  }
-
   function filteredPhones(){
     const term = document.getElementById('phoneSearch').value.replace(/\D/g,'');
-    const respFilter = document.getElementById('respFilter').value;
     const disparoFilter = document.getElementById('phoneDisparoFilter').value;
     const dateFrom = document.getElementById('phoneDateFrom').value;
     const dateTo = document.getElementById('phoneDateTo').value;
     return BASE_DATA.filter(r=>{
       if(term && !r.phone.includes(term)) return false;
-      if(respFilter !== 'todas' && respCategory(r.resposta) !== respFilter) return false;
       if(disparoFilter !== 'todos' && r.disparo !== disparoFilter) return false;
       if(dateFrom && r.data < dateFrom) return false;
       if(dateTo && r.data > dateTo) return false;
@@ -1205,10 +1191,9 @@ License: MIT
     const tbody = document.getElementById('phoneTableBody');
     tbody.innerHTML = pageRows.map(r => `
       <tr>
-        <td class="mono">${formatPhone(r.phone)}</td>
+        <td class="mono">${r.phone}</td>
         <td>${r.disparo}</td>
         <td class="mono">${formatDateBR(r.data)}</td>
-        <td>${respBadge(r.resposta)}</td>
       </tr>
     `).join('');
 
@@ -1222,16 +1207,15 @@ License: MIT
   }
 
   ['input'].forEach(evt => document.getElementById('phoneSearch').addEventListener(evt, ()=>{ phonePage = 1; renderPhoneTable(); }));
-  ['respFilter','phoneDisparoFilter'].forEach(id => document.getElementById(id).addEventListener('change', ()=>{ phonePage = 1; renderPhoneTable(); }));
+  document.getElementById('phoneDisparoFilter').addEventListener('change', ()=>{ phonePage = 1; renderPhoneTable(); });
   ['phoneDateFrom','phoneDateTo'].forEach(id => document.getElementById(id).addEventListener('change', ()=>{ phonePage = 1; renderPhoneTable(); }));
   document.getElementById('phonePrev').addEventListener('click', ()=>{ phonePage--; renderPhoneTable(); });
   document.getElementById('phoneNext').addEventListener('click', ()=>{ phonePage++; renderPhoneTable(); });
 
   document.getElementById('phoneExport').addEventListener('click', ()=>{
     const data = filteredPhones();
-    const respLabel = r => !r ? 'Sem resposta' : isFalarAgora(r) ? 'Falar agora' : 'Não tenho interesse';
-    const rows = data.map(r => [formatPhone(r.phone), r.disparo, formatDateBR(r.data), respLabel(r.resposta)]);
-    exportCSV('telefones.csv', ['Telefone','Disparo','Data de envio','Resposta'], rows);
+    const rows = data.map(r => [r.phone, r.disparo, formatDateBR(r.data)]);
+    exportCSV('telefones.csv', ['Telefone','Disparo','Data de envio'], rows);
   });
 
   // ---------------------------------------------------------------

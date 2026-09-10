@@ -576,7 +576,6 @@ License: MIT
   <nav class="tabs">
     <button type="button" data-tab="geral" class="active">Visão geral</button>
     <button type="button" data-tab="telefones">Telefones</button>
-    <button type="button" data-tab="respostas">Respostas por botão</button>
   </nav>
 
   <div id="tab-geral" class="tabpanel active">
@@ -707,46 +706,6 @@ License: MIT
       </div>
     </section>
   </div><!-- /tab-telefones -->
-
-  <div id="tab-respostas" class="tabpanel">
-    <header class="page" style="margin-bottom:28px;">
-      <h1 style="font-size:26px;">Respostas por botão</h1>
-      <p>Cada clique registrado, com o botão selecionado e o horário.</p>
-    </header>
-
-    <section class="block">
-      <div class="table-toolbar">
-        <input type="search" id="respSearch" placeholder="Buscar por telefone…">
-        <select id="respDisparoFilter">
-          <option value="todos">Todos os disparos</option>
-        </select>
-        <div class="field">
-          <label>De</label>
-          <input type="date" id="respDateFrom">
-        </div>
-        <div class="field">
-          <label>Até</label>
-          <input type="date" id="respDateTo">
-        </div>
-        <button type="button" class="export-btn" id="respExport">⬇ Exportar CSV</button>
-        <span class="table-count" id="respCount"></span>
-      </div>
-      <div class="data-table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr><th>Telefone</th><th>Disparo</th><th>Botão selecionado</th><th>Data e hora do clique</th></tr>
-          </thead>
-          <tbody id="respTableBody"></tbody>
-        </table>
-        <div class="empty-state" id="respEmpty" style="display:none;">Nenhum registro encontrado para essa busca.</div>
-      </div>
-      <div class="pagination">
-        <span id="respPageInfo"></span>
-        <button type="button" id="respPrev">← Anterior</button>
-        <button type="button" id="respNext">Próxima →</button>
-      </div>
-    </section>
-  </div><!-- /tab-respostas -->
 
 <script>
   // ---------------------------------------------------------------
@@ -919,9 +878,8 @@ License: MIT
       selectedDisparos = new Set(Object.keys(DISPAROS)); // padrão: todos selecionados
       updatePickerLabel();
       render(selectedDisparos);
-      phonePage = 1; respPage = 1;
+      phonePage = 1;
       renderPhoneTable();
-      renderRespTable();
 
       document.getElementById('updatedDate').textContent =
         new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -940,14 +898,10 @@ License: MIT
     renderPickerList();
 
     const phoneDisparoFilter = document.getElementById('phoneDisparoFilter');
-    const respDisparoFilter = document.getElementById('respDisparoFilter');
     phoneDisparoFilter.innerHTML = '<option value="todos">Todos os disparos</option>';
-    respDisparoFilter.innerHTML = '<option value="todos">Todos os disparos</option>';
     Object.keys(DISPAROS).forEach(name => {
       const o1 = document.createElement('option'); o1.value = name; o1.textContent = name;
       phoneDisparoFilter.appendChild(o1);
-      const o2 = document.createElement('option'); o2.value = name; o2.textContent = name;
-      respDisparoFilter.appendChild(o2);
     });
   }
 
@@ -1278,72 +1232,6 @@ License: MIT
     const respLabel = r => !r ? 'Sem resposta' : isFalarAgora(r) ? 'Falar agora' : 'Não tenho interesse';
     const rows = data.map(r => [formatPhone(r.phone), r.disparo, formatDateBR(r.data), respLabel(r.resposta)]);
     exportCSV('telefones.csv', ['Telefone','Disparo','Data de envio','Resposta'], rows);
-  });
-
-  // ---------------------------------------------------------------
-  // Tabela: Respostas por botão (aba RELATORIO)
-  // ---------------------------------------------------------------
-  let respPage = 1;
-
-  function filteredResp(){
-    const term = document.getElementById('respSearch').value.replace(/\D/g,'');
-    const disparoFilter = document.getElementById('respDisparoFilter').value;
-    const dateFrom = document.getElementById('respDateFrom').value;
-    const dateTo = document.getElementById('respDateTo').value;
-    return REL_DATA.filter(r=>{
-      if(term && !r.phone.includes(term)) return false;
-      if(disparoFilter !== 'todos' && r.disparo !== disparoFilter) return false;
-      if(dateFrom || dateTo){
-        const iso = relDateISO(r.timestamp);
-        if(dateFrom && (!iso || iso < dateFrom)) return false;
-        if(dateTo && (!iso || iso > dateTo)) return false;
-      }
-      return true;
-    });
-  }
-
-  function botaoBadge(botao){
-    if(isFalarAgora(botao)) return '<span class="badge badge-interesse">Falar agora</span>';
-    return '<span class="badge badge-nao">Não tenho interesse</span>';
-  }
-
-  function renderRespTable(){
-    const data = filteredResp();
-    const totalPages = Math.max(Math.ceil(data.length / PAGE_SIZE), 1);
-    respPage = Math.min(respPage, totalPages);
-    const start = (respPage-1) * PAGE_SIZE;
-    const pageRows = data.slice(start, start+PAGE_SIZE);
-
-    const tbody = document.getElementById('respTableBody');
-    tbody.innerHTML = pageRows.map(r => `
-      <tr>
-        <td class="mono">${formatPhone(r.phone)}</td>
-        <td>${r.disparo || '—'}</td>
-        <td>${botaoBadge(r.botao)}</td>
-        <td class="mono">${r.timestamp}</td>
-      </tr>
-    `).join('');
-
-    document.getElementById('respEmpty').style.display = data.length===0 ? 'block' : 'none';
-    document.getElementById('respCount').textContent = `${data.length.toLocaleString('pt-BR')} clique${data.length===1?'':'s'}`;
-    document.getElementById('respPageInfo').textContent = data.length
-      ? `Página ${respPage} de ${totalPages} (${start+1}–${Math.min(start+PAGE_SIZE,data.length)} de ${data.length})`
-      : '';
-    document.getElementById('respPrev').disabled = respPage <= 1;
-    document.getElementById('respNext').disabled = respPage >= totalPages;
-  }
-
-  ['input'].forEach(evt => document.getElementById('respSearch').addEventListener(evt, ()=>{ respPage = 1; renderRespTable(); }));
-  document.getElementById('respDisparoFilter').addEventListener('change', ()=>{ respPage = 1; renderRespTable(); });
-  ['respDateFrom','respDateTo'].forEach(id => document.getElementById(id).addEventListener('change', ()=>{ respPage = 1; renderRespTable(); }));
-  document.getElementById('respPrev').addEventListener('click', ()=>{ respPage--; renderRespTable(); });
-  document.getElementById('respNext').addEventListener('click', ()=>{ respPage++; renderRespTable(); });
-
-  document.getElementById('respExport').addEventListener('click', ()=>{
-    const data = filteredResp();
-    const botaoLabel = b => isFalarAgora(b) ? 'Falar agora' : 'Não tenho interesse';
-    const rows = data.map(r => [formatPhone(r.phone), r.disparo || '', botaoLabel(r.botao), r.timestamp]);
-    exportCSV('respostas_por_botao.csv', ['Telefone','Disparo','Botão selecionado','Data e hora do clique'], rows);
   });
 
   // ---------------------------------------------------------------

@@ -115,51 +115,99 @@ License: MIT
   .picker-btn:focus-visible{ outline: 2px solid var(--blue); outline-offset:2px; }
   .picker-caret{ color: var(--blue); font-size:11px; }
   .picker-panel{
-    position:absolute;
-    top: calc(100% + 8px);
-    left:0;
-    width: 320px;
+    position: fixed;
+    width: 460px;
+    max-width: calc(100vw - 24px);
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 12px;
-    box-shadow: 0 12px 32px rgba(5,28,101,.14);
-    padding: 16px;
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(5,28,101,.16);
+    padding: 18px;
     z-index: 20;
   }
   .picker-search{ margin-bottom:12px; }
   .picker-search input{
     width:100%;
-    font-family:'Inter',sans-serif; font-size:13px;
-    padding: 8px 12px; border:1px solid var(--line); border-radius:7px; background: var(--bg); color: var(--ink);
+    font-family:'Inter',sans-serif; font-size:13.5px;
+    padding: 9px 13px; border:1px solid var(--line); border-radius:8px; background: var(--bg); color: var(--ink);
   }
   .picker-search input:focus-visible{ outline:2px solid var(--blue); outline-offset:1px; }
-  .picker-date-filter{ display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
-  .picker-date-filter label{ font-size:11px; font-weight:700; color:var(--muted); }
-  .picker-date-filter input{
-    font-family:'Inter',sans-serif; font-size:13px;
-    padding: 7.5px 10px; border:1px solid var(--line); border-radius:7px; background: var(--bg); color: var(--ink);
+
+  /* chips de data clicáveis */
+  .date-chip-row{
+    display:flex; flex-wrap:wrap; gap:7px;
+    margin-bottom: 14px;
   }
+  .date-chip{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 12.5px; font-weight:600;
+    padding: 6px 13px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--muted);
+    cursor:pointer;
+    transition: background .12s, color .12s, border-color .12s;
+  }
+  .date-chip:hover{ border-color: var(--blue); color: var(--blue-deep); }
+  .date-chip.active{ background: var(--blue); border-color: var(--blue); color:#fff; }
+
   .picker-actions-top{
-    display:flex; justify-content:space-between; margin-bottom:8px;
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;
   }
+  .picker-actions-top .picker-selected-count{ font-size:12px; color: var(--muted); }
+  .picker-actions-top .picker-links{ display:flex; gap:14px; }
   .picker-actions-top button{
     background:none; border:none; color: var(--blue-deep); font-size:12.5px; font-weight:600; cursor:pointer; padding:2px 0;
   }
   .picker-actions-top button:hover{ text-decoration:underline; }
+
   .picker-list{
-    max-height: 230px; overflow-y:auto;
+    max-height: 320px; overflow-y:auto;
+    display:flex; flex-direction:column; gap:8px;
     border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
-    padding: 6px 0; margin-bottom: 12px;
+    padding: 10px 2px; margin-bottom: 14px;
   }
-  .picker-item{
-    display:flex; align-items:center; gap:10px;
-    padding: 7px 4px; border-radius:6px; cursor:pointer;
+  .picker-empty{ font-size:13px; color: var(--muted); padding: 16px 4px; text-align:center; }
+
+  /* card de disparo, com métricas principais visíveis */
+  .disparo-card{
+    position:relative;
+    display:block;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 11px 14px;
+    cursor:pointer;
+    background: var(--surface);
+    transition: border-color .12s, background .12s;
   }
-  .picker-item:hover{ background: var(--bg); }
-  .picker-item input{ flex:none; accent-color: var(--blue); width:15px; height:15px; }
-  .picker-item .pi-name{ font-size:13.5px; color: var(--ink); flex:1; }
-  .picker-item .pi-date{ font-size:11.5px; color: var(--muted); }
-  .picker-empty{ font-size:13px; color: var(--muted); padding: 10px 4px; }
+  .disparo-card:hover{ border-color: var(--blue); }
+  .disparo-card.selected{ border-color: var(--blue); background: var(--blue-tint); }
+  .disparo-card input{ position:absolute; opacity:0; pointer-events:none; }
+  .dc-top{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:9px;
+  }
+  .dc-name{ font-size:13.5px; font-weight:600; color: var(--ink); line-height:1.25; }
+  .dc-date-pill{
+    flex:none;
+    font-size:11px; font-weight:600; color: var(--blue-deep);
+    background: var(--blue-tint); border-radius:12px; padding:2px 9px;
+  }
+  .disparo-card.selected .dc-date-pill{ background: #fff; }
+  .dc-check{
+    position:absolute; top:10px; right:12px;
+    width:18px; height:18px; border-radius:5px;
+    border: 1.5px solid var(--line); background:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:#fff;
+  }
+  .disparo-card.selected .dc-check{ background: var(--blue); border-color: var(--blue); }
+  .dc-top{ padding-right: 26px; }
+  .dc-stats{ display:flex; gap:18px; }
+  .dc-stat{ display:flex; flex-direction:column; gap:1px; }
+  .dc-stat-val{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; color: var(--blue-deep); }
+  .dc-stat-label{ font-size:10.5px; color: var(--muted); }
+
   .picker-actions-bottom{ display:flex; justify-content:flex-end; }
   .picker-actions-bottom button{
     font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:13.5px;
@@ -530,6 +578,8 @@ License: MIT
     .tabs button{ margin-right:16px; font-size:13px; }
     table.data-table{ font-size:12.5px; }
     table.data-table thead th, table.data-table tbody td{ padding: 9px 10px; }
+    .picker-panel{ max-width: calc(100vw - 24px); }
+    .dc-stats{ flex-wrap: wrap; row-gap:6px; }
   }
 </style>
 </head>
@@ -550,13 +600,13 @@ License: MIT
           <div class="picker-search">
             <input type="search" id="pickerSearch" placeholder="Buscar disparo por palavra-chave…">
           </div>
-          <div class="picker-date-filter">
-            <label for="pickerDateFilter">Filtrar lista por data de disparo</label>
-            <input type="date" id="pickerDateFilter">
-          </div>
+          <div class="date-chip-row" id="dateChipRow"></div>
           <div class="picker-actions-top">
-            <button type="button" id="pickerSelectAll">Selecionar todos</button>
-            <button type="button" id="pickerClear">Limpar seleção</button>
+            <span class="picker-selected-count" id="pickerSelectedCount"></span>
+            <div class="picker-links">
+              <button type="button" id="pickerSelectAll">Selecionar todos</button>
+              <button type="button" id="pickerClear">Limpar seleção</button>
+            </div>
           </div>
           <div class="picker-list" id="pickerList"></div>
           <div class="picker-actions-bottom">
@@ -913,34 +963,85 @@ License: MIT
   // Seletor múltiplo de disparos (Visão geral)
   // ---------------------------------------------------------------
   let selectedDisparos = new Set();
+  let activeDateChips = new Set(); // datas (ISO) marcadas como filtro; vazio = todas
 
   function formatDateBRShort(iso){
+    if(!iso) return 'sem data';
+    const [y,m,d] = iso.split('-');
+    return `${d}/${m}`;
+  }
+  function formatDateBRFull(iso){
     if(!iso) return 'sem data';
     const [y,m,d] = iso.split('-');
     return `${d}/${m}/${y}`;
   }
 
+  function renderDateChips(){
+    const row = document.getElementById('dateChipRow');
+    const dates = [...new Set(Object.values(DISPAROS).map(d => d.dataEnvio).filter(Boolean))].sort();
+    if(dates.length === 0){ row.innerHTML = ''; return; }
+    row.innerHTML = dates.map(iso => `
+      <button type="button" class="date-chip ${activeDateChips.has(iso) ? 'active' : ''}" data-date="${iso}">${formatDateBRFull(iso)}</button>
+    `).join('');
+    row.querySelectorAll('.date-chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const d = chip.dataset.date;
+        activeDateChips.has(d) ? activeDateChips.delete(d) : activeDateChips.add(d);
+        renderDateChips();
+        renderPickerList();
+      });
+    });
+  }
+
+  function updateSelectedCount(){
+    document.getElementById('pickerSelectedCount').textContent =
+      `${document.querySelectorAll('#pickerList input[type="checkbox"]:checked').length} de ${document.querySelectorAll('#pickerList input[type="checkbox"]').length} marcados`;
+  }
+
   function renderPickerList(){
-    const dateFilter = document.getElementById('pickerDateFilter').value;
     const searchTerm = document.getElementById('pickerSearch').value.trim().toLowerCase();
     const list = document.getElementById('pickerList');
     const names = Object.keys(DISPAROS).filter(n => {
-      if(dateFilter && DISPAROS[n].dataEnvio !== dateFilter) return false;
+      if(activeDateChips.size && !activeDateChips.has(DISPAROS[n].dataEnvio)) return false;
       if(searchTerm && !n.toLowerCase().includes(searchTerm)) return false;
       return true;
     });
 
     if(names.length === 0){
       list.innerHTML = '<div class="picker-empty">Nenhum disparo encontrado.</div>';
+      updateSelectedCount();
       return;
     }
-    list.innerHTML = names.map(n => `
-      <label class="picker-item">
-        <input type="checkbox" value="${n.replace(/"/g,'&quot;')}" ${selectedDisparos.has(n) ? 'checked' : ''}>
-        <span class="pi-name">${n}</span>
-        <span class="pi-date">${formatDateBRShort(DISPAROS[n].dataEnvio)}</span>
+    list.innerHTML = names.map(n => {
+      const d = DISPAROS[n];
+      const cliques = d.falarAgora + d.naoInteresse;
+      const engaj = d.lido > 0 ? Math.round(cliques / d.lido * 100) : 0;
+      const isSel = selectedDisparos.has(n);
+      return `
+      <label class="disparo-card ${isSel ? 'selected' : ''}">
+        <input type="checkbox" value="${n.replace(/"/g,'&quot;')}" ${isSel ? 'checked' : ''}>
+        <span class="dc-check">✓</span>
+        <div class="dc-top">
+          <span class="dc-name">${n}</span>
+          <span class="dc-date-pill">${formatDateBRShort(d.dataEnvio)}</span>
+        </div>
+        <div class="dc-stats">
+          <div class="dc-stat"><span class="dc-stat-val">${fmt(d.visado)}</span><span class="dc-stat-label">Visado</span></div>
+          <div class="dc-stat"><span class="dc-stat-val">${fmt(d.lido)}</span><span class="dc-stat-label">Lido</span></div>
+          <div class="dc-stat"><span class="dc-stat-val">${fmt(cliques)}</span><span class="dc-stat-label">Cliques</span></div>
+          <div class="dc-stat"><span class="dc-stat-val">${engaj}%</span><span class="dc-stat-label">Engajamento</span></div>
+        </div>
       </label>
-    `).join('');
+    `; }).join('');
+
+    list.querySelectorAll('.disparo-card input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        cb.closest('.disparo-card').classList.toggle('selected', cb.checked);
+        updateSelectedCount();
+      });
+    });
+    updateSelectedCount();
   }
 
   function updatePickerLabel(){
@@ -955,23 +1056,43 @@ License: MIT
 
   const pickerBtn = document.getElementById('disparoPickerBtn');
   const pickerPanel = document.getElementById('disparoPickerPanel');
+  pickerPanel.addEventListener('click', (e) => e.stopPropagation());
+
+  function positionPickerPanel(){
+    const btnRect = pickerBtn.getBoundingClientRect();
+    const panelWidth = Math.min(460, window.innerWidth - 24);
+    let left = btnRect.left;
+    if(left + panelWidth > window.innerWidth - 12) left = window.innerWidth - panelWidth - 12;
+    if(left < 12) left = 12;
+    pickerPanel.style.top = (btnRect.bottom + 8) + 'px';
+    pickerPanel.style.left = left + 'px';
+  }
+  window.addEventListener('resize', () => { if(!pickerPanel.hidden) positionPickerPanel(); });
+  window.addEventListener('scroll', () => { if(!pickerPanel.hidden) positionPickerPanel(); }, true);
 
   pickerBtn.addEventListener('click', () => {
     pickerPanel.hidden = !pickerPanel.hidden;
-    if(!pickerPanel.hidden) renderPickerList();
+    if(!pickerPanel.hidden){ positionPickerPanel(); renderDateChips(); renderPickerList(); }
   });
   document.addEventListener('click', (e) => {
     if(!pickerPanel.hidden && !pickerPanel.contains(e.target) && e.target !== pickerBtn && !pickerBtn.contains(e.target)){
       pickerPanel.hidden = true;
     }
   });
-  document.getElementById('pickerDateFilter').addEventListener('change', renderPickerList);
   document.getElementById('pickerSearch').addEventListener('input', renderPickerList);
   document.getElementById('pickerSelectAll').addEventListener('click', () => {
-    document.querySelectorAll('#pickerList input[type="checkbox"]').forEach(cb => cb.checked = true);
+    document.querySelectorAll('#pickerList .disparo-card').forEach(card => {
+      card.classList.add('selected');
+      card.querySelector('input').checked = true;
+    });
+    updateSelectedCount();
   });
   document.getElementById('pickerClear').addEventListener('click', () => {
-    document.querySelectorAll('#pickerList input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.querySelectorAll('#pickerList .disparo-card').forEach(card => {
+      card.classList.remove('selected');
+      card.querySelector('input').checked = false;
+    });
+    updateSelectedCount();
   });
   document.getElementById('pickerApply').addEventListener('click', () => {
     // Substitui a seleção pelo que está marcado agora (considerando só os

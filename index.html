@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Painel Império Hap-on</title>
- 
+
 <style>
 body {
   margin: 0;
@@ -11,7 +11,7 @@ body {
   display: flex;
   background: #f4f6fb;
 }
- 
+
 .menu {
   width: 250px;
   background: #1a1a2e;
@@ -19,12 +19,12 @@ body {
   height: 100vh;
   padding: 20px 15px;
 }
- 
+
 .menu h2 {
   font-size: 18px;
   margin-bottom: 25px;
 }
- 
+
 .menu button {
   display: block;
   width: 100%;
@@ -37,17 +37,17 @@ body {
   font-weight: 600;
   transition: 0.2s;
 }
- 
+
 .menu button:hover {
   background: #4361ee;
   color: #fff;
 }
- 
+
 .menu button.active {
   background: #4361ee;
   color: #fff;
 }
- 
+
 iframe {
   flex: 1;
   border: none;
@@ -55,9 +55,9 @@ iframe {
 }
 </style>
 </head>
- 
+
 <body>
- 
+
 <div class="menu">
 <h2>📊 Império Hap-on</h2>
 
@@ -69,7 +69,7 @@ iframe {
     EugênIA
 </button>
 
-<button onclick="loadPage('disparos.html', this)" class="active">
+<button onclick="loadPage('funil.html', this)" class="active">
     Disparos
 </button>
 
@@ -85,10 +85,6 @@ iframe {
     Teste
 </button>
 
-<button onclick="loadPage('disparos.html', this)" style="display:none">
-    Disparos
-</button>
-
 <button onclick="loadPage('leads.html', this)" style="display:none">
     Leads
 </button>
@@ -102,7 +98,7 @@ iframe {
 </button>
 </div>
 
-<iframe id="frame" src="disparo.html"></iframe>
+<iframe id="frame" src="funil.html"></iframe>
 
 <script>
 function loadPage(page, element){
@@ -114,21 +110,7 @@ function loadPage(page, element){
 
   element.classList.add('active');
 }
-
-// 🔒 BLOCO PARA OCULTAR BOTÕES
-function ocultarBotoes() {
-  document.getElementById('btnDisparos').style.display = 'none';      
-  document.getElementById('btnCarteira de Clientes').style.display = 'none';
-  document.getElementById('btnLeads').style.display = 'none';
-  document.getElementById('btnQualidade').style.display = 'none';
-  document.getElementById('btnAbsenteismo').style.display = 'none';
-}
-
-// Executa automaticamente ao carregar
-window.onload = function() {
-  ocultarBotoes();
-};
 </script>
- 
+
 </body>
 </html>

@@ -118,6 +118,8 @@ License: MIT
     position: fixed;
     width: 460px;
     max-width: calc(100vw - 24px);
+    max-height: 82vh;
+    overflow-y: auto;
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 14px;
@@ -133,12 +135,12 @@ License: MIT
   }
   .picker-search input:focus-visible{ outline:2px solid var(--blue); outline-offset:1px; }
 
-  /* chips de data clicáveis */
-  .date-chip-row{
+  /* chips genéricos (data, categoria, origem) */
+  .chip-row, .date-chip-row{
     display:flex; flex-wrap:wrap; gap:7px;
     margin-bottom: 14px;
   }
-  .date-chip{
+  .chip, .date-chip{
     font-family:'Space Grotesk', sans-serif;
     font-size: 12.5px; font-weight:600;
     padding: 6px 13px;
@@ -149,8 +151,36 @@ License: MIT
     cursor:pointer;
     transition: background .12s, color .12s, border-color .12s;
   }
-  .date-chip:hover{ border-color: var(--blue); color: var(--blue-deep); }
-  .date-chip.active{ background: var(--blue); border-color: var(--blue); color:#fff; }
+  .chip:hover, .date-chip:hover{ border-color: var(--blue); color: var(--blue-deep); }
+  .chip.active, .date-chip.active{ background: var(--blue); border-color: var(--blue); color:#fff; }
+
+  .picker-filter-group{ margin-bottom: 4px; }
+  .picker-filter-label{
+    display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:7px;
+  }
+
+  .date-mode-tabs{ display:flex; align-items:center; gap:14px; margin-bottom:10px; }
+  .date-mode-btn{
+    background:none; border:none; font-family:'Inter',sans-serif;
+    font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; padding:4px 0;
+    border-bottom: 2px solid transparent;
+  }
+  .date-mode-btn.active{ color: var(--blue-deep); border-bottom-color: var(--blue); }
+  .date-mode-clear{
+    margin-left:auto; background:none; border:none; font-size:11.5px; color: var(--muted);
+    cursor:pointer; text-decoration:underline;
+  }
+  .date-mode-panel{ margin-bottom: 14px; }
+  .date-mode-panel select{
+    width:100%; font-family:'Inter',sans-serif; font-size:13px;
+    padding: 8px 12px; border:1px solid var(--line); border-radius:8px; background: var(--bg); color: var(--ink);
+  }
+  .period-inputs{ display:flex; align-items:center; gap:8px; }
+  .period-inputs input{
+    flex:1; font-family:'Inter',sans-serif; font-size:13px;
+    padding: 7.5px 10px; border:1px solid var(--line); border-radius:8px; background: var(--bg); color: var(--ink);
+  }
+  .period-inputs span{ font-size:12px; color:var(--muted); }
 
   .picker-actions-top{
     display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;
@@ -205,6 +235,12 @@ License: MIT
   .dc-top{ padding-right: 26px; }
   .dc-stats{ display:flex; gap:18px; flex-wrap:wrap; }
   .dc-stats-resp{ margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); }
+  .dc-badges{ display:flex; gap:6px; margin-bottom:10px; }
+  .dc-badge-cat, .dc-badge-origem{
+    font-size:10.5px; font-weight:700; padding:2px 9px; border-radius:10px;
+  }
+  .dc-badge-cat{ background: var(--blue-tint); color: var(--blue-deep); }
+  .dc-badge-origem{ background: var(--coral-tint); color: var(--coral-deep); }
   .dc-coral{ color: var(--coral-deep) !important; }
   .dc-blue{ color: var(--blue-deep) !important; }
   .dc-gray{ color: var(--muted) !important; }
@@ -604,7 +640,37 @@ License: MIT
           <div class="picker-search">
             <input type="search" id="pickerSearch" placeholder="Buscar disparo por palavra-chave…">
           </div>
-          <div class="date-chip-row" id="dateChipRow"></div>
+
+          <div class="picker-filter-group">
+            <span class="picker-filter-label">Categoria</span>
+            <div class="chip-row" id="categoriaChipRow"></div>
+          </div>
+
+          <div class="picker-filter-group">
+            <span class="picker-filter-label">Origem</span>
+            <div class="chip-row" id="origemChipRow"></div>
+          </div>
+
+          <div class="picker-filter-group">
+            <div class="date-mode-tabs">
+              <button type="button" class="date-mode-btn active" data-mode="exata">Data exata</button>
+              <button type="button" class="date-mode-btn" data-mode="mes">Mês</button>
+              <button type="button" class="date-mode-btn" data-mode="periodo">Período</button>
+              <button type="button" class="date-mode-clear" id="dateModeClear">limpar</button>
+            </div>
+            <div class="date-mode-panel" id="dateModeExata">
+              <div class="chip-row" id="dateChipRow"></div>
+            </div>
+            <div class="date-mode-panel" id="dateModeMes" hidden>
+              <select id="monthSelect"><option value="">Todos os meses</option></select>
+            </div>
+            <div class="date-mode-panel" id="dateModePeriodo" hidden>
+              <div class="period-inputs">
+                <input type="date" id="periodoFrom"><span>até</span><input type="date" id="periodoTo">
+              </div>
+            </div>
+          </div>
+
           <div class="picker-actions-top">
             <span class="picker-selected-count" id="pickerSelectedCount"></span>
             <div class="picker-links">
@@ -647,20 +713,19 @@ License: MIT
 
   <div class="hero">
     <div class="hero-main">
-      <div class="hero-eyebrow">TAXA DE ENGAJAMENTO</div>
-      <div class="hero-num"><span id="engRate">0%</span><small>dos que leram, responderam</small></div>
+      <div class="hero-eyebrow">TAXA DE ACEITE</div>
+      <div class="hero-num"><span id="engRate">0%</span><small>da base disse "sim"</small></div>
       <div class="hero-sub">
-        De <strong id="heroLido">–</strong> pessoas que leram a mensagem, <strong id="heroCliques">–</strong> clicaram em algum botão —
-        <strong id="heroInteresse">–</strong> demonstraram interesse em falar agora.
+        De <strong id="heroTotalBase">–</strong> pessoas na base, <strong id="heroSim">–</strong> disseram <strong>sim</strong> e
+        <strong id="heroNao">–</strong> disseram <strong>não</strong>.
       </div>
     </div>
     <div class="ledger">
-      <div class="ledger-title">BASE DO DISPARO</div>
-      <div class="ledger-row"><span class="label">Contatos na lista</span><span class="value" id="ledgerBase">–</span></div>
-      <div class="ledger-row"><span class="label">Visado (meta)</span><span class="value" id="ledgerVisado">–</span></div>
-      <div class="ledger-row"><span class="label">Enviado ao Meta</span><span class="value" id="ledgerMeta">–</span></div>
-      <div class="ledger-row"><span class="label">Entregue aos usuários</span><span class="value" id="ledgerEntregue">–</span></div>
-      <div class="ledger-row"><span class="label">Lido pelos usuários</span><span class="value" id="ledgerLido">–</span></div>
+      <div class="ledger-title">RESUMO</div>
+      <div class="ledger-row"><span class="label">Total da base</span><span class="value" id="ledgerBase">–</span></div>
+      <div class="ledger-row"><span class="label">Sim</span><span class="value" id="ledgerSim">–</span></div>
+      <div class="ledger-row"><span class="label">Não</span><span class="value" id="ledgerNao">–</span></div>
+      <div class="ledger-row"><span class="label">Sem resposta</span><span class="value" id="ledgerSemResp">–</span></div>
       <div class="ledger-row"><span class="label">Último envio</span><span class="value" id="ledgerUltimoEnvio">–</span></div>
     </div>
   </div>
@@ -676,7 +741,7 @@ License: MIT
   <section class="block">
     <div class="block-head">
       <h2>Distribuição de respostas</h2>
-      <span class="hint">de quem leu a mensagem</span>
+      <span class="hint">de toda a base contatada</span>
     </div>
     <div class="segbar">
       <div class="seg-a" id="segA"></div>
@@ -684,37 +749,37 @@ License: MIT
       <div class="seg-c" id="segC"></div>
     </div>
     <div class="seg-legend">
-      <div class="seg-item"><span class="seg-dot" style="background:var(--coral)"></span>Falar agora — <b id="legA">–</b> <span class="pct" id="legAp"></span></div>
-      <div class="seg-item"><span class="seg-dot" style="background:var(--blue)"></span>Não tenho interesse — <b id="legB">–</b> <span class="pct" id="legBp"></span></div>
+      <div class="seg-item"><span class="seg-dot" style="background:var(--coral)"></span>Sim — <b id="legA">–</b> <span class="pct" id="legAp"></span></div>
+      <div class="seg-item"><span class="seg-dot" style="background:var(--blue)"></span>Não — <b id="legB">–</b> <span class="pct" id="legBp"></span></div>
       <div class="seg-item"><span class="seg-dot" style="background:#D7DEF2"></span>Sem resposta — <b id="legC">–</b> <span class="pct" id="legCp"></span></div>
     </div>
 
     <div class="rates">
       <div class="rate-card">
-        <div class="rate-label">Taxa de entrega<br>(entregue / enviado)</div>
-        <div class="rate-num" id="rateEntrega">–</div>
-        <div class="rate-bar"><div id="barEntrega"></div></div>
+        <div class="rate-label">Taxa de resposta<br>(sim + não / total)</div>
+        <div class="rate-num" id="rateResposta">–</div>
+        <div class="rate-bar"><div id="barResposta"></div></div>
       </div>
       <div class="rate-card">
-        <div class="rate-label">Taxa de leitura<br>(lido / entregue)</div>
-        <div class="rate-num" id="rateLeitura">–</div>
-        <div class="rate-bar"><div id="barLeitura"></div></div>
+        <div class="rate-label">Taxa de aceite<br>(sim / total)</div>
+        <div class="rate-num" id="rateAceite">–</div>
+        <div class="rate-bar"><div id="barAceite"></div></div>
       </div>
       <div class="rate-card">
-        <div class="rate-label">Taxa de engajamento<br>(cliques / lido)</div>
-        <div class="rate-num" id="rateEngaj">–</div>
-        <div class="rate-bar"><div id="barEngaj"></div></div>
+        <div class="rate-label">Taxa de recusa<br>(não / total)</div>
+        <div class="rate-num" id="rateRecusa">–</div>
+        <div class="rate-bar"><div id="barRecusa"></div></div>
       </div>
       <div class="rate-card">
-        <div class="rate-label">Taxa de interesse<br>(falar agora / cliques)</div>
-        <div class="rate-num" id="rateInteresse">–</div>
-        <div class="rate-bar"><div id="barInteresse"></div></div>
+        <div class="rate-label">Aceite entre quem respondeu<br>(sim / (sim + não))</div>
+        <div class="rate-num" id="rateAceiteResp">–</div>
+        <div class="rate-bar"><div id="barAceiteResp"></div></div>
       </div>
     </div>
   </section>
 
   <div class="footnote">
-    <b>Como adicionar um novo disparo:</b> crie uma nova linha na aba <b>DISPARO</b> da planilha com os dados do funil, adicione os contatos correspondentes na aba <b>BASE</b> (preenchendo "Nome Disparo" com o mesmo nome usado na aba DISPARO) e, se houver cliques, registre-os na aba <b>RELATORIO</b>. Clique em "↻ Atualizar dados" aqui no painel para trazer as novidades — nenhuma edição de código é necessária.
+    <b>Como adicionar um novo disparo:</b> crie uma nova linha na aba <b>DISPARO</b> da planilha com nome, categoria, origem (COMERCIAL/MARKETING), total da base, respostas "sim"/"não" e a data de envio. Clique em "↻ Atualizar dados" aqui no painel para trazer as novidades — nenhuma edição de código é necessária.
   </div>
 
   </div><!-- /tab-geral -->
@@ -761,24 +826,19 @@ License: MIT
 
 <script>
   // ---------------------------------------------------------------
-  // Fonte dos dados: 1 objeto por disparo. Para adicionar um novo
-  // disparo, copie o bloco abaixo, ajuste os valores e o nome (key).
-  // ---------------------------------------------------------------
-  // ---------------------------------------------------------------
-  // Fonte dos dados: planilha Google Sheets publicada (BASE, RELATORIO
-  // e DISPARO). Ajuste os IDs/gids abaixo se a planilha for trocada.
+  // Fonte dos dados: planilha Google Sheets publicada.
+  // DISPARO: nome, categoria, origem, total da base, sim/não, data.
+  // BASE: lista de telefones por disparo (usada na aba Telefones).
   // ---------------------------------------------------------------
   const SHEET_ID = '1490_mZAxpR9XGlrHvkyByXE619X-T5HNBxVFrJZd7sw';
   const GIDS = {
     disparo: '0',            // aba DISPARO — confirme este gid na planilha
     base: '1955407831',      // aba BASE
-    relatorio: '408096952',  // aba RELATORIO
   };
   const csvUrl = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
 
   let DISPAROS = {};
   let BASE_DATA = [];
-  let REL_DATA = [];
 
   function parseCSVRows(text){
     const result = Papa.parse(text.trim(), { skipEmptyLines: true });
@@ -801,6 +861,7 @@ License: MIT
   }
   function parseFlexibleDate(raw){
     const s = String(raw || '').trim();
+    if (!s) return null;
     if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
     const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
     if (br) return `${br[3]}-${br[2].padStart(2,'0')}-${br[1].padStart(2,'0')}`;
@@ -809,21 +870,23 @@ License: MIT
     const d = new Date(s);
     return isNaN(d) ? null : d.toISOString().slice(0, 10);
   }
-  function isFalarAgora(botao){ return /seguir/i.test(String(botao || '')); }
 
-  function buildFromCSV(disparoRows, baseRows, relRows){
+  // Ordem preferida de exibição para as categorias mais comuns; qualquer
+  // categoria nova que apareça na planilha é adicionada ao final da lista.
+  const CATEGORIA_ORDEM = ['VPC', 'PF', 'ADESÃO', 'ADESAO', 'PME', 'PROJETO', 'PROJETOS'];
+
+  function buildFromCSV(disparoRows, baseRows){
     const disparos = {};
     disparoRows.forEach(cols => {
       const nome = (cols[0] || '').trim();
       if (!nome) return;
       disparos[nome] = {
-        visado: parseK(cols[1]), enviadoMeta: parseK(cols[2]),
-        enviadoUsuarios: parseK(cols[3]), entregue: parseK(cols[4]),
-        lido: parseK(cols[5]),
-        nenhumClicado: parseK(cols[6]),   // coluna G — direto da planilha
-        naoInteresse: parseK(cols[7]),    // coluna H — direto da planilha
-        falarAgora: parseK(cols[8]),      // coluna I — direto da planilha
-        baseContatos: 0, dataEnvio: null, relMatchedCount: 0,
+        categoria: (cols[1] || 'Sem categoria').trim(),
+        origem: (cols[2] || 'Sem origem').trim(),
+        totalBase: parseK(cols[3]),
+        naoInteresse: parseK(cols[4]),
+        falarAgora: parseK(cols[5]),
+        dataEnvio: parseFlexibleDate(cols[7]),
       };
     });
 
@@ -833,60 +896,10 @@ License: MIT
       const disparo = (cols[1] || '').trim();
       const iso = parseFlexibleDate(cols[2]);
       if (!phone) return;
-      baseData.push({ phone, disparo, data: iso, resposta: null });
-      if (disparos[disparo]) {
-        disparos[disparo].baseContatos++;
-        if (iso && (!disparos[disparo].dataEnvio || iso > disparos[disparo].dataEnvio)) {
-          disparos[disparo].dataEnvio = iso;
-        }
-      }
+      baseData.push({ phone, disparo, data: iso });
     });
 
-    // Agrupa as linhas da BASE por telefone, para poder escolher a linha certa
-    // quando o mesmo número aparece em mais de um disparo/data.
-    const rowsByPhone = new Map();
-    baseData.forEach(r => {
-      if (!rowsByPhone.has(r.phone)) rowsByPhone.set(r.phone, []);
-      rowsByPhone.get(r.phone).push(r);
-    });
-
-    // Escolhe, entre as linhas da BASE com o mesmo telefone, a mais adequada
-    // para receber um clique registrado em determinada data:
-    // 1) a que foi enviada exatamente na data do clique;
-    // 2) senão, a mais recente enviada até a data do clique;
-    // 3) senão (sem nenhuma data anterior ao clique), a mais antiga disponível.
-    function pickBaseRow(phone, clickDateISO){
-      const candidates = rowsByPhone.get(phone);
-      if (!candidates || candidates.length === 0) return null;
-      if (candidates.length === 1) return candidates[0];
-      const exact = candidates.find(c => c.data === clickDateISO);
-      if (exact) return exact;
-      const before = candidates.filter(c => c.data && clickDateISO && c.data <= clickDateISO)
-                                .sort((a,b) => a.data < b.data ? 1 : -1);
-      if (before.length) return before[0];
-      return candidates.slice().sort((a,b) => (a.data||'') < (b.data||'') ? -1 : 1)[0];
-    }
-
-    const relData = [];
-    relRows.forEach(cols => {
-      const phone = (cols[0] || '').replace(/\D/g, '');
-      const botao = (cols[1] || '').trim();
-      const timestamp = (cols[2] || '').trim();
-      if (!phone) return;
-      const clickDateISO = relDateISO(timestamp);
-      const matched = pickBaseRow(phone, clickDateISO);
-      const disparo = matched ? matched.disparo : null;
-      relData.push({ phone, botao, timestamp, disparo });
-      if (matched && !matched.resposta) matched.resposta = botao;
-      // falarAgora/naoInteresse do disparo vêm das colunas H/I da aba DISPARO
-      // (ver acima); aqui só contamos quantos cliques da RELATORIO foram
-      // efetivamente casados com esse disparo, para o aviso de completude.
-      if (disparo && disparos[disparo]) {
-        disparos[disparo].relMatchedCount++;
-      }
-    });
-
-    return { disparos, baseData, relData };
+    return { disparos, baseData };
   }
 
   async function fetchCSV(gid){
@@ -914,20 +927,21 @@ License: MIT
     setLoading(true);
     setStatus('loading', 'Carregando dados da planilha…');
     try {
-      const [disparoRows, baseRows, relRows] = await Promise.all([
-        fetchCSV(GIDS.disparo), fetchCSV(GIDS.base), fetchCSV(GIDS.relatorio),
+      const [disparoRows, baseRows] = await Promise.all([
+        fetchCSV(GIDS.disparo), fetchCSV(GIDS.base),
       ]);
-      const built = buildFromCSV(disparoRows, baseRows, relRows);
+      const built = buildFromCSV(disparoRows, baseRows);
       DISPAROS = built.disparos;
       BASE_DATA = built.baseData;
-      REL_DATA = built.relData;
 
       if (Object.keys(DISPAROS).length === 0) {
         throw new Error('A aba DISPARO não retornou nenhuma linha. Confira o gid configurado.');
       }
 
+      activeCategoria = 'todas';
+      activeOrigem = 'todos';
       populateSelectors();
-      selectedDisparos = new Set(Object.keys(DISPAROS)); // padrão: todos selecionados
+      selectedDisparos = new Set(disparosNoEscopo()); // padrão: todos os disparos no escopo atual
       updatePickerLabel();
       render(selectedDisparos);
       phonePage = 1;
@@ -946,7 +960,93 @@ License: MIT
     }
   }
 
+  // ---------------------------------------------------------------
+  // Filtros de Categoria e Origem (nível de página)
+  // ---------------------------------------------------------------
+  let activeCategoria = 'todas';
+  let activeOrigem = 'todos';
+
+  function normCat(s){ return String(s||'').trim().toUpperCase(); }
+
+  function categoriasDisponiveis(){
+    const set = new Set(Object.values(DISPAROS).map(d => d.categoria));
+    const arr = [...set];
+    arr.sort((a,b) => {
+      const ia = CATEGORIA_ORDEM.indexOf(normCat(a));
+      const ib = CATEGORIA_ORDEM.indexOf(normCat(b));
+      if(ia === -1 && ib === -1) return a.localeCompare(b);
+      if(ia === -1) return 1;
+      if(ib === -1) return -1;
+      return ia - ib;
+    });
+    return arr;
+  }
+  function origensDisponiveis(){
+    return [...new Set(Object.values(DISPAROS).map(d => d.origem))].sort();
+  }
+
+  // disparos que passam nos filtros de categoria + origem (mas não nos de
+  // busca/data, que são aplicados só dentro da lista do picker)
+  function disparosNoEscopo(){
+    return Object.keys(DISPAROS).filter(n => {
+      const d = DISPAROS[n];
+      if(activeCategoria !== 'todas' && normCat(d.categoria) !== normCat(activeCategoria)) return false;
+      if(activeOrigem !== 'todos' && normCat(d.origem) !== normCat(activeOrigem)) return false;
+      return true;
+    });
+  }
+
+  function renderCategoriaChips(){
+    const row = document.getElementById('categoriaChipRow');
+    const cats = categoriasDisponiveis();
+    const chips = ['todas', ...cats];
+    row.innerHTML = chips.map(c => {
+      const label = c === 'todas' ? 'Todas' : c;
+      const active = normCat(activeCategoria) === normCat(c) ? 'active' : '';
+      return `<button type="button" class="chip ${active}" data-cat="${c.replace(/"/g,'&quot;')}">${label}</button>`;
+    }).join('');
+    row.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        activeCategoria = chip.dataset.cat;
+        selectedDisparos = new Set(disparosNoEscopo());
+        renderCategoriaChips();
+        renderDateChips();
+        renderMonthSelect();
+        renderPickerList();
+        updatePickerLabel();
+        render(selectedDisparos);
+      });
+    });
+  }
+
+  function renderOrigemChips(){
+    const row = document.getElementById('origemChipRow');
+    const origens = origensDisponiveis();
+    const chips = ['todos', ...origens];
+    row.innerHTML = chips.map(o => {
+      const label = o === 'todos' ? 'Todos' : (o.charAt(0) + o.slice(1).toLowerCase());
+      const active = normCat(activeOrigem) === normCat(o) ? 'active' : '';
+      return `<button type="button" class="chip ${active}" data-origem="${o.replace(/"/g,'&quot;')}">${label}</button>`;
+    }).join('');
+    row.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        activeOrigem = chip.dataset.origem;
+        selectedDisparos = new Set(disparosNoEscopo());
+        renderOrigemChips();
+        renderDateChips();
+        renderMonthSelect();
+        renderPickerList();
+        updatePickerLabel();
+        render(selectedDisparos);
+      });
+    });
+  }
+
   function populateSelectors(){
+    renderCategoriaChips();
+    renderOrigemChips();
     renderPickerList();
 
     const phoneDisparoFilter = document.getElementById('phoneDisparoFilter');
@@ -968,6 +1068,10 @@ License: MIT
   // ---------------------------------------------------------------
   let selectedDisparos = new Set();
   let activeDateChips = new Set(); // datas (ISO) marcadas como filtro; vazio = todas
+  let dateMode = 'exata'; // 'exata' | 'mes' | 'periodo'
+  let activeMonth = '';   // 'YYYY-MM'
+  let periodoFrom = '';
+  let periodoTo = '';
 
   function formatDateBRShort(iso){
     if(!iso) return 'sem data';
@@ -979,15 +1083,20 @@ License: MIT
     const [y,m,d] = iso.split('-');
     return `${d}/${m}/${y}`;
   }
+  const NOMES_MES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  function formatMonthLabel(ym){
+    const [y,m] = ym.split('-');
+    return `${NOMES_MES[parseInt(m,10)-1]}/${y}`;
+  }
 
   function renderDateChips(){
     const row = document.getElementById('dateChipRow');
-    const dates = [...new Set(Object.values(DISPAROS).map(d => d.dataEnvio).filter(Boolean))].sort();
-    if(dates.length === 0){ row.innerHTML = ''; return; }
+    const dates = [...new Set(disparosNoEscopo().map(n => DISPAROS[n].dataEnvio).filter(Boolean))].sort();
+    if(dates.length === 0){ row.innerHTML = '<span class="picker-empty" style="padding:4px 0;">Nenhuma data disponível.</span>'; return; }
     row.innerHTML = dates.map(iso => `
-      <button type="button" class="date-chip ${activeDateChips.has(iso) ? 'active' : ''}" data-date="${iso}">${formatDateBRFull(iso)}</button>
+      <button type="button" class="chip ${activeDateChips.has(iso) ? 'active' : ''}" data-date="${iso}">${formatDateBRFull(iso)}</button>
     `).join('');
-    row.querySelectorAll('.date-chip').forEach(chip => {
+    row.querySelectorAll('.chip').forEach(chip => {
       chip.addEventListener('click', (e) => {
         e.stopPropagation();
         const d = chip.dataset.date;
@@ -998,17 +1107,107 @@ License: MIT
     });
   }
 
+  function renderMonthSelect(){
+    const sel = document.getElementById('monthSelect');
+    const months = [...new Set(disparosNoEscopo().map(n => DISPAROS[n].dataEnvio).filter(Boolean).map(iso => iso.slice(0,7)))].sort();
+    sel.innerHTML = '<option value="">Todos os meses</option>' +
+      months.map(ym => `<option value="${ym}" ${activeMonth===ym?'selected':''}>${formatMonthLabel(ym)}</option>`).join('');
+  }
+
+  function setDateMode(mode){
+    dateMode = mode;
+    document.querySelectorAll('.date-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    document.getElementById('dateModeExata').hidden = mode !== 'exata';
+    document.getElementById('dateModeMes').hidden = mode !== 'mes';
+    document.getElementById('dateModePeriodo').hidden = mode !== 'periodo';
+  }
+  document.querySelectorAll('.date-mode-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.stopPropagation(); setDateMode(btn.dataset.mode); renderPickerList(); });
+  });
+  document.getElementById('dateModeClear').addEventListener('click', (e) => {
+    e.stopPropagation();
+    activeDateChips.clear(); activeMonth = ''; periodoFrom = ''; periodoTo = '';
+    document.getElementById('monthSelect').value = '';
+    document.getElementById('periodoFrom').value = '';
+    document.getElementById('periodoTo').value = '';
+    renderDateChips();
+    renderPickerList();
+  });
+  document.getElementById('monthSelect').addEventListener('change', (e) => {
+    activeMonth = e.target.value; renderPickerList();
+  });
+  document.getElementById('periodoFrom').addEventListener('change', (e) => { periodoFrom = e.target.value; renderPickerList(); });
+  document.getElementById('periodoTo').addEventListener('change', (e) => { periodoTo = e.target.value; renderPickerList(); });
+
+  function passaFiltroData(iso){
+    if(dateMode === 'exata') return activeDateChips.size === 0 || activeDateChips.has(iso);
+    if(dateMode === 'mes') return !activeMonth || (iso && iso.slice(0,7) === activeMonth);
+    if(dateMode === 'periodo'){
+      if(periodoFrom && (!iso || iso < periodoFrom)) return false;
+      if(periodoTo && (!iso || iso > periodoTo)) return false;
+      return true;
+    }
+    return true;
+  }
+
   function updateSelectedCount(){
     document.getElementById('pickerSelectedCount').textContent =
       `${document.querySelectorAll('#pickerList input[type="checkbox"]:checked').length} de ${document.querySelectorAll('#pickerList input[type="checkbox"]').length} marcados`;
   }
 
+  function disparoStatCardHTML(n, dd, { withCheckbox }){
+    const cliques = dd.falarAgora + dd.naoInteresse;
+    const semResp = Math.max(dd.totalBase - cliques, 0);
+    const aceite = dd.totalBase > 0 ? Math.round(dd.falarAgora / dd.totalBase * 100) : 0;
+    const isSel = selectedDisparos.has(n);
+    const origemLabel = dd.origem ? (dd.origem.charAt(0) + dd.origem.slice(1).toLowerCase()) : '';
+    if(withCheckbox){
+      return `
+      <label class="disparo-card ${isSel ? 'selected' : ''}">
+        <input type="checkbox" value="${n.replace(/"/g,'&quot;')}" ${isSel ? 'checked' : ''}>
+        <span class="dc-check">✓</span>
+        <div class="dc-top">
+          <span class="dc-name">${n}</span>
+          <span class="dc-date-pill">${formatDateBRShort(dd.dataEnvio)}</span>
+        </div>
+        <div class="dc-badges">
+          <span class="dc-badge-cat">${dd.categoria}</span>
+          <span class="dc-badge-origem">${origemLabel}</span>
+        </div>
+        <div class="dc-stats">
+          <div class="dc-stat"><span class="dc-stat-val">${fmt(dd.totalBase)}</span><span class="dc-stat-label">Total da base</span></div>
+          <div class="dc-stat"><span class="dc-stat-val dc-coral">${fmt(dd.falarAgora)}</span><span class="dc-stat-label">Sim</span></div>
+          <div class="dc-stat"><span class="dc-stat-val dc-blue">${fmt(dd.naoInteresse)}</span><span class="dc-stat-label">Não</span></div>
+          <div class="dc-stat"><span class="dc-stat-val">${aceite}%</span><span class="dc-stat-label">Aceite</span></div>
+        </div>
+      </label>`;
+    }
+    return `
+      <div class="stat-card">
+        <div class="sc-top">
+          <span class="sc-name">${n}</span>
+          <span class="sc-date-pill">${formatDateBRFull(dd.dataEnvio)}</span>
+        </div>
+        <div class="dc-badges" style="margin-bottom:14px;">
+          <span class="dc-badge-cat">${dd.categoria}</span>
+          <span class="dc-badge-origem">${origemLabel}</span>
+        </div>
+        <div class="sc-section-label">RESPOSTAS · ${aceite}% DE ACEITE</div>
+        <div class="sc-stats">
+          <div><span class="sc-stat-val">${fmt(dd.totalBase)}</span><span class="sc-stat-label">Total da base</span></div>
+          <div><span class="sc-stat-val dc-coral">${fmt(dd.falarAgora)}</span><span class="sc-stat-label">Sim</span></div>
+          <div><span class="sc-stat-val dc-blue">${fmt(dd.naoInteresse)}</span><span class="sc-stat-label">Não</span></div>
+          <div><span class="sc-stat-val dc-gray">${fmt(semResp)}</span><span class="sc-stat-label">Sem resposta</span></div>
+        </div>
+      </div>`;
+  }
+
   function renderPickerList(){
     const searchTerm = document.getElementById('pickerSearch').value.trim().toLowerCase();
     const list = document.getElementById('pickerList');
-    const names = Object.keys(DISPAROS).filter(n => {
-      if(activeDateChips.size && !activeDateChips.has(DISPAROS[n].dataEnvio)) return false;
+    const names = disparosNoEscopo().filter(n => {
       if(searchTerm && !n.toLowerCase().includes(searchTerm)) return false;
+      if(!passaFiltroData(DISPAROS[n].dataEnvio)) return false;
       return true;
     });
 
@@ -1017,32 +1216,7 @@ License: MIT
       updateSelectedCount();
       return;
     }
-    list.innerHTML = names.map(n => {
-      const d = DISPAROS[n];
-      const cliques = d.falarAgora + d.naoInteresse;
-      const engaj = d.lido > 0 ? Math.round(cliques / d.lido * 100) : 0;
-      const isSel = selectedDisparos.has(n);
-      return `
-      <label class="disparo-card ${isSel ? 'selected' : ''}">
-        <input type="checkbox" value="${n.replace(/"/g,'&quot;')}" ${isSel ? 'checked' : ''}>
-        <span class="dc-check">✓</span>
-        <div class="dc-top">
-          <span class="dc-name">${n}</span>
-          <span class="dc-date-pill">${formatDateBRShort(d.dataEnvio)}</span>
-        </div>
-        <div class="dc-stats">
-          <div class="dc-stat"><span class="dc-stat-val">${fmt(d.visado)}</span><span class="dc-stat-label">Visado</span></div>
-          <div class="dc-stat"><span class="dc-stat-val">${fmt(d.lido)}</span><span class="dc-stat-label">Lido</span></div>
-          <div class="dc-stat"><span class="dc-stat-val">${fmt(cliques)}</span><span class="dc-stat-label">Cliques</span></div>
-          <div class="dc-stat"><span class="dc-stat-val">${engaj}%</span><span class="dc-stat-label">Engajamento</span></div>
-        </div>
-        <div class="dc-stats dc-stats-resp">
-          <div class="dc-stat"><span class="dc-stat-val dc-coral">${fmt(d.falarAgora)}</span><span class="dc-stat-label">Falar agora</span></div>
-          <div class="dc-stat"><span class="dc-stat-val dc-blue">${fmt(d.naoInteresse)}</span><span class="dc-stat-label">Não tenho interesse</span></div>
-          <div class="dc-stat"><span class="dc-stat-val dc-gray">${fmt(d.nenhumClicado)}</span><span class="dc-stat-label">Sem resposta</span></div>
-        </div>
-      </label>
-    `; }).join('');
+    list.innerHTML = names.map(n => disparoStatCardHTML(n, DISPAROS[n], { withCheckbox: true })).join('');
 
     list.querySelectorAll('.disparo-card input[type="checkbox"]').forEach(cb => {
       cb.addEventListener('change', () => {
@@ -1081,7 +1255,7 @@ License: MIT
 
   pickerBtn.addEventListener('click', () => {
     pickerPanel.hidden = !pickerPanel.hidden;
-    if(!pickerPanel.hidden){ positionPickerPanel(); renderDateChips(); renderPickerList(); }
+    if(!pickerPanel.hidden){ positionPickerPanel(); renderDateChips(); renderMonthSelect(); renderPickerList(); }
   });
   document.addEventListener('click', (e) => {
     if(!pickerPanel.hidden && !pickerPanel.contains(e.target) && e.target !== pickerBtn && !pickerBtn.contains(e.target)){
@@ -1115,20 +1289,13 @@ License: MIT
   });
 
   function aggregateSelected(names){
-    const agg = { dataEnvio:null, baseContatos:0, visado:0, enviadoMeta:0, enviadoUsuarios:0,
-                  entregue:0, lido:0, falarAgora:0, naoInteresse:0, nenhumClicado:0 };
+    const agg = { dataEnvio:null, totalBase:0, falarAgora:0, naoInteresse:0 };
     names.forEach(n=>{
       const d = DISPAROS[n];
       if(!d) return;
-      agg.baseContatos    += d.baseContatos;
-      agg.visado          += d.visado;
-      agg.enviadoMeta     += d.enviadoMeta;
-      agg.enviadoUsuarios += d.enviadoUsuarios;
-      agg.entregue        += d.entregue;
-      agg.lido            += d.lido;
-      agg.falarAgora      += d.falarAgora;
-      agg.naoInteresse    += d.naoInteresse;
-      agg.nenhumClicado   += d.nenhumClicado;
+      agg.totalBase    += d.totalBase;
+      agg.falarAgora   += d.falarAgora;
+      agg.naoInteresse += d.naoInteresse;
       if(!agg.dataEnvio || d.dataEnvio > agg.dataEnvio) agg.dataEnvio = d.dataEnvio;
     });
     return agg;
@@ -1143,7 +1310,7 @@ License: MIT
     title.textContent = names.length === total ? 'Todos os disparos' :
                          names.length === 1 ? names[0] :
                          `${names.length} disparos selecionados`;
-    hint.textContent = `${names.length} disparo${names.length===1?'':'s'} • contatos e respostas por disparo`;
+    hint.textContent = `${names.length} disparo${names.length===1?'':'s'} • total da base, sim e não por disparo`;
 
     if(names.length === 0){
       grid.innerHTML = '<div class="disparo-grid-empty">Nenhum disparo selecionado. Use o filtro acima para escolher.</div>';
@@ -1155,63 +1322,39 @@ License: MIT
     grid.innerHTML = sorted.map(n => {
       const dd = DISPAROS[n];
       if(!dd) return '';
-      const dcliques = dd.falarAgora + dd.naoInteresse;
-      const dengaj = dd.lido > 0 ? Math.round(dcliques / dd.lido * 100) : 0;
-      return `
-      <div class="stat-card">
-        <div class="sc-top">
-          <span class="sc-name">${n}</span>
-          <span class="sc-date-pill">${formatDateBRFull(dd.dataEnvio)}</span>
-        </div>
-        <div class="sc-section-label">FUNIL</div>
-        <div class="sc-stats">
-          <div><span class="sc-stat-val">${fmt(dd.visado)}</span><span class="sc-stat-label">Visado</span></div>
-          <div><span class="sc-stat-val">${fmt(dd.enviadoMeta)}</span><span class="sc-stat-label">Enviado Meta</span></div>
-          <div><span class="sc-stat-val">${fmt(dd.enviadoUsuarios)}</span><span class="sc-stat-label">Enviado</span></div>
-          <div><span class="sc-stat-val">${fmt(dd.entregue)}</span><span class="sc-stat-label">Entregue</span></div>
-          <div><span class="sc-stat-val">${fmt(dd.lido)}</span><span class="sc-stat-label">Lido</span></div>
-        </div>
-        <hr class="sc-divider">
-        <div class="sc-section-label">RESPOSTAS · ${dengaj}% ENGAJAMENTO</div>
-        <div class="sc-stats">
-          <div><span class="sc-stat-val dc-coral">${fmt(dd.falarAgora)}</span><span class="sc-stat-label">Falar agora</span></div>
-          <div><span class="sc-stat-val dc-blue">${fmt(dd.naoInteresse)}</span><span class="sc-stat-label">Não tenho interesse</span></div>
-          <div><span class="sc-stat-val dc-gray">${fmt(dd.nenhumClicado)}</span><span class="sc-stat-label">Sem resposta</span></div>
-        </div>
-      </div>
-    `; }).join('');
+      return disparoStatCardHTML(n, dd, { withCheckbox: false });
+    }).join('');
   }
 
   function render(selection){
     const names = [...selection];
     const d = names.length === 1 ? (DISPAROS[names[0]] || aggregateSelected(names)) : aggregateSelected(names);
     const cliques = d.falarAgora + d.naoInteresse;
-    const semResposta = d.nenhumClicado;
+    const semResposta = Math.max(d.totalBase - cliques, 0);
     const safeDiv = (a, b) => b > 0 ? a / b : 0;
-    const taxaEntrega = safeDiv(d.entregue, d.enviadoUsuarios);
-    const taxaLeitura = safeDiv(d.lido, d.entregue);
-    const taxaEngaj = safeDiv(cliques, d.lido);
-    const taxaInteresse = safeDiv(d.falarAgora, cliques);
+    const taxaResposta = safeDiv(cliques, d.totalBase);
+    const taxaAceite = safeDiv(d.falarAgora, d.totalBase);
+    const taxaRecusa = safeDiv(d.naoInteresse, d.totalBase);
+    const taxaAceiteResp = safeDiv(d.falarAgora, cliques);
 
     const ultimoEnvio = d.dataEnvio ? new Date(d.dataEnvio+'T00:00:00').toLocaleDateString('pt-BR') : '—';
 
-    document.getElementById('engRate').textContent = pctInt(taxaEngaj);
-    document.getElementById('heroLido').textContent = fmt(d.lido);
-    document.getElementById('heroCliques').textContent = fmt(cliques);
-    document.getElementById('heroInteresse').textContent = fmt(d.falarAgora);
+    document.getElementById('engRate').textContent = pctInt(taxaAceite);
+    document.getElementById('heroTotalBase').textContent = fmt(d.totalBase);
+    document.getElementById('heroSim').textContent = fmt(d.falarAgora);
+    document.getElementById('heroNao').textContent = fmt(d.naoInteresse);
 
-    document.getElementById('ledgerBase').textContent = fmt(d.baseContatos);
-    document.getElementById('ledgerVisado').textContent = fmt(d.visado);
-    document.getElementById('ledgerMeta').textContent = fmt(d.enviadoMeta);
-    document.getElementById('ledgerEntregue').textContent = fmt(d.entregue);
-    document.getElementById('ledgerLido').textContent = fmt(d.lido);
+    document.getElementById('ledgerBase').textContent = fmt(d.totalBase);
+    document.getElementById('ledgerSim').textContent = fmt(d.falarAgora);
+    document.getElementById('ledgerNao').textContent = fmt(d.naoInteresse);
+    document.getElementById('ledgerSemResp').textContent = fmt(semResposta);
     document.getElementById('ledgerUltimoEnvio').textContent = ultimoEnvio;
 
     // grade de cards — um por disparo selecionado
     renderDisparoGrid(names);
 
     // responses segmented bar
-    const total = d.lido || 1;
+    const total = d.totalBase || 1;
     document.getElementById('segA').dataset.w = (d.falarAgora/total*100).toFixed(2);
     document.getElementById('segB').dataset.w = (d.naoInteresse/total*100).toFixed(2);
     document.getElementById('segC').dataset.w = (semResposta/total*100).toFixed(2);
@@ -1223,14 +1366,14 @@ License: MIT
     document.getElementById('legCp').textContent = '('+pct(semResposta/total)+')';
 
     // rates
-    document.getElementById('rateEntrega').textContent = pct(taxaEntrega);
-    document.getElementById('rateLeitura').textContent = pct(taxaLeitura);
-    document.getElementById('rateEngaj').textContent = pct(taxaEngaj);
-    document.getElementById('rateInteresse').textContent = pct(taxaInteresse);
-    document.getElementById('barEntrega').dataset.w = Math.min(taxaEntrega*100,100);
-    document.getElementById('barLeitura').dataset.w = Math.min(taxaLeitura*100,100);
-    document.getElementById('barEngaj').dataset.w = Math.min(taxaEngaj*100,100);
-    document.getElementById('barInteresse').dataset.w = Math.min(taxaInteresse*100,100);
+    document.getElementById('rateResposta').textContent = pct(taxaResposta);
+    document.getElementById('rateAceite').textContent = pct(taxaAceite);
+    document.getElementById('rateRecusa').textContent = pct(taxaRecusa);
+    document.getElementById('rateAceiteResp').textContent = pct(taxaAceiteResp);
+    document.getElementById('barResposta').dataset.w = Math.min(taxaResposta*100,100);
+    document.getElementById('barAceite').dataset.w = Math.min(taxaAceite*100,100);
+    document.getElementById('barRecusa').dataset.w = Math.min(taxaRecusa*100,100);
+    document.getElementById('barAceiteResp').dataset.w = Math.min(taxaAceiteResp*100,100);
 
     // trigger one orchestrated fill-in animation
     requestAnimationFrame(()=>{

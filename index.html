@@ -110,7 +110,8 @@ iframe {
 
 <script>
 function loadPage(page, element){
-  document.getElementById('frame').src = page;
+  // ?v=... evita que o navegador mostre uma versão antiga guardada em cache
+  document.getElementById('frame').src = page + '?v=' + Date.now();
 
   document.querySelectorAll('.menu button').forEach(btn => {
     btn.classList.remove('active');

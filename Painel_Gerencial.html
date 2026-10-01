@@ -144,7 +144,6 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
       <h1>Painel gerencial de leads e vendas</h1>
       <span class="muted" id="period"></span>
     </div>
-    <span class="note">Fontes: Tabela de Leads por Origem (01–30/09) e Levantamento de Vendas Setembro (BASE_PF, BASE PME, BASE ADESÃO)</span>
   </header>
 
   <div class="kpis" id="kpis"></div>
@@ -242,6 +241,8 @@ footer{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:
 
 
   <footer>
+    <span>Fontes: Tabela de Leads por Origem (01–30/09) e Levantamento de Vendas Setembro (BASE_PF, BASE PME, BASE ADESÃO)</span>
+    <span>Indicadores do topo: Levantamento de Vendas Setembro (BASE_PF, BASE PME e BASE ADESÃO)</span>
     <span>As análises de encerramento, conversão e mapa usam apenas as sessões com Tag de encerramento preenchida. As sessões sem tag ainda abertas (abertas, aguardando resposta ou pendentes) aparecem somente na seção “Sem tag”, com o tempo contado da 1ª resposta do promotor até o momento da atualização do painel. Sessões sem tag que já estão fechadas não entram em nenhuma análise do painel. Tags equivalentes foram unificadas (19 Exclusivo Odonto, 30 Portabilidade, 23 com nome truncado). O uso de bot é inferido pela fila ou origem EugenIA.</span>
     <span>Notas: a tag 10 conta sessões encerradas como pagas (um cliente pode ter mais de uma sessão); as bases de vendas contam contratos implantados. Adesão conta titulares como vendas e cada beneficiário como uma vida. A base Adesão não traz ID de sessão, por isso não é cruzada com os chats.</span>
     <span>Valores mensais: PF = Valor Saúde + Odonto · PME = VL.Fatura · Adesão = VL_MENSALIDADE. DDDs sem correspondência, telefones internacionais ou vazios aparecem como “Não identificado”.</span>
@@ -320,7 +321,6 @@ $('kpis').innerHTML=[
  kpi('Lead Adesão','var(--ad)',nf.format(AD.vendas),'Vendas Adesão (titulares)',`${nf.format(AD.vidas)} vidas · ${brlK(AD.valor)}/mês · ticket ${brl(AD.valor/AD.vendas)}`),
  kpi('Vendas','var(--accent)',topUF[0],'UF com mais vendas',`${nf.format(topUF[1])} vendas (${pct(topUF[1],T.vendas)}) · filial líder: ${title(topFil[0])}`,'sale'),
 ].join('');
-$('kpis').insertAdjacentHTML('beforebegin','<span class="note" style="margin-bottom:-12px">Indicadores do topo: Levantamento de Vendas Setembro (BASE_PF, BASE PME e BASE ADESÃO)</span>');
 
 /* ---------- groups ---------- */
 const G=Object.fromEntries(L.grupos);const gOrder=['Venda fechada','Em negociação','Cotação perdida','Portabilidade','Improdutivo'];

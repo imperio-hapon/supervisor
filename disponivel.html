@@ -1,2041 +1,783 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Central de Performance</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jornada da equipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI',system-ui,sans-serif;background:#F0F4F8;color:#1A2332;font-size:14px}
-  :root{
-    --green:#10B981;--green-lt:#D1FAE5;
-    --amber:#F59E0B;--amber-lt:#FEF3C7;
-    --red:#EF4444;  --red-lt:#FEE2E2;
-    --blue:#2563EB; --blue-lt:#DBEAFE;
-    --surface:#fff; --border:#E2E8F0;
-    --text:#1A2332; --sub:#4A5568; --muted:#94A3B8;
-  }
-  /* HEADER */
-  .header{background:linear-gradient(135deg,#1A2332 0%,#2D3F5C 100%);padding:20px 28px 0;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-  .header-top{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:18px}
-  .header-label{font-size:9px;letter-spacing:4px;color:#7EB3FF;text-transform:uppercase;font-weight:700;margin-bottom:4px}
-  .header-title{font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px}
-  .header-sub{font-size:11px;color:#8FA3C0;margin-top:3px}
-  .kpi-strip{display:flex;gap:8px;flex-wrap:wrap}
-  .kpi-box{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:10px 14px;text-align:center;min-width:110px}
-  .kpi-val{font-size:20px;font-weight:900;letter-spacing:-.5px}
-  .kpi-label{font-size:9px;color:rgba(255,255,255,.6);margin-top:2px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
-  .kpi-sub{font-size:12px;font-weight:700;margin-top:2px}
-  /* TABS */
-  .tabs{display:flex;gap:2px}
-  .tab-btn{background:transparent;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,.5);padding:9px 20px;font-size:13px;cursor:pointer;font-weight:500;transition:all .15s;font-family:inherit}
-  .tab-btn.active{color:#7EB3FF;border-bottom-color:#7EB3FF;font-weight:700}
-  /* PANELS */
-  .main{padding:20px 28px;max-width:1380px}
-  .panel{display:none}.panel.active{display:block}
-  /* FILTER BAR */
-  .filter-bar{background:var(--surface);border-radius:12px;padding:12px 16px;margin-bottom:16px;border:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-  .filter-group{display:flex;flex-direction:column;gap:5px}
-  .filter-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase}
-  .filter-bar select{padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:#F8FAFC;outline:none;cursor:pointer;font-family:inherit;min-width:160px}
-  .btn-group{display:flex;gap:4px}
-  .btn-toggle{background:transparent;border:1px solid var(--border);color:var(--sub);border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:400;font-family:inherit;transition:all .15s;white-space:nowrap}
-  .btn-toggle.active{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
-  /* EQUIPE CHIP BUTTONS */
-  .equipe-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-  .equipe-btn{border:2px solid transparent;border-radius:20px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .18s;opacity:.7}
-  .equipe-btn.active{opacity:1;transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.15)}
-  /* CARD */
-  .card{background:var(--surface);border-radius:12px;padding:18px 20px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04);margin-bottom:16px}
-  .card-title{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
-  /* KPI GRID */
-  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
-  .kpi-inner{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-  .kpi-inner .val{font-size:22px;font-weight:900;letter-spacing:-.5px}
-  .kpi-inner .lbl{font-size:11px;color:var(--muted);margin-top:2px;font-weight:500}
-  .kpi-inner .sub{font-size:11px;margin-top:2px;font-weight:600}
-  /* TOP10 */
-  .top10-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-  .top10-card{background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-  .top10-header{padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
-  .top10-strip{width:4px;height:18px;border-radius:2px;flex-shrink:0}
-  .top10-title{font-size:13px;font-weight:700}
-  .top10-sub{font-size:10px;color:var(--sub)}
-  .top10-col-head{display:grid;grid-template-columns:28px 1fr 60px 60px;gap:6px;padding:6px 14px;font-size:9px;color:var(--muted);letter-spacing:.7px;text-transform:uppercase;background:#FAFBFD;border-bottom:1px solid var(--border)}
-  .top10-row{display:grid;grid-template-columns:28px 1fr 60px 60px;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid #F0F4F8;transition:background .12s}
-  .top10-row:hover{background:#F7FAFB}
-  .top10-medal{text-align:center;font-size:14px}
-  .top10-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .top10-badge{font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600}
-  .top10-leads{text-align:right;font-size:11px;color:var(--sub)}
-  .top10-pct{text-align:right;font-size:13px;font-weight:800}
-  /* SEARCH */
-  .search-bar{background:var(--surface);border-radius:12px;padding:12px 16px;margin-bottom:12px;border:1px solid var(--border);display:flex;gap:12px;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-  .search-wrap{position:relative;flex:1;max-width:300px}
-  .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px}
-  .search-wrap input{width:100%;padding:7px 10px 7px 28px;border:1px solid var(--border);border-radius:8px;font-size:12px;outline:none;background:#F8FAFC;font-family:inherit}
-  /* TABLE */
-  .table-wrap{background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-  table{width:100%;border-collapse:collapse}
-  th{padding:8px 10px;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.7px;text-transform:uppercase;background:#F7F9FC;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap}
-  th:hover{color:var(--blue)}
-  th.sorted{color:var(--blue)}
-  td{padding:9px 10px;border-bottom:1px solid var(--border);transition:background .1s}
-  tr:hover td{background:#F7F9FC}
-  .td-right{text-align:right}
-  .eq-badge{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;white-space:nowrap}
-  .status-badge{font-size:9px;padding:2px 7px;border-radius:6px;font-weight:700;white-space:nowrap}
-  .mini-bar-wrap{display:flex;align-items:center;justify-content:flex-end;gap:6px}
-  .mini-bar-bg{width:48px;height:5px;border-radius:3px;background:#F1F5F9;overflow:hidden}
-  .mini-bar-fill{height:100%;border-radius:3px;transition:width .3s}
-  .pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border);background:#FAFBFD}
-  .pagination span{font-size:11px;color:var(--sub)}
-  .pg-btns{display:flex;gap:4px}
-  .pg-btn{padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text);cursor:pointer;font-size:11px;font-family:inherit}
-  .pg-btn:disabled{background:#F1F5F9;color:var(--muted);cursor:default}
-  /* SUP CHIPS INFO */
-  .sup-chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-  .sup-chip{border-radius:10px;padding:10px 14px;min-width:150px;border:1px solid transparent}
-  .sup-chip-name{font-size:11px;font-weight:700;margin-bottom:4px}
-  .sup-chip-count{font-size:11px}
-  .sup-chip-rates{display:flex;gap:8px;margin-top:4px}
-  .sup-chip-avg{font-size:10px}
-  /* COMPARATIVO EQUIPES */
-  .comp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
-  .comp-card{background:var(--surface);border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-  .comp-header{padding:10px 12px;font-size:11px;font-weight:800;text-align:center;border-bottom:1px solid var(--border)}
-  .comp-row{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:1px solid #F0F4F8;font-size:11px}
-  .comp-row:last-child{border-bottom:none}
-  .comp-lbl{color:var(--muted);font-size:10px}
-  .comp-val{font-weight:700;font-size:13px}
-  .comp-sub{font-size:10px;font-weight:600}
-  .comp-bar-wrap{padding:8px 12px 10px;border-bottom:1px solid #F0F4F8}
-  .comp-bar-track{height:6px;border-radius:3px;background:#F1F5F9;overflow:hidden;margin-top:4px}
-  .comp-bar-fill{height:100%;border-radius:3px;transition:width .4s}
-  @media(max-width:1100px){.comp-grid{grid-template-columns:repeat(3,1fr)}}
-  @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.top10-grid{grid-template-columns:1fr}.comp-grid{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:600px){.kpi-grid{grid-template-columns:1fr}.header-top{flex-direction:column}.comp-grid{grid-template-columns:1fr}}
+:root{
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#EEF1F5;--paper:#FFFFFF;--ink:#17202E;--ink2:#4A5568;--ink3:#8592A6;--line:#DCE2EA;--shift:#E4EAF4;--wk:#F6EFE3;
+  --late:#D2453B;--extra:#2459C9;--ok:#1F8A62;--warn:#C98512;--wknd:#B7791F;
+  --s-disp:#22A37C;--s-cot:#3E70D9;--s-fu:#8B5CD6;--s-venda:#E3A22F;--s-alm:#B4AC9F;--s-ban:#D9708F;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121821;--paper:#1A2230;--ink:#E8EDF4;--ink2:#AAB5C5;--ink3:#7887A0;--line:#2B3546;--shift:#1F2B3D;--wk:#2A2619;
+  --late:#F06A5F;--extra:#6E9BFF;--ok:#45C291;--warn:#E8AE45;--wknd:#E0A94A;--s-alm:#8C857A;
+}}
+:root[data-theme="dark"]{
+  --bg:#121821;--paper:#1A2230;--ink:#E8EDF4;--ink2:#AAB5C5;--ink3:#7887A0;--line:#2B3546;--shift:#1F2B3D;--wk:#2A2619;
+  --late:#F06A5F;--extra:#6E9BFF;--ok:#45C291;--warn:#E8AE45;--wknd:#E0A94A;--s-alm:#8C857A;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 60px}
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+h1{font-size:clamp(26px,4vw,40px);line-height:1.05;margin:0;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--ink2);margin:6px 0 0;font-size:15px}
+.filters{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:12px 18px;align-items:end;margin-bottom:14px;box-shadow:0 6px 18px -14px rgba(20,30,50,.5)}
+.f{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink2)}
+.f .row{display:flex;gap:6px;align-items:center}
+input,select{font:inherit;font-size:14px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+input[type=date]{min-width:140px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.seg button{border:0;background:transparent;color:var(--ink2);font:inherit;font-size:13px;padding:6px 10px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.btn{font:inherit;font-size:13px;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--extra);outline-offset:2px}
+.tabs{display:flex;gap:4px;margin:0 0 18px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{font:inherit;font-size:15px;font-weight:600;border:0;background:none;color:var(--ink2);padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(var(--n,4),1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:22px}
+.stat{background:var(--paper);padding:13px 15px}
+.stat b{display:block;font-size:24px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+.stat span{color:var(--ink2);font-size:13px}
+.stat small{display:block;color:var(--ink3);font-size:12px;margin-top:2px}
+section{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:20px}
+h2{font-size:19px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
+.lead{color:var(--ink2);margin:0 0 14px;font-size:14px;max-width:80ch}
+.scroll{overflow-x:auto}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--ink2);margin:0 0 12px}
+.legend i,.sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+svg text{font-family:inherit}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child,.l{text-align:left}
+th{font-weight:600;color:var(--ink2);font-size:13px;user-select:none;vertical-align:bottom}
+th[data-k]{cursor:pointer}th[data-k]:hover{color:var(--ink)}
+tbody tr:hover{background:var(--shift)}
+tfoot td{font-weight:600;border-bottom:0}
+.tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600}
+.t-late{background:color-mix(in srgb,var(--late) 15%,transparent);color:var(--late)}
+.t-ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+.t-extra{background:color-mix(in srgb,var(--extra) 15%,transparent);color:var(--extra)}
+.t-warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.t-wk{background:color-mix(in srgb,var(--wknd) 18%,transparent);color:var(--wknd)}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;width:70px}
+.bar>div{height:100%;background:var(--ok)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)!important}}
+.grid2 section{margin-bottom:0}
+.rank{list-style:none;margin:0;padding:0}
+.rank li{display:grid;grid-template-columns:1fr auto;gap:6px;padding:7px 0;border-bottom:1px solid var(--line);align-items:center}
+.rank li:last-child{border-bottom:0}
+.rank .bx{grid-column:1/-1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.rank .bx>div{height:100%}
+.alerts{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.alerts li{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:11px 14px;border-radius:10px;border:1px solid var(--line)}
+.alerts .dot{width:10px;height:10px;border-radius:50%;margin-top:6px}
+.alerts p{margin:2px 0 0;color:var(--ink2);font-size:14px}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--paper);padding:7px 10px;border-radius:8px;font-size:13px;line-height:1.35;opacity:0;transition:opacity .1s;z-index:20;max-width:280px}
+.muted{color:var(--ink3)}
+.head2{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.head2 .lead{margin:0}
+details.src{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:14px}
+details.src summary{cursor:pointer;font-weight:600;font-size:14px}
+.srcbody{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px}
+.srcbody input[type=url]{flex:1 1 420px}
+.banner{border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:14px;display:none}
+.banner.on{display:block}
+.banner.warn{background:color-mix(in srgb,var(--warn) 14%,var(--paper));border:1px solid color-mix(in srgb,var(--warn) 40%,transparent)}
+.banner.ok{background:color-mix(in srgb,var(--ok) 10%,var(--paper));border:1px solid color-mix(in srgb,var(--ok) 35%,transparent)}
+.heat td{padding:0;border:1px solid var(--paper);text-align:center;min-width:46px;height:34px;font-size:12px;cursor:pointer;position:relative}
+.heat td.name{text-align:left;padding:0 10px;cursor:default;font-size:13px;min-width:150px;border:0;border-bottom:1px solid var(--line)}
+.heat th{font-size:11px;text-align:center;padding:4px 2px;line-height:1.2}
+.heat th.wk,.heat td.wkc{background-image:linear-gradient(var(--wk),var(--wk))}
+.heat .late::after{content:"";position:absolute;top:0;left:0;border-top:9px solid var(--late);border-right:9px solid transparent}
+.heat .ext::before{content:"";position:absolute;bottom:0;right:0;border-bottom:9px solid var(--extra);border-left:9px solid transparent}
+.heat tr.grp td{background:none;cursor:default;font-weight:700;font-size:13px;text-align:left;padding:10px 10px 4px;height:auto;color:var(--ink2);border:0}
+.empty{padding:30px;text-align:center;color:var(--ink2)}
+.foot{color:var(--ink3);font-size:13px;max-width:90ch}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Jornada da equipe</h1>
+    <p class="sub" id="sub"></p>
+  </div>
+</header>
 
-<div class="header">
-  <div class="header-top">
-    <div>
-      <div class="header-title">Central de Performance</div>
-      <div class="header-sub" id="period-label">Carregando...</div>
-    </div>
-    <div class="kpi-strip">
-      <div class="kpi-box"><div class="kpi-val" id="h-leads" style="color:#7EB3FF">–</div><div class="kpi-label">Leads Totais</div></div>
-      <div class="kpi-box"><div class="kpi-val" id="h-ate2" style="color:#68D391">–</div><div class="kpi-label">Respondidos ≤2min</div><div class="kpi-sub" id="h-ate2-pct" style="color:#68D391"></div></div>
-      <div class="kpi-box"><div class="kpi-val" id="h-gt2" style="color:#F6AD55">–</div><div class="kpi-label">Respondidos &gt;2min</div><div class="kpi-sub" id="h-gt2-pct" style="color:#F6AD55"></div></div>
+<div class="banner" id="banner"></div>
+
+<div id="main" hidden>
+<div class="filters" id="filters">
+  <div class="f">Período
+    <div class="row"><input type="date" id="dFrom" aria-label="Data inicial"><span>até</span><input type="date" id="dTo" aria-label="Data final"></div>
+  </div>
+  <div class="f">Atalhos
+    <div class="seg" id="presets">
+      <button data-p="last">Último dia</button><button data-p="w">Esta semana</button><button data-p="7">7 dias</button><button data-p="m">Mês</button><button data-p="all">Tudo</button>
     </div>
   </div>
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(0)">Primeira Resposta</button>
-    <button class="tab-btn" onclick="switchTab(1)">Disponibilidade</button>
+  <div class="f">Supervisor<select id="fSup"></select></div>
+  <div class="f">Agente<select id="fAg"></select></div>
+  <div class="f">Dias
+    <div class="seg" id="fDays"><button data-v="all" aria-pressed="true">Todos</button><button data-v="wd">Dias úteis</button><button data-v="we">Fim de semana</button></div>
   </div>
-</div>
-
-<div class="main">
-
-<!-- PANEL 0: PRIMEIRA RESPOSTA -->
-<div class="panel active" id="panel-0">
-  <div class="filter-bar">
-    <div class="filter-group">
-      <div class="filter-label">Mês</div>
-      <select id="sel-month-0" onchange="onMonthChange(0)"></select>
-    </div>
-    <div class="filter-group">
-      <div class="filter-label">Período</div>
-      <div class="btn-group">
-        <button class="btn-toggle active" id="btn-acum-0"  onclick="setPeriod('acum',0)">Acumulado</button>
-        <button class="btn-toggle" id="btn-dia-0"   onclick="setPeriod('dia',0)">Por Dia</button>
-        <button class="btn-toggle" id="btn-sem-0"   onclick="setPeriod('sem',0)">Semanal</button>
-        <button class="btn-toggle" id="btn-2dias-0" onclick="setPeriod('2dias',0)">2 Dias</button>
-        <button class="btn-toggle" id="btn-range-0" onclick="setPeriod('range',0)">Período</button>
-      </div>
-    </div>
-    <div class="filter-group" id="date-wrap-0" style="display:none">
-      <div class="filter-label">Data</div>
-      <select id="sel-date-0" onchange="render()"></select>
-    </div>
-    <div class="filter-group" id="date2-wrap-0" style="display:none">
-      <div class="filter-label">Segunda Data</div>
-      <select id="sel-date2-0" onchange="render()"></select>
-    </div>
-    <div class="filter-group" id="range-wrap-0" style="display:none">
-      <div class="filter-label">De</div>
-      <select id="sel-range-from-0" onchange="render()"></select>
-    </div>
-    <div class="filter-group" id="range-wrap2-0" style="display:none">
-      <div class="filter-label">Até</div>
-      <select id="sel-range-to-0" onchange="render()"></select>
-    </div>
+  <div class="f">Tolerância
+    <select id="fTol"><option value="0">0 min</option><option value="5">5 min</option><option value="10" selected>10 min</option><option value="15">15 min</option></select>
   </div>
-
-  <!-- EQUIPE BUTTONS -->
-  <div class="equipe-btns" id="equipe-btns-0"></div>
-
-  <!-- COMPARATIVO (visível só quando Todas as Equipes) -->
-  <div id="pr-comparativo" style="display:none"></div>
-
-  <div class="kpi-grid" id="pr-kpis"></div>
-
-  <!-- TOP 10 -->
-  <div class="top10-grid">
-    <div class="top10-card">
-      <div class="top10-header" style="background:#D1FAE5">
-        <div class="top10-strip" style="background:#10B981"></div>
-        <div class="top10-title">Top 10 Melhores</div>
-        <div class="top10-sub">maior % ≤2min</div>
-      </div>
-      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Leads</div><div style="text-align:right">%≤2min</div></div>
-      <div id="pr-top10-best"></div>
-    </div>
-    <div class="top10-card">
-      <div class="top10-header" style="background:#FEE2E2">
-        <div class="top10-strip" style="background:#EF4444"></div>
-        <div class="top10-title">Top 10 Ofensores</div>
-        <div class="top10-sub">menor % ≤2min</div>
-      </div>
-      <div class="top10-col-head"><div></div><div>Promotor / Equipe</div><div style="text-align:right">Leads</div><div style="text-align:right">%≤2min</div></div>
-      <div id="pr-top10-worst"></div>
-    </div>
-  </div>
-
-  <!-- SEARCH + TABLE -->
-  <div class="search-bar">
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="ag-search" placeholder="Buscar promotor..." oninput="agPage=0;renderAgTable()">
-    </div>
-    <span style="font-size:12px;color:var(--sub)"><b id="ag-count"></b> promotores</span>
-    <button onclick="exportAgResumoExcel()" style="margin-left:auto;padding:6px 14px;background:#10B981;color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px">📊 Exportar Resumo (Excel)</button>
-    <button onclick="exportAgCSV()" style="padding:6px 14px;background:#2563EB;color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px">⬇ Exportar CSV</button>
-  </div>
-  <div class="table-wrap" style="overflow-x:auto">
-    <table id="ag-table">
-      <thead id="ag-thead">
-        <tr>
-          <th onclick="sortAg('name')" id="th-name" style="text-align:left">Promotor ↕</th>
-          <th>Equipe</th>
-          <th onclick="sortAg('total_leads')" id="th-total_leads" class="td-right sorted">Total Leads ↓</th>
-          <th onclick="sortAg('ate1')" id="th-ate1" class="td-right">≤1min ↕</th>
-          <th onclick="sortAg('ate2')" id="th-ate2" class="td-right">1-2min ↕</th>
-          <th onclick="sortAg('gt2')" id="th-gt2" class="td-right">&gt;2min ↕</th>
-          <th onclick="sortAg('pctAte2')" id="th-pctAte2" class="td-right">% ≤2min ↕</th>
-          <th class="td-right">Status</th>
-          <th class="td-right">Meta ≤2min</th>
-        </tr>
-      </thead>
-      <tbody id="ag-tbody"></tbody>
-    </table>
-    <div class="pagination">
-      <span id="ag-page-info"></span>
-      <div class="pg-btns">
-        <button class="pg-btn" id="ag-pg-first"  onclick="agPage=0;renderAgTable()">«</button>
-        <button class="pg-btn" id="ag-pg-prev"   onclick="agPage=Math.max(0,agPage-1);renderAgTable()">‹</button>
-        <button class="pg-btn" id="ag-pg-next"   onclick="agPage=Math.min(agTotalPages-1,agPage+1);renderAgTable()">›</button>
-        <button class="pg-btn" id="ag-pg-last"   onclick="agPage=agTotalPages-1;renderAgTable()">»</button>
-      </div>
-    </div>
+  <div class="f">Expediente
+    <div class="row"><input type="time" id="s0" value="08:00" aria-label="Início do expediente"><span>às</span><input type="time" id="s1" value="17:00" aria-label="Fim do expediente"></div>
   </div>
 </div>
 
-<!-- PANEL 1: DISPONIBILIDADE -->
-<div class="panel" id="panel-1">
-  <div class="filter-bar">
-    <div class="filter-group">
-      <div class="filter-label">Mês</div>
-      <select id="sel-month-1" onchange="onMonthChange(1)"></select>
-    </div>
-    <div class="filter-group">
-      <div class="filter-label">Período</div>
-      <div class="btn-group">
-        <button class="btn-toggle active" id="btn-acum-1"  onclick="setPeriod('acum',1)">Acumulado</button>
-        <button class="btn-toggle" id="btn-dia-1"   onclick="setPeriod('dia',1)">Por Dia</button>
-        <button class="btn-toggle" id="btn-sem-1"   onclick="setPeriod('sem',1)">Semanal</button>
-        <button class="btn-toggle" id="btn-2dias-1" onclick="setPeriod('2dias',1)">2 Dias</button>
-        <button class="btn-toggle" id="btn-range-1" onclick="setPeriod('range',1)">Período</button>
-      </div>
-    </div>
-    <div class="filter-group" id="date-wrap-1" style="display:none">
-      <div class="filter-label">Data</div>
-      <select id="sel-date-1" onchange="render()"></select>
-    </div>
-    <div class="filter-group" id="date2-wrap-1" style="display:none">
-      <div class="filter-label">Segunda Data</div>
-      <select id="sel-date2-1" onchange="render()"></select>
-    </div>
-    <div class="filter-group" id="range-wrap-1" style="display:none">
-      <div class="filter-label">De</div>
-      <select id="sel-range-from-1" onchange="render()"></select>
-    </div>
-    <div class="filter-group" id="range-wrap2-1" style="display:none">
-      <div class="filter-label">Até</div>
-      <select id="sel-range-to-1" onchange="render()"></select>
-    </div>
+<nav class="tabs" role="tablist">
+  <button role="tab" data-t="geral" aria-selected="true">Visão do período</button>
+  <button role="tab" data-t="semana">Semanal</button>
+  <button role="tab" data-t="dia">Dia a dia</button>
+  <button role="tab" data-t="fds">Fim de semana</button>
+</nav>
+
+<!-- ============ VISÃO DO PERÍODO ============ -->
+<div id="v-geral" role="tabpanel">
+  <div class="stats" id="gStats"></div>
+  <section>
+    <h2>Evolução diária</h2>
+    <p class="lead">Horas trabalhadas pela equipe em cada dia, separando o que foi feito dentro do expediente, fora dele e no fim de semana. Os pontos vermelhos indicam quantos agentes atrasaram.</p>
+    <div class="legend" id="trendLeg"></div>
+    <div class="scroll"><svg id="trend" role="img" aria-label="Evolução diária"></svg></div>
+  </section>
+  <section>
+    <div class="head2"><div><h2>Comparativo por supervisor</h2><p class="lead">Desempenho de horário de cada equipe no período.</p></div></div>
+    <div class="scroll"><table id="tSup"></table></div>
+  </section>
+  <section>
+    <div class="head2"><div><h2>Consolidado por agente</h2><p class="lead">Clique no cabeçalho para ordenar. A meta é de 8h por dia útil trabalhado; horas de fim de semana entram no saldo.</p></div><button class="btn" id="expAg">Exportar CSV</button></div>
+    <div class="scroll"><table id="tAg"></table></div>
+  </section>
+  <section>
+    <h2>Mapa de presença</h2>
+    <p class="lead">Horas trabalhadas por agente em cada dia. Canto vermelho indica atraso; canto azul indica trabalho fora do expediente. Clique em um dia para abrir o detalhe.</p>
+    <div class="scroll"><table class="heat" id="heat"></table></div>
+  </section>
+  <div class="grid2">
+    <section><h2>Por dia da semana</h2><p class="lead">Padrões de pontualidade e jornada conforme o dia.</p><div class="scroll"><table id="tDow"></table></div></section>
+    <section><h2>Pontualidade</h2><p class="lead">Percentual de dias úteis sem atraso, por agente.</p><ul class="rank" id="rPont"></ul></section>
   </div>
-
-  <!-- EQUIPE BUTTONS -->
-  <div class="equipe-btns" id="equipe-btns-1"></div>
-
-  <div class="kpi-grid" id="av-kpis"></div>
-
-  <!-- COMPARATIVO DE EQUIPES -->
-  <div id="av-comp-equipes"></div>
-
-  <!-- SEARCH + TABLE -->
-  <div class="search-bar">
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="av-search" placeholder="Buscar promotor..." oninput="avPage=0;renderAvTable()">
-    </div>
-    <span style="font-size:12px;color:var(--sub)" id="av-count-label"></span>
-    <button onclick="exportAvCSV()" style="margin-left:auto;padding:6px 14px;background:#2563EB;color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:5px">⬇ Exportar CSV</button>
-  </div>
-
-  <div class="table-wrap" style="overflow-x:auto">
-    <table>
-      <thead id="av-thead">
-        <tr>
-          <th onclick="sortAv('name')" id="av-th-name" style="text-align:left">Promotor ↕</th>
-          <th>Equipe</th>
-          <th onclick="sortAv('totalH')" id="av-th-totalH" class="td-right">Total Horas ↕</th>
-          <th onclick="sortAv('days')"   id="av-th-days"   class="td-right">Dias ↕</th>
-          <th onclick="sortAv('avgH')"   id="av-th-avgH"   class="td-right sorted">Média Diária ↓</th>
-          <th class="td-right">Status</th>
-        </tr>
-      </thead>
-      <tbody id="av-tbody"></tbody>
-    </table>
-    <div class="pagination">
-      <span id="av-page-info"></span>
-      <div class="pg-btns">
-        <button class="pg-btn" id="av-pg-first" onclick="avPage=0;renderAvTable()">«</button>
-        <button class="pg-btn" id="av-pg-prev"  onclick="avPage=Math.max(0,avPage-1);renderAvTable()">‹</button>
-        <button class="pg-btn" id="av-pg-next"  onclick="avPage=Math.min(avTotalPages-1,avPage+1);renderAvTable()">›</button>
-        <button class="pg-btn" id="av-pg-last"  onclick="avPage=avTotalPages-1;renderAvTable()">»</button>
-      </div>
-    </div>
-  </div>
+  <section>
+    <div class="head2"><div><h2>Tempo em cada status</h2><p class="lead">Soma do período por agente.</p></div><div class="seg" id="modeG"><button data-v="h" aria-pressed="true">Horas</button><button data-v="p">Percentual</button></div></div>
+    <div class="legend" id="legStatusG"></div>
+    <div class="scroll"><svg id="stackG" role="img" aria-label="Tempo por status no período"></svg></div>
+  </section>
 </div>
 
-</div><!-- /main -->
+<!-- ============ SEMANAL ============ -->
+<div id="v-semana" role="tabpanel" hidden>
+  <section>
+    <h2>Resumo por semana</h2>
+    <p class="lead">Semanas de segunda a domingo dentro do período filtrado.</p>
+    <div class="scroll"><table id="tWeek"></table></div>
+  </section>
+  <section>
+    <h2>Horas por agente em cada semana</h2>
+    <p class="lead">Horas trabalhadas e, abaixo, o saldo em relação a 8h por dia útil trabalhado. Entre parênteses, os atrasos da semana.</p>
+    <div class="scroll"><table id="tWeekAg"></table></div>
+  </section>
+  <section>
+    <h2>Evolução semanal</h2>
+    <div class="legend" id="wkLeg"></div>
+    <div class="scroll"><svg id="wkChart" role="img" aria-label="Evolução semanal"></svg></div>
+  </section>
+</div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- ============ DIA A DIA ============ -->
+<div id="v-dia" role="tabpanel" hidden>
+  <div class="head2" style="margin-bottom:14px">
+    <div class="row" style="display:flex;gap:8px;align-items:center">
+      <button class="btn" id="prevDay" aria-label="Dia anterior">‹</button>
+      <select id="daySel" aria-label="Escolher dia"></select>
+      <button class="btn" id="nextDay" aria-label="Próximo dia">›</button>
+    </div>
+    <span class="muted" id="dayInfo"></span>
+  </div>
+  <div class="stats" id="dStats"></div>
+  <section>
+    <h2>Linha do tempo do dia</h2>
+    <p class="lead">A faixa clara é o expediente. Vermelho antes da entrada indica atraso; contorno azul marca o que foi feito depois do fim do expediente. Em fins de semana, todo o dia conta como extra.</p>
+    <div class="legend" id="legGantt"></div>
+    <div class="scroll"><svg id="gantt" role="img" aria-label="Linha do tempo"></svg></div>
+  </section>
+  <section>
+    <h2>Quadro de horário</h2>
+    <div class="scroll"><table id="tDay"></table></div>
+  </section>
+  <section>
+    <div class="head2"><div><h2>Tempo em cada status</h2></div><div class="seg" id="modeD"><button data-v="h" aria-pressed="true">Horas</button><button data-v="p">Percentual</button></div></div>
+    <div class="scroll"><svg id="stackD" role="img" aria-label="Tempo por status"></svg></div>
+    <div class="scroll" style="margin-top:12px"><table id="tStatusD"></table></div>
+  </section>
+  <section>
+    <h2>Cobertura ao longo do dia</h2>
+    <p class="lead">Quantos agentes estavam em cada situação, a cada 15 minutos.</p>
+    <div class="legend" id="legCover"></div>
+    <div class="scroll"><svg id="cover" role="img" aria-label="Cobertura"></svg></div>
+    <p class="lead" id="coverNotes" style="margin:12px 0 0"></p>
+  </section>
+  <section>
+    <h2>Ocorrências do dia</h2>
+    <ul class="alerts" id="alerts"></ul>
+  </section>
+  <section>
+    <div class="head2"><h2 style="margin:0">Registro detalhado</h2><select id="logSel" aria-label="Escolher agente"></select></div>
+    <div class="scroll"><table id="tLog"></table></div>
+  </section>
+</div>
+
+<!-- ============ FIM DE SEMANA ============ -->
+<div id="v-fds" role="tabpanel" hidden>
+  <div class="stats" id="wStats"></div>
+  <section>
+    <h2>Quem trabalhou no fim de semana</h2>
+    <p class="lead">Todo o tempo de sábado e domingo é tratado como fora do expediente.</p>
+    <div class="scroll"><table id="tFdsAg"></table></div>
+  </section>
+  <section>
+    <h2>Registros de sábado e domingo</h2>
+    <div class="scroll"><table id="tFds"></table></div>
+  </section>
+  <section>
+    <h2>Fim de semana versus dias úteis</h2>
+    <p class="lead">Comparação da média por agente em cada tipo de dia.</p>
+    <div class="scroll"><table id="tFdsCmp"></table></div>
+  </section>
+</div>
+
+</div>
+<p class="foot">A duração de cada status vai do registro até o próximo registro do agente; Offline e Logout encerram a sessão. Quando não há logout no fim do dia, o último status é contado só até o último registro. Tempo trabalhado é o tempo logado menos almoço, jantar, banheiro e outras pausas.</p>
+</div>
+<div class="tip" id="tip"></div>
+
 <script>
-// ── GOOGLE SHEETS ─────────────────────────────────────────────────────────────
-const SHEET_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTugCcib-1W1OBydQ1ziRLaVEM_CCikBOP3AKilAsXOreHRffJF6Rt-lOAL5jgV8y-2bGr4on0a9E39/pub";
-// Equipes removidas (sem dados)
-const EQUIPES_REMOVIDAS = ['ADM','DESLIGADO']; // removidos completamente dos dados
-const EQUIPES_OCULTAS = ['ADMINISTRATIVO']; // oculto nos comparativos e botões, mas dados mantidos
+const DEFAULT_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vRomc077FhuUT3C3g1HyZths8tuDiGwN4__wxtdp4G75zbtNFrFIQwwXHwoL5aXP0obFv7mi66yaZMy/pub?gid=8224132&single=true&output=csv";
+const DOW=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const DOWL=["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
+const MES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+let CFG={S0:480,S1:1020,TOL:10,META:480};
+let ROWS=[],DAYS=[],SOURCE="";
+let F={from:"",to:"",sup:"",ag:"",days:"all"};
+let TAB="geral",DAY="",MODEG="h",MODED="h";
 
-// ── RUNTIME DATA ──────────────────────────────────────────────────────────────
-let RAW_BY_DAY = [];
-let RAW_AVAIL  = [];
-let ALL_DATES  = [];
-let ALL_SUPS   = [];
-let PR_HEADERS = []; // cabeçalhos originais da planilha
-let PR_ROWS_RAW = []; // linhas brutas da planilha (para export)
-// Months indexed per tab: { '2026-04': ['2026-04-01', ...], ... }
-let MONTHS_PR  = {}; // tab 0
-let MONTHS_AV  = {}; // tab 1
+/* ---------- utilitários ---------- */
+const $=id=>document.getElementById(id);
+const cv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const col=c=>c.startsWith("var(")?cv(c.slice(4,-1)):c;
+const hm=m=>{if(m==null||isNaN(m))return"–";m=Math.floor(m+1e-6);const h=Math.floor(m/60),mm=m%60;return String(h).padStart(2,"0")+":"+String(mm).padStart(2,"0")};
+const dur=m=>{if(m==null||isNaN(m))return"–";m=Math.round(Math.abs(m));const h=Math.floor(m/60),mm=m%60;return h?`${h}h${String(mm).padStart(2,"0")}`:`${mm}min`};
+const sdur=m=>(m<0?"−":"+")+dur(m);
+const pct=(a,b)=>b?Math.round(a/b*100)+"%":"–";
+const ov=(a,b,c,d)=>Math.max(0,Math.min(b,d)-Math.max(a,c));
+const sum=(arr,f)=>arr.reduce((t,x)=>t+(f?f(x):x),0);
+const avg=(arr,f)=>arr.length?sum(arr,f)/arr.length:null;
+const short=n=>{const p=n.split(" ");return p.length>1?p[0]+" "+p[p.length-1]:n};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const norm=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+const title=s=>String(s||"").trim().replace(/\s+/g," ").toLowerCase().replace(/(^|\s)(\S)/g,(m,a,b)=>a+b.toUpperCase()).replace(/\b(Da|De|Do|Das|Dos|E)\b/g,w=>w.toLowerCase());
+const dObj=k=>{const[y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
+const dKey=o=>`${o.getFullYear()}-${String(o.getMonth()+1).padStart(2,"0")}-${String(o.getDate()).padStart(2,"0")}`;
+const dFmt=k=>{const o=dObj(k);return `${String(o.getDate()).padStart(2,"0")}/${String(o.getMonth()+1).padStart(2,"0")}`};
+const dLong=k=>{const o=dObj(k);return `${DOWL[o.getDay()]}, ${o.getDate()} de ${MES[o.getMonth()]} de ${o.getFullYear()}`};
+const addD=(k,n)=>{const o=dObj(k);o.setDate(o.getDate()+n);return dKey(o)};
+const weekStart=k=>{const o=dObj(k);const w=(o.getDay()+6)%7;o.setDate(o.getDate()-w);return dKey(o)};
+const niceStep=(mx,n=6)=>{const raw=mx/n/60;const c=[1,2,4,5,10,20,25,50,100,200,250,500,1000];return (c.find(x=>x>=raw)||2000)*60};
+const toMin=v=>{const[h,m]=v.split(":").map(Number);return h*60+m};
 
-// ── STATE (declarado antes de qualquer função) ────────────────────────────────
-const state = {
-  dateMode:     ['acum','acum'],
-  selMonth:     ['',''],        // 'YYYY-MM' — mês selecionado por tab
-  selDate:      ['',''],
-  selDate2:     ['',''],
-  selRangeFrom: ['',''],
-  selRangeTo:   ['',''],
-  selSup:       ['Todos','Todos'],
-};
-let agSortCol='total_leads', agSortDir=-1, agPage=0, agTotalPages=1;
-let compSortSlice=-1, compSortDir=-1; // -1 = sem sort comparativo
-let compSortField='pct'; // 'pct' ou 'leads'
+/* ---------- status ---------- */
+const KNOWN=[["disponivel","Disponível","--s-disp"],["preparando cotacao","Preparando Cotação","--s-cot"],["follow up","Follow up","--s-fu"],["cadastrando venda","Cadastrando venda","--s-venda"],["almoco/jantar","Almoço/Jantar","--s-alm"],["banheiro","Banheiro","--s-ban"]];
+const PAL=["#0E9AA7","#A15C07","#6D28D9","#C0267A","#5E9E0E","#0F5FA8","#B4532A","#8E44AD","#2F855A","#975A16"];
+let REG={},ORDER=[],CANON={};
+function resetStatus(){REG={};ORDER=[];CANON={};KNOWN.forEach(([k,n,c])=>{CANON[k]=n;REG[n]={kind:k==="disponivel"?"disp":/almo|banheiro/.test(k)?"pausa":"prod",color:`var(${c})`,known:true}})}
+const isEnd=r=>/logout|log out|offline|deslog/.test(norm(r));
+function canon(r){const k=norm(r);if(CANON[k])return CANON[k];const name=String(r).trim();CANON[k]=name;
+  if(!REG[name]&&!isEnd(name)){const kind=/dispon/.test(k)?"disp":/almo|jantar|banheiro|pausa|intervalo|lanche|descanso|treinamento|feedback|reuniao/.test(k)?(/treinamento|feedback|reuniao/.test(k)?"prod":"pausa"):"prod";
+    REG[name]={kind,color:PAL[Object.keys(REG).filter(x=>!REG[x].known).length%PAL.length]}}
+  return name}
+const stC=r=>REG[r]?.color||"var(--ink3)";
 
-function sortComp(sliceIdx, field){
-  if(compSortSlice===sliceIdx && compSortField===field){
-    compSortDir*=-1;
-  } else {
-    compSortSlice=sliceIdx; compSortField=field; compSortDir=-1;
+/* ---------- leitura de arquivos ---------- */
+function parseCSV(t){
+  t=t.replace(/^\uFEFF/,"");const first=t.split(/\r?\n/)[0];const sep=(first.split(";").length>first.split(",").length)?";":(first.split("\t").length>first.split(",").length?"\t":",");
+  const out=[];let row=[],f="",q=false;
+  for(let i=0;i<t.length;i++){const c=t[i];
+    if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;else if(c===sep){row.push(f);f=""}
+    else if(c==="\n"||c==="\r"){if(c==="\r"&&t[i+1]==="\n")i++;row.push(f);out.push(row);row=[];f=""}
+    else f+=c}
+  if(f!==""||row.length){row.push(f);out.push(row)}
+  return out.filter(r=>r.some(x=>String(x).trim()!==""));
+}
+function findCols(h){
+  const n=h.map(norm),used=new Set(),pick=(re,ex)=>{const i=n.findIndex((x,j)=>!used.has(j)&&re.test(x)&&!(ex&&ex.test(x)));if(i>=0)used.add(i);return i};
+  const sup=pick(/supervis|coorden|lider|gestor|equipe|time$/);
+  const time=pick(/time of|^time|hora|horario|timestamp/);
+  const date=pick(/^date$|^data$|^dia$|\bdate\b|\bdata\b/);
+  const reason=pick(/reason|status|motivo|estado/);
+  const agent=pick(/agent|agente|operador|colaborador|^nome|consultor|vendedor/);
+  return {sup,time,date,reason,agent};
+}
+function rowsFromTable(tab){
+  let hi=tab.findIndex(r=>{const c=findCols(r.map(String));return c.agent>=0&&c.reason>=0&&(c.time>=0||c.date>=0)});
+  if(hi<0) return {err:"Não encontrei as colunas de agente, horário e status nesta aba. Os cabeçalhos encontrados foram: "+(tab[0]||[]).slice(0,8).join(", ")+"."};
+  const c=findCols(tab[hi].map(String));
+  const raw=[];
+  for(const r of tab.slice(hi+1)){
+    const ag=r[c.agent],rs=r[c.reason];if(!ag||!rs)continue;
+    raw.push({ag:title(ag),sup:c.sup>=0&&r[c.sup]?title(r[c.sup]):"",d:c.date>=0?r[c.date]:"",t:c.time>=0?r[c.time]:"",r:String(rs).trim()});
   }
-  agPage=0;
-  renderAgTable();
+  // decidir ordem de data (dd/mm ou mm/dd)
+  const dm=[];raw.forEach(x=>[x.d,x.t].forEach(v=>{const m=typeof v==="string"&&v.match(/(\d{1,4})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);if(m)dm.push([+m[1],+m[2],m[1].length]);}));
+  const order=dm.some(x=>x[2]===4)?"ymd":dm.some(x=>x[0]>12)?"dmy":dm.some(x=>x[1]>12)?"mdy":"dmy";
+  const pd=v=>{
+    if(v===""||v==null)return null;
+    if(typeof v==="number"||/^\d+(\.\d+)?$/.test(String(v).trim())){const n=+v;if(n>20000){const o=new Date(Date.UTC(1899,11,30)+Math.floor(n)*864e5);return {date:`${o.getUTCFullYear()}-${String(o.getUTCMonth()+1).padStart(2,"0")}-${String(o.getUTCDate()).padStart(2,"0")}`,min:(n%1)*1440,hasT:n%1>0}}if(n<1)return {date:null,min:n*1440,hasT:true};return null}
+    if(v instanceof Date)return {date:dKey(v),min:v.getHours()*60+v.getMinutes()+v.getSeconds()/60,hasT:true};
+    const s=String(v);let date=null,min=null;
+    const m=s.match(/(\d{1,4})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+    if(m){let y,mo,d;const a=+m[1],b=+m[2],cc=+m[3];if(order==="ymd"&&m[1].length===4){y=a;mo=b;d=cc}else if(order==="mdy"){mo=a;d=b;y=cc}else{d=a;mo=b;y=cc}if(y<100)y+=2000;date=`${y}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`}
+    const tm=s.replace(m?m[0]:"","").match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm|AM|PM)?/);
+    if(tm){let h=+tm[1];const ap=(tm[4]||"").toLowerCase();if(ap==="pm"&&h<12)h+=12;if(ap==="am"&&h===12)h=0;min=h*60+(+tm[2])+(+(tm[3]||0))/60}
+    return {date,min,hasT:min!=null};
+  };
+  const rows=[];let skipped=0;
+  raw.forEach((x,i)=>{const T=pd(x.t),D=pd(x.d);const date=(T&&T.date)||(D&&D.date);const min=(T&&T.hasT)?T.min:(D&&D.hasT?D.min:null);
+    if(!date||min==null){skipped++;return}rows.push([x.ag,x.sup,date,Math.round(min*100)/100,x.r,i])});
+  if(!rows.length)return {err:"A aba tem as colunas certas, mas nenhuma linha com data e horário válidos."};
+  return {rows,skipped};
 }
 
-// ── EXPORTAR RESUMO (EXCEL) — Promotor x % atendido em até 2min no período selecionado ──
-function exportAgResumoExcel(){
-  if(!_agData || !_agData.length){ alert('Nenhum dado para exportar com os filtros atuais.'); return; }
-
-  const search = (document.getElementById('ag-search')?.value || '').toLowerCase();
-  const filtered = search
-    ? _agData.filter(a => a.name.toLowerCase().includes(search) || (a.sup||'').toLowerCase().includes(search))
-    : _agData;
-
-  if(!filtered.length){ alert('Nenhum dado para exportar com os filtros atuais.'); return; }
-
-  const sorted = [...filtered].sort((a,b)=>b.pctAte2-a.pctAte2);
-
-  const rows = sorted.map(a=>{
-    const leadsResp = a.ate1 + a.ate2 + a.gt2;
-    const st = agStatus(a.pctAte2);
-    return {
-      'Promotor': a.name,
-      'Equipe': a.sup,
-      'Total Leads': leadsResp,
-      '% Atendido em até 2min': Number((a.pctAte2/100).toFixed(4)),
-      'Status': st.label
-    };
+/* ---------- processamento por agente/dia ---------- */
+function build(){
+  resetStatus();
+  const by={};const supCount={};
+  ROWS.forEach(([ag,sup,date,min,r,i])=>{const k=ag+"|"+date;(by[k]=by[k]||{ag,date,ev:[],sups:{}}).ev.push([min,canon(r),i??0]);if(sup){by[k].sups[sup]=(by[k].sups[sup]||0)+1;(supCount[ag]=supCount[ag]||{})[sup]=(supCount[ag][sup]||0)+1}});
+  const topSup=o=>o&&Object.keys(o).length?Object.entries(o).sort((a,b)=>b[1]-a[1])[0][0]:"";
+  DAYS=Object.values(by).map(o=>{o.ev.sort((a,b)=>a[0]-b[0]||a[2]-b[2]);const d=computeDay(o.ev,o.date);if(!d)return null;d.ag=o.ag;d.sup=topSup(o.sups)||topSup(supCount[o.ag])||"Sem supervisor";return d}).filter(Boolean);
+  ORDER=Object.keys(REG).filter(k=>DAYS.some(d=>d.by[k]>0));
+  ORDER.sort((a,b)=>{const ia=KNOWN.findIndex(x=>x[1]===a),ib=KNOWN.findIndex(x=>x[1]===b);return (ia<0?99:ia)-(ib<0?99:ib)});
+}
+function computeDay(ev,date){
+  const {S0,S1}=CFG;const dow=dObj(date).getDay(),wk=dow===0||dow===6;
+  const segs=[],sess=[],gaps=[];let cur=null,sS=null,lastOut=null,noLogout=false;
+  ev.forEach(([m,r])=>{
+    if(isEnd(r)){if(cur){cur.e=m;segs.push(cur);cur=null}if(sS!==null){sess.push([sS,m]);sS=null;lastOut=m}}
+    else{if(cur){cur.e=m;segs.push(cur)}if(sS===null){sS=m;if(lastOut!==null)gaps.push({a:lastOut,b:m,inShift:wk?0:ov(lastOut,m,S0,S1)})}cur={s:m,r}}
   });
+  if(!sess.length&&!cur)return null;
+  const lastT=ev[ev.length-1][0];
+  if(cur){cur.e=lastT;segs.push(cur);noLogout=true}
+  if(sS!==null)sess.push([sS,lastT]);
+  const by={};segs.forEach(s=>by[s.r]=(by[s.r]||0)+(s.e-s.s));
+  const logged=sum(sess,([a,b])=>b-a);
+  const pausa=sum(segs.filter(s=>REG[s.r]?.kind==="pausa"),s=>s.e-s.s);
+  const work=logged-pausa;
+  const prod=segs.filter(s=>REG[s.r]?.kind!=="pausa");
+  const wIn=wk?0:sum(prod,s=>ov(s.s,s.e,S0,S1));
+  const wBefore=wk?0:sum(prod,s=>ov(s.s,s.e,0,S0));
+  const wAfter=wk?0:sum(prod,s=>ov(s.s,s.e,S1,1440));
+  const loggedIn=wk?0:sum(sess,([a,b])=>ov(a,b,S0,S1));
+  const inp=sess[0][0],out=sess[sess.length-1][1];
+  const ls=segs.filter(s=>/almo|jantar|refei/.test(norm(s.r)));
+  const lunch=ls.length?{s:ls[0].s,d:sum(ls,s=>s.e-s.s)}:null;
+  const disp=sum(segs.filter(s=>REG[s.r]?.kind==="disp"),s=>s.e-s.s);
+  const late=wk?0:Math.max(0,inp-S0);
+  const early=(!wk&&out<S1)?S1-out:0;
+  const extra=wk?work:wBefore+wAfter;
+  const longest=segs.reduce((m,s)=>(s.e-s.s)>(m.e-m.s)?s:m,segs[0]||{s:0,e:0,r:"–"});
+  return {date,dow,wk,ev,segs,sess,gaps,by,logged,pausa,work,wIn,wBefore,wAfter,loggedIn,inp,out,lunch,disp,late,early,extra,noLogout,longest,changes:segs.length};
+}
+const isLate=d=>!d.wk&&d.late>CFG.TOL;
 
-  const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [ {wch:28}, {wch:16}, {wch:13}, {wch:22}, {wch:12} ];
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  for(let R=range.s.r+1; R<=range.e.r; R++){
-    const cellRef = XLSX.utils.encode_cell({r:R, c:3});
-    if(ws[cellRef]) ws[cellRef].z = '0.0%';
-  }
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Resumo Primeira Resposta');
-
-  const equipeLabel = state.selSup[0]==='Todos' ? 'Todas as Equipes' : state.selSup[0];
-  const infoRows = [
-    ['Central de Performance — Resumo de Primeira Resposta'],
-    ['Período:', periodLabel()],
-    ['Equipe:', equipeLabel],
-    ['Gerado em:', new Date().toLocaleString('pt-BR')],
-    []
-  ];
-  XLSX.utils.sheet_add_aoa(ws, infoRows, {origin:'A1'});
-  XLSX.utils.sheet_add_json(ws, rows, {origin:'A6', skipHeader:false});
-  ws['!cols'] = [ {wch:28}, {wch:16}, {wch:13}, {wch:22}, {wch:12} ];
-  const range2 = XLSX.utils.decode_range(ws['!ref']);
-  for(let R=6; R<=range2.e.r; R++){
-    const cellRef = XLSX.utils.encode_cell({r:R, c:3});
-    if(ws[cellRef] && typeof ws[cellRef].v === 'number') ws[cellRef].z = '0.0%';
-  }
-
-  const today = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
-  const supFile = state.selSup[0]==='Todos' ? 'todas-equipes' : state.selSup[0].replace(/\s+/g,'-').toLowerCase();
-  XLSX.writeFile(wb, `resumo_primeira_resposta_${supFile}_${today}.xlsx`);
+/* ---------- filtros ---------- */
+function filtered(opts={}){
+  return DAYS.filter(d=>(!F.from||d.date>=F.from)&&(!F.to||d.date<=F.to)&&(!F.sup||d.sup===F.sup)&&(!F.ag||d.ag===F.ag)&&(opts.ignoreDays||F.days==="all"||(F.days==="wd"?!d.wk:d.wk)));
+}
+function fillSelects(){
+  const sups=[...new Set(DAYS.map(d=>d.sup))].sort();
+  $("fSup").innerHTML=`<option value="">Todos (${sups.length})</option>`+sups.map(s=>`<option ${s===F.sup?"selected":""}>${esc(s)}</option>`).join("");
+  const ags=[...new Set(DAYS.filter(d=>!F.sup||d.sup===F.sup).map(d=>d.ag))].sort();
+  if(F.ag&&!ags.includes(F.ag))F.ag="";
+  $("fAg").innerHTML=`<option value="">Todos (${ags.length})</option>`+ags.map(s=>`<option ${s===F.ag?"selected":""}>${esc(s)}</option>`).join("");
+}
+function dataRange(){const ds=DAYS.map(d=>d.date).sort();return [ds[0],ds[ds.length-1]]}
+function preset(p){
+  const [mn,mx]=dataRange();if(!mx)return;
+  if(p==="last"){F.from=F.to=mx}
+  else if(p==="7"){F.to=mx;F.from=addD(mx,-6)}
+  else if(p==="w"){F.from=weekStart(mx);F.to=addD(F.from,6)}
+  else if(p==="m"){F.from=mx.slice(0,8)+"01";F.to=mx}
+  else{F.from=mn;F.to=mx}
+  if(F.from<mn)F.from=mn;
+  $("dFrom").value=F.from;$("dTo").value=F.to;
+  document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.p===p));
+  render();
 }
 
-function exportAgCSV(){
-  // Filtra índices dos registros válidos conforme filtros ativos
-  const filteredRows = filterPR(0);
-  const validIdx = new Set(filteredRows.map(r => r._idx));
-  const exportRows = PR_ROWS_RAW.filter((_, i) => validIdx.has(i));
+/* ---------- SVG / tooltip ---------- */
+const NS="http://www.w3.org/2000/svg";
+function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+function txt(p,x,y,s,a={}){const t=el("text",Object.assign({x,y,"font-size":12,fill:cv("--ink3")},a),p);t.textContent=s;return t}
+const tip=$("tip");
+function hover(n,h){n.addEventListener("mousemove",e=>{tip.innerHTML=h;tip.style.opacity=1;tip.style.left=Math.min(e.clientX+14,innerWidth-290)+"px";tip.style.top=(e.clientY+14)+"px"});n.addEventListener("mouseleave",()=>tip.style.opacity=0)}
+function sizeSvg(svg,minW,H){const W=Math.max(minW,svg.parentElement.clientWidth-2);svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.setAttribute("width",W);svg.setAttribute("height",H);svg.innerHTML="";return W}
+function legend(id,items){$(id).innerHTML=items.map(([l,c])=>`<span><i style="background:${c}"></i>${esc(l)}</span>`).join("")}
+function stats(id,list){const n=list.length;$(id).style.setProperty('--n',n<=6?n:Math.ceil(n/2));$(id).innerHTML=list.map(([b,s,m])=>`<div class="stat"><b>${b}</b><span>${s}</span>${m?`<small>${m}</small>`:""}</div>`).join("")}
 
-  if (!exportRows.length) { alert('Nenhum dado para exportar com os filtros atuais.'); return; }
-
-  const avIdx = window._AV_STATUS_IDX || {};
-
-  // Função: dado agente + timestamp da atribuição, retorna o status vigente
-  // Lógica: status começa no horário do registro e vale até o próximo registro
-  function getAgentStatus(agentName, atribuicaoStr) {
-    if (!atribuicaoStr || !atribuicaoStr.trim()) return '–';
-    const atTs = parseDateTimeBR(atribuicaoStr.trim());
-    if (!atTs) return '–';
-    const events = avIdx[agentName];
-    if (!events || !events.length) return 'Sem registro';
-
-    // Busca o intervalo: evento[i].ts <= atTs < evento[i+1].ts
-    let statusAtual = null;
-    for (let i = 0; i < events.length; i++) {
-      const ev = events[i];
-      const proxTs = i + 1 < events.length ? events[i+1].ts : null;
-
-      if (ev.ts <= atTs) {
-        // atTs está dentro deste intervalo se não há próximo ou atTs < próximo
-        if (!proxTs || atTs < proxTs) {
-          statusAtual = ev.reason;
-          break;
-        }
-        // Se atTs >= próximo, continua para o próximo intervalo
-        statusAtual = ev.reason; // mantém como fallback
-      }
-    }
-    return statusAtual || 'Sem registro';
-  }
-
-  const colAtrib = PR_HEADERS.find(h => h.includes('atribui') || h.includes('Atribui') || h.toLowerCase().includes('horário de atri')) || 'Horário de atribuição';
-  const colVendedor = PR_HEADERS.find(h => h.toUpperCase().includes('VENDEDOR')) || 'VENDEDOR';
-
-  const headers = [...PR_HEADERS, 'Status Disponibilidade na Atribuição'];
-
-  const csv = [headers, ...exportRows.map(r => {
-    const agente = (r[colVendedor] || '').trim();
-    const horAtrib = (r[colAtrib] || '').trim();
-    const statusAv = getAgentStatus(agente, horAtrib);
-    return [...PR_HEADERS.map(h => r[h] || ''), statusAv];
-  })].map(row => row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-
-  const bom  = '\uFEFF';
-  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  const today = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
-  const sup   = state.selSup[0]==='Todos' ? 'todas-equipes' : state.selSup[0].replace(/\s+/g,'-').toLowerCase();
-  a.href     = url;
-  a.download = `leads_${sup}_${today}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+/* ---------- tabela ordenável ---------- */
+const SORT={};
+function table(id,cols,rows,foot,defSort){
+  const st=SORT[id]||(SORT[id]=defSort||{k:cols[0].k,d:1});
+  const c=cols.find(c=>c.k===st.k)||cols[0];
+  const val=c.v||(r=>r[c.k]);
+  const sorted=[...rows].sort((a,b)=>{const u=val(a),v=val(b);if(u==null)return 1;if(v==null)return -1;return (typeof u==="string"?u.localeCompare(v,"pt"):u-v)*st.d});
+  $(id).innerHTML=`<thead><tr>${cols.map(c=>`<th data-k="${c.k}" class="${c.l?"l":""}">${c.h}${st.k===c.k?(st.d>0?" ▲":" ▼"):""}</th>`).join("")}</tr></thead><tbody>${sorted.map(r=>`<tr>${cols.map(c=>`<td class="${c.l?"l":""}">${c.f?c.f(r):esc((c.v||(x=>x[c.k]))(r)??"–")}</td>`).join("")}</tr>`).join("")}</tbody>${foot?`<tfoot><tr>${cols.map((c,i)=>`<td class="${c.l?"l":""}">${foot[c.k]??(i===0?"Total":"")}</td>`).join("")}</tr></tfoot>`:""}`;
+  $(id).querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(st.k===k)st.d*=-1;else{st.k=k;st.d=(k==="ag"||k==="sup"||k==="name")?1:-1}table(id,cols,rows,foot,defSort)});
 }
-function exportAvCSV(){
-  const avRows = filterAv(1);
-  const avData = aggAvByAgent(avRows);
-  if (!avData.length) { alert('Nenhum dado para exportar com os filtros atuais.'); return; }
+const tagLate=m=>m>CFG.TOL?`<span class="tag t-late">${dur(m)}</span>`:m>0?`<span class="tag t-warn">${dur(m)}</span>`:`<span class="tag t-ok">no horário</span>`;
+const pbar=p=>`<div style="display:flex;gap:8px;align-items:center;justify-content:flex-end">${p==null?"–":Math.round(p)+"%"}<div class="bar"><div style="width:${Math.min(100,p||0)}%"></div></div></div>`;
 
-  const search = (document.getElementById('av-search')?.value || '').toLowerCase();
-  const filtered = search ? avData.filter(a => a.name.toLowerCase().includes(search) || (a.sup||'').toLowerCase().includes(search)) : avData;
+/* ---------- agregação ---------- */
+function agg(list){
+  const wd=list.filter(d=>!d.wk),we=list.filter(d=>d.wk);
+  const lates=wd.filter(isLate);
+  return {n:list.length,wd:wd.length,we:we.length,work:sum(list,d=>d.work),logged:sum(list,d=>d.logged),disp:sum(list,d=>d.disp),
+    lates:lates.length,lateMin:sum(lates,d=>d.late),lateAvg:avg(lates,d=>d.late),
+    inAvg:avg(wd,d=>d.inp),outAvg:avg(wd,d=>d.out),extra:sum(wd,d=>d.extra),after:sum(wd,d=>d.wAfter),weWork:sum(we,d=>d.work),
+    saldo:sum(list,d=>d.work)-wd.length*CFG.META,adh:wd.length?sum(wd,d=>d.wIn)/(wd.length*CFG.META)*100:null,
+    pont:wd.length?(wd.length-lates.length)/wd.length*100:null,lunchAvg:avg(list.filter(d=>d.lunch),d=>d.lunch.d),
+    early:wd.filter(d=>d.early>0).length,noLog:list.filter(d=>d.noLogout).length,
+    ags:new Set(list.map(d=>d.ag)).size,days:new Set(list.map(d=>d.date)).size};
+}
+function groupBy(list,f){const o={};list.forEach(d=>{const k=f(d);(o[k]=o[k]||[]).push(d)});return o}
 
-  const headers = ['Agente','Equipe','Total Horas','Dias','Média Diária (h)','Status'];
-  const rows = filtered.map(a => [
-    a.name,
-    a.sup || '',
-    a.totalH.toFixed(2),
-    a.days,
-    a.avgH.toFixed(2),
-    a.avgH >= 7 ? 'OK' : a.avgH >= 5 ? 'Atenção' : 'Crítico'
+/* ================= VISÃO DO PERÍODO ================= */
+function renderGeral(){
+  const L=filtered();
+  if(!L.length){["gStats"].forEach(i=>$(i).innerHTML="");$("v-geral").querySelectorAll("section").forEach(s=>s.hidden=true);$("gStats").outerHTML;stats("gStats",[["–","Nenhum registro com os filtros atuais","Ajuste o período, o supervisor ou o agente"]]);return}
+  $("v-geral").querySelectorAll("section").forEach(s=>s.hidden=false);
+  const A=agg(L);
+  stats("gStats",[
+    [A.days+" dias","Com registro no período",`${A.wd} dias úteis e ${A.we} de fim de semana (agente/dia)`],
+    [A.ags,"Agentes",F.sup?F.sup:"todas as equipes"],
+    [dur(A.work),"Total trabalhado",`média de ${dur(A.work/A.n)} por agente/dia`],
+    [pct(A.disp,A.logged),"Tempo disponível",`${dur(A.disp)} no status Disponível`],
+    [A.pont==null?"–":Math.round(A.pont)+"%","Pontualidade",`${A.lates} atrasos em ${A.wd} dias úteis`],
+    [dur(A.extra+A.weWork),"Fora do expediente",`${dur(A.extra)} em dias úteis, ${dur(A.weWork)} no fim de semana`],
+    [A.adh==null?"–":Math.round(A.adh)+"%","Aderência ao expediente","trabalhado dentro do horário ÷ 8h"],
+    [sdur(A.saldo),"Saldo de horas","em relação a 8h por dia útil"]
   ]);
-
-  const csv = [headers, ...rows]
-    .map(row => row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(','))
-    .join('\n');
-
-  const bom  = '\uFEFF';
-  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  const today = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
-  a.href     = url;
-  a.download = `disponibilidade_agentes_${today}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  renderTrend(L);
+  // supervisor
+  const G=groupBy(L,d=>d.sup);
+  const supRows=Object.entries(G).map(([sup,l])=>Object.assign({sup},agg(l)));
+  const cS=[{k:"sup",h:"Supervisor",l:1,f:r=>`<b>${esc(r.sup)}</b>`},{k:"ags",h:"Agentes"},{k:"n",h:"Agente/dias"},{k:"work",h:"Trabalhado",f:r=>dur(r.work)},
+    {k:"avg",h:"Média por dia",v:r=>r.work/r.n,f:r=>dur(r.work/r.n)},{k:"pont",h:"Pontualidade",f:r=>pbar(r.pont)},{k:"lates",h:"Atrasos"},{k:"lateMin",h:"Minutos de atraso",f:r=>dur(r.lateMin)},
+    {k:"extra",h:"Extra dias úteis",f:r=>dur(r.extra)},{k:"weWork",h:"Fim de semana",f:r=>r.weWork?`<span class="tag t-wk">${dur(r.weWork)}</span>`:"–"},{k:"dp",h:"Disponível",v:r=>r.disp/r.logged,f:r=>pct(r.disp,r.logged)},{k:"adh",h:"Aderência",f:r=>pbar(r.adh)},{k:"saldo",h:"Saldo",f:r=>`<span style="color:var(${r.saldo>=0?"--ok":"--late"})">${sdur(r.saldo)}</span>`}];
+  table("tSup",cS,supRows,null,{k:"work",d:-1});
+  // agente
+  const GA=groupBy(L,d=>d.ag);
+  const agRows=Object.entries(GA).map(([ag,l])=>Object.assign({ag,sup:l[0].sup},agg(l)));
+  window.__agRows=agRows;
+  const cA=[{k:"ag",h:"Agente",l:1,f:r=>`<b>${esc(r.ag)}</b>`},{k:"sup",h:"Supervisor",l:1},{k:"n",h:"Dias"},
+    {k:"lates",h:"Atrasos",f:r=>r.lates?`<span class="tag t-late">${r.lates}</span>`:`<span class="tag t-ok">0</span>`},{k:"lateAvg",h:"Atraso médio",f:r=>r.lateAvg?dur(r.lateAvg):"–"},
+    {k:"inAvg",h:"Entrada média",f:r=>hm(r.inAvg)},{k:"outAvg",h:"Saída média",f:r=>hm(r.outAvg)},{k:"work",h:"Trabalhado",f:r=>`<b>${dur(r.work)}</b>`},{k:"avg",h:"Média por dia",v:r=>r.work/r.n,f:r=>dur(r.work/r.n)},
+    {k:"saldo",h:"Saldo",f:r=>`<span style="color:var(${r.saldo>=0?"--ok":"--late"})">${sdur(r.saldo)}</span>`},{k:"extra",h:"Extra dias úteis",f:r=>r.extra?`<span class="tag t-extra">${dur(r.extra)}</span>`:"–"},
+    {k:"weWork",h:"Fim de semana",f:r=>r.weWork?`<span class="tag t-wk">${dur(r.weWork)}</span>`:"–"},{k:"dp",h:"Disponível",v:r=>r.disp/r.logged,f:r=>pct(r.disp,r.logged)},
+    {k:"lunchAvg",h:"Almoço médio",f:r=>r.lunchAvg?dur(r.lunchAvg):"–"},{k:"early",h:"Saídas antecipadas"},{k:"noLog",h:"Sem logout"},{k:"adh",h:"Aderência",f:r=>pbar(r.adh)}];
+  table("tAg",cA,agRows,null,{k:"ag",d:1});
+  renderHeat(L);
+  // dia da semana
+  const GD=groupBy(L,d=>d.dow);
+  const dowRows=[1,2,3,4,5,6,0].filter(k=>GD[k]).map(k=>{const l=GD[k],a=agg(l);return Object.assign({dow:k,name:DOWL[k],ord:(k+6)%7,inp:avg(l,d=>d.inp),outp:avg(l,d=>d.out)},a)});
+  table("tDow",[{k:"ord",h:"Dia",l:1,f:r=>`<b>${r.name}</b>${r.dow%6===0?' <span class="tag t-wk">fds</span>':""}`},{k:"n",h:"Registros"},{k:"inp",h:"Entrada média",f:r=>hm(r.inp)},{k:"outp",h:"Saída média",f:r=>hm(r.outp)},
+    {k:"pont",h:"Pontualidade",f:r=>r.pont==null?"–":Math.round(r.pont)+"%"},{k:"avgw",h:"Média trabalhada",v:r=>r.work/r.n,f:r=>dur(r.work/r.n)},{k:"ext",h:"Extra média",v:r=>(r.extra+r.weWork)/r.n,f:r=>dur((r.extra+r.weWork)/r.n)}],dowRows,null,{k:"ord",d:1});
+  // pontualidade ranking
+  const pr=agRows.filter(r=>r.wd).sort((a,b)=>b.pont-a.pont||a.lateMin-b.lateMin);
+  $("rPont").innerHTML=pr.map(r=>{const c=r.pont>=90?"--ok":r.pont>=70?"--warn":"--late";return `<li><span>${esc(r.ag)} <span class="muted">${esc(r.sup)}</span></span><span style="color:var(${c});font-weight:600">${Math.round(r.pont)}% <span class="muted" style="font-weight:400">(${r.lates} de ${r.wd})</span></span><div class="bx"><div style="width:${Math.max(2,r.pont)}%;background:var(${c})"></div></div></li>`}).join("")||'<li class="muted">Sem dias úteis no filtro.</li>';
+  // status
+  const byAg=agRows.map(r=>{const b={};GA[r.ag].forEach(d=>{for(const k in d.by)b[k]=(b[k]||0)+d.by[k]});return {name:r.ag,by:b,logged:r.logged}});
+  legend("legStatusG",ORDER.map(k=>[k,stC(k)]));
+  renderStack("stackG",byAg,MODEG);
 }
-
-let avSortCol='avgH',        avSortDir=-1, avPage=0, avTotalPages=1;
-const PAGE = 15;
-
-// ── CSV PARSER ────────────────────────────────────────────────────────────────
-function splitCSVLine(line) {
-  const fields = [];
-  let cur = '', inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQ) {
-      if (ch === '"') {
-        if (line[i + 1] === '"') { cur += '"'; i++; }
-        else { inQ = false; }
-      } else { cur += ch; }
-    } else {
-      if (ch === '"') { inQ = true; }
-      else if (ch === ',') { fields.push(cur.trim()); cur = ''; }
-      else { cur += ch; }
-    }
-  }
-  fields.push(cur.trim());
-  return fields;
+function renderTrend(L){
+  const svg=$("trend");
+  const dates=[];if(F.from&&F.to){for(let k=F.from;k<=F.to;k=addD(k,1))dates.push(k)}
+  const ds=dates.length&&dates.length<=120?dates:[...new Set(L.map(d=>d.date))].sort();
+  const G=groupBy(L,d=>d.date);
+  const data=ds.map(k=>{const l=G[k]||[];return {k,wk:[0,6].includes(dObj(k).getDay()),in:sum(l,d=>d.wIn),out:sum(l.filter(d=>!d.wk),d=>d.extra+ (d.work-d.wIn-d.extra)),we:sum(l.filter(d=>d.wk),d=>d.work),late:l.filter(isLate).length,n:l.length}});
+  const H=280,Lm=46,R=16,T=20,B=40;const W=sizeSvg(svg,Math.max(600,ds.length*26),H);
+  const mx=Math.max(60,...data.map(d=>d.in+d.out+d.we));const step=niceStep(mx);const top=Math.ceil(mx/step)*step;
+  const x=i=>Lm+i*(W-Lm-R)/data.length,bw=Math.max(4,(W-Lm-R)/data.length*.68),y=v=>H-B-v/top*(H-B-T);
+  for(let v=0;v<=top;v+=step){el("line",{x1:Lm,x2:W-R,y1:y(v),y2:y(v),stroke:cv("--line")},svg);txt(svg,Lm-6,y(v)+4,(v/60)+"h",{"text-anchor":"end"})}
+  const mxL=Math.max(1,...data.map(d=>d.late));
+  data.forEach((d,i)=>{
+    const cx=x(i)+((W-Lm-R)/data.length-bw)/2;
+    if(d.wk)el("rect",{x:x(i),y:T,width:(W-Lm-R)/data.length,height:H-B-T,fill:cv("--wk")},svg);
+    let acc=0;[["in","--s-cot"],["out","--extra"],["we","--wknd"]].forEach(([k,c],j)=>{if(!d[k])return;el("rect",{x:cx,y:y(acc+d[k]),width:bw,height:y(acc)-y(acc+d[k]),fill:cv(c),opacity:k==="out"?.55:1},svg);acc+=d[k]});
+    if(d.late){el("circle",{cx:cx+bw/2,cy:y(acc)-12,r:9,fill:cv("--late")},svg);txt(svg,cx+bw/2,y(acc)-8,d.late,{"text-anchor":"middle",fill:"#fff","font-size":11,"font-weight":700})}
+    if(data.length<=45||i%Math.ceil(data.length/30)===0){txt(svg,cx+bw/2,H-B+15,dFmt(d.k),{"text-anchor":"middle","font-size":11});txt(svg,cx+bw/2,H-B+29,DOW[dObj(d.k).getDay()],{"text-anchor":"middle","font-size":10,fill:d.wk?cv("--wknd"):cv("--ink3")})}
+    const hit=el("rect",{x:x(i),y:T,width:(W-Lm-R)/data.length,height:H-B-T,fill:"transparent",style:"cursor:pointer"},svg);
+    hover(hit,`<b>${dLong(d.k)}</b><br>${d.n} agentes com registro<br>Dentro do expediente: ${dur(d.in)}<br>Fora do expediente: ${dur(d.out)}${d.we?`<br>Fim de semana: ${dur(d.we)}`:""}<br>Atrasos: ${d.late}<br><i>Clique para ver o dia</i>`);
+    hit.onclick=()=>{if(d.n){DAY=d.k;setTab("dia")}};
+  });
+  legend("trendLeg",[["Dentro do expediente","var(--s-cot)"],["Fora do expediente (dias úteis)","color-mix(in srgb,var(--extra) 55%,transparent)"],["Fim de semana","var(--wknd)"],["Agentes atrasados","var(--late)"]]);
 }
-
-function parseCSV(text) {
-  const lines = [];
-  let cur = '', inQ = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (ch === '"') { inQ = !inQ; cur += ch; }
-    else if ((ch === '\n' || (ch === '\r' && text[i+1] === '\n')) && !inQ) {
-      if (ch === '\r') i++;
-      lines.push(cur); cur = '';
-    } else { cur += ch; }
-  }
-  if (cur.trim()) lines.push(cur);
-  if (lines.length < 2) return { headers: [], rows: [] };
-  const headers = splitCSVLine(lines[0]);
-  const rows = lines.slice(1)
-    .filter(l => l.trim())
-    .map(line => {
-      const fields = splitCSVLine(line);
-      const obj = {};
-      headers.forEach((h, i) => { obj[h] = (fields[i] || ''); });
-      return obj;
+function renderHeat(L){
+  const dates=[...new Set(L.map(d=>d.date))].sort();
+  let all=dates;if(F.from&&F.to){const t=[];for(let k=F.from;k<=F.to;k=addD(k,1))t.push(k);if(t.length<=62)all=t.filter(k=>F.days==="all"||(F.days==="wd")===![0,6].includes(dObj(k).getDay()))}
+  const idx={};L.forEach(d=>idx[d.ag+"|"+d.date]=d);
+  const bySup=groupBy([...new Set(L.map(d=>d.ag+"|"+d.sup))].map(s=>s.split("|")),x=>x[1]);
+  const mx=Math.max(540,...L.map(d=>d.work));
+  let h=`<thead><tr><th></th>${all.map(k=>{const w=[0,6].includes(dObj(k).getDay());return `<th class="${w?"wk":""}">${DOW[dObj(k).getDay()]}<br>${dFmt(k)}</th>`}).join("")}<th>Total</th></tr></thead><tbody>`;
+  Object.keys(bySup).sort().forEach(sup=>{
+    if(Object.keys(bySup).length>1)h+=`<tr class="grp"><td colspan="${all.length+2}">${esc(sup)}</td></tr>`;
+    bySup[sup].map(x=>x[0]).sort().forEach(ag=>{
+      let tot=0;
+      h+=`<tr><td class="name">${esc(ag)}</td>${all.map(k=>{const d=idx[ag+"|"+k];const w=[0,6].includes(dObj(k).getDay());if(!d)return `<td class="${w?"wkc":""}" style="cursor:default"><span class="muted">·</span></td>`;tot+=d.work;
+        const a=Math.min(1,d.work/mx);const bg=`color-mix(in srgb,var(${d.wk?"--wknd":"--s-cot"}) ${Math.round(18+a*72)}%,var(--paper))`;
+        return `<td class="${isLate(d)?"late ":""}${(d.extra>5&&!d.wk)?"ext":""}" style="background:${bg};color:${a>.55?"#fff":"var(--ink)"}" data-d="${k}" title="${esc(ag)} em ${dFmt(k)}: ${dur(d.work)} trabalhadas, entrada ${hm(d.inp)}, saída ${hm(d.out)}${isLate(d)?", atraso "+dur(d.late):""}">${(d.work/60).toFixed(1).replace(".",",")}</td>`}).join("")}<td><b>${dur(tot)}</b></td></tr>`;
     });
-  return { headers, rows };
-}
-
-// Converte "DD/MM/YYYY" ou "DD/MM/YYYY HH:MM:SS" ou "YYYY-MM-DD" → "YYYY-MM-DD"
-function fmtDate(v) {
-  if (!v) return '';
-  const s = v.trim().split(' ')[0];
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
-    const [d, m, y] = s.split('/');
-    return y + '-' + m + '-' + d;
-  }
-  return s;
-}
-
-// Converte "HH:MM:SS" → horas decimais
-function hmsToH(v) {
-  if (!v || !v.trim()) return 0;
-  const p = v.trim().split(':');
-  if (p.length === 3) return (+p[0]) + (+p[1]) / 60 + (+p[2]) / 3600;
-  if (p.length === 2) return (+p[0]) + (+p[1]) / 60;
-  return 0;
-}
-
-// Converte "HH:MM:SS" ou segundos → segundos
-function toSeconds(v) {
-  if (!v || !v.trim()) return null;
-  const s = v.trim();
-  if (/^\d+$/.test(s)) return +s;  // já em segundos
-  const p = s.split(':');
-  if (p.length === 3) return (+p[0]) * 3600 + (+p[1]) * 60 + (+p[2]);
-  if (p.length === 2) return (+p[0]) * 60 + (+p[1]);
-  return null;
-}
-
-// Converte "DD/MM/YYYY HH:MM:SS" → Date object
-function parseDateTimeBR(v) {
-  if (!v || !v.trim()) return null;
-  const s = v.trim();
-  // formato: DD/MM/YYYY HH:MM:SS
-  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/);
-  if (m) return new Date(+m[3], +m[2]-1, +m[1], +m[4], +m[5], +m[6]);
-  // fallback: tentar parse direto
-  const d = new Date(s);
-  return isNaN(d) ? null : d;
-}
-
-// ── LOAD DATA ─────────────────────────────────────────────────────────────────
-async function loadData() {
-  showLoading(true);
-  try {
-    const [prResp, avResp] = await Promise.all([
-      fetch(SHEET_BASE + '?output=csv&gid=299409161&single=true'),
-      fetch(SHEET_BASE + '?output=csv&sheet=' + encodeURIComponent('disponibilidade'))
-    ]);
-    if (!prResp.ok) throw new Error('HTTP ' + prResp.status + ' na aba "primeira resposta"');
-    if (!avResp.ok) throw new Error('HTTP ' + avResp.status + ' na aba "disponibilidade"');
-    const [prText, avText] = await Promise.all([prResp.text(), avResp.text()]);
-
-    console.log('[Dashboard] primeira resposta header:', prText.split('\n')[0]);
-    console.log('[Dashboard] disponibilidade header:', avText.split('\n')[0]);
-
-    // ── PRIMEIRA RESPOSTA ─────────────────────────────────────────────────────
-    // Fonte: SOMENTE a sheet "primeira resposta" — 1 linha = 1 lead real
-    // Colunas utilizadas:
-    //   VENDEDOR              → nome do agente
-    //   SUPERVISOR            → equipe
-    //   DATA DE ATRIBUIÇÃO    → coluna D — fonte única para filtro de data (DD/MM/YYYY)
-    //   Primeira resposta do agente → tempo HH:MM:SS ou segundos
-    //   STATUS                → "sem resposta" / "expirado" → sem_resp
-    // Linhas sem VENDEDOR ou sem DATA DE ATRIBUIÇÃO são descartadas (linhas auxiliares/vazias)
-    const { headers: prHeaders, rows: prRows } = parseCSV(prText);
-    PR_HEADERS = prHeaders;
-    console.log('[Dashboard] primeira resposta headers:', prHeaders);
-    console.log('[Dashboard] primeira resposta linhas brutas:', prRows.length);
-    if (prRows.length > 0) console.log('[Dashboard] primeira resposta linha 1:', JSON.stringify(prRows[0]));
-
-    // Sem agrupamento: cada linha = 1 registro = 1 lead
-    RAW_BY_DAY = [];
-    PR_ROWS_RAW = [];
-    prRows.forEach(r => {
-      const vendedor     = (r['VENDEDOR'] || '').trim();
-      const sup          = normSup((r['SUPERVISOR'] || '').trim());
-      const date         = fmtDate(r['DATA DE ATRIBUIÇÃO'] || r['DATA DE ATRIBUICAO'] || '');
-      const transferencia= (r['Transferência'] || r['Transferencia'] || '').trim().toLowerCase();
-      const status       = (r['STATUS'] || '').trim().toLowerCase();
-      const media        = (r['media de tempo'] || r['MEDIA de tempo'] || r['MEDIA'] || r['Média'] || r['Media'] || '').trim().toLowerCase();
-
-      if (!vendedor || !date) return;
-      if (vendedor.toUpperCase() === 'VENDEDOR' || vendedor.startsWith('=')) return;
-
-      // Detecta fora do horário: STATUS = "fora do horario" OU MEDIA = "fora do horario"
-      const statusNorm = status.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      const mediaNorm  = media.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      const foraHorario = statusNorm.includes('fora do horario') || mediaNorm.includes('fora do horario');
-
-      // Transferido: coluna Transferência = "Sim"
-      const transferido = transferencia === 'sim';
-
-      // Leads contados: NÃO transferido E NÃO fora do horário
-      const contaLead = !foraHorario && !transferido;
-
-      const dtResposta   = parseDateTimeBR(r['Primeira resposta do agente em'] || r['Primeira resposta do agente'] || '');
-      const dtAtribuicao = parseDateTimeBR(r['Horário de atribuição do bate-papo'] || r['Horário de atribuição'] || r['Horario de atribuicao'] || '');
-
-      let secs = null;
-      if (dtResposta && dtAtribuicao && dtResposta >= dtAtribuicao) {
-        secs = Math.round((dtResposta - dtAtribuicao) / 1000);
-      }
-
-      let ate1=0, ate2=0, gt2=0, sem_resp=0;
-      if (contaLead) {
-        if (status === 'sem resposta' || status === 'expirado' || secs === null) {
-          sem_resp = 1;
-        } else if (secs <= 60)  { ate1 = 1; }
-        else if (secs <= 120)   { ate2 = 1; }
-        else                    { gt2  = 1; }
-      }
-
-      // total_leads = apenas leads com tempo de resposta (ate1+ate2+gt2)
-      // sem_resp e fora_horario NÃO contam no total
-      const idx = RAW_BY_DAY.length;
-      RAW_BY_DAY.push({
-        POWER_BI: vendedor, SUPERVISOR: sup, date_str: date,
-        total_leads: (ate1||ate2||gt2) ? 1 : 0,
-        ate1, ate2, gt2, sem_resp,
-        fora_horario: foraHorario ? 1 : 0,
-        transferido:  transferido  ? 1 : 0,
-        _idx: idx
-      });
-      PR_ROWS_RAW.push(r);
-    });
-    console.log('[Dashboard] RAW_BY_DAY:', RAW_BY_DAY.length,
-      '| leads válidos:', RAW_BY_DAY.filter(r=>r.total_leads).length,
-      '| fora horário:', RAW_BY_DAY.filter(r=>r.fora_horario).length,
-      '| transferidos:', RAW_BY_DAY.filter(r=>r.transferido).length);
-
-    // ── DISPONIBILIDADE ───────────────────────────────────────────────────────
-    // Colunas confirmadas: A=Agent Name | B=Date | C=HORARIO | D=Reason | E=SITUAÇÃO | F=PF OU PME | G=SUPERVISOR | H=TEMPO LOGADO | I=Tempo de um status para outro
-    // Regra: soma col I quando col D (Reason) = "Disponível"
-
-    const { headers: avHeaders, rows: avRows } = parseCSV(avText);
-    console.log('[AV] headers:', JSON.stringify(avHeaders));
-    console.log('[AV] total linhas:', avRows.length);
-    if (avRows.length > 0) console.log('[AV] linha 1:', JSON.stringify(avRows[0]));
-
-    // Busca coluna por nome exato ou parcial (ignora acento/case)
-    function findAvCol(candidates){
-      const norm=s=>(s||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-      for(const c of candidates){
-        const k=avHeaders.find(h=>norm(h)===norm(c));
-        if(k!==undefined) return k;
-      }
-      for(const c of candidates){
-        const k=avHeaders.find(h=>norm(h).includes(norm(c).split(' ')[0]));
-        if(k!==undefined) return k;
-      }
-      return null;
-    }
-
-    const COL_AGENT  = findAvCol(['Agent Name'])    || avHeaders[0];
-    console.log('[AV] headers:', JSON.stringify(avHeaders));
-    if(avRows[0]) console.log('[AV] row1:', JSON.stringify(avRows[0]));
-    const COL_DATE   = findAvCol(['Date'])           || avHeaders[1];
-    const COL_HORARIO= findAvCol(['HORARIO','Horario','horario']) || avHeaders[2]; // col C: timestamp do evento
-    const COL_REASON = findAvCol(['Reason'])         || avHeaders[3];
-    const COL_SUP    = findAvCol(['SUPERVISOR'])     || avHeaders[5];
-    const COL_TEMPO  = findAvCol(['Tempo de um status para outro','Tempo de um status','TEMPO LOGADO']) || avHeaders[6] || avHeaders[7];
-
-    console.log('[AV] colunas:', {COL_AGENT,COL_DATE,COL_HORARIO,COL_REASON,COL_SUP,COL_TEMPO});
-
-    // Índice de status por agente para lookup no export
-    // Estrutura: AV_STATUS_IDX[agentName] = [{ts: Date, reason: string}, ...]
-    const AV_STATUS_IDX = {};
-    avRows.forEach(r => {
-      const agent  = (r[COL_AGENT]  || '').trim();
-      const horario= (r[COL_HORARIO]|| '').trim();
-      const reason = (r[COL_REASON] || '').trim();
-      if (!agent || !horario || !reason) return;
-      const ts = parseDateTimeBR(horario);
-      if (!ts) return;
-      if (!AV_STATUS_IDX[agent]) AV_STATUS_IDX[agent] = [];
-      AV_STATUS_IDX[agent].push({ ts, reason });
-    });
-    // Ordena cada agente por timestamp
-    Object.values(AV_STATUS_IDX).forEach(arr => arr.sort((a,b) => a.ts-b.ts));
-
-    // Expõe globalmente para uso no export
-    window._AV_STATUS_IDX = AV_STATUS_IDX;
-
-    // Passo 1: coleta TODOS os agentes únicos da col A
-    const agentSupMap = {};
-    avRows.forEach(r => {
-      const agent = (r[COL_AGENT] || '').trim();
-      const sup   = normSup((r[COL_SUP] || '').trim());
-      if (!agent) return;
-      if (EQUIPES_REMOVIDAS.includes(sup.toUpperCase())) return;
-      if (!agentSupMap[agent]) agentSupMap[agent] = sup;
-    });
-    console.log('[AV] agentes col A:', Object.keys(agentSupMap).length, Object.keys(agentSupMap).slice(0,5));
-
-    // Passo 2: agrupa por agente+data, soma col I quando Reason=Disponível
-    const avMap = {};
-    avRows.forEach(r => {
-      const agent   = (r[COL_AGENT]  || '').trim();
-      const dateRaw = (r[COL_DATE]   || '').trim();
-      const reason  = (r[COL_REASON] || '').trim();
-      const sup     = normSup((r[COL_SUP]   || '').trim());
-      const tempo   = (r[COL_TEMPO]  || '').trim();
-
-      if (!agent) return;
-      if (EQUIPES_REMOVIDAS.includes(sup.toUpperCase())) return;
-
-      const date = fmtDate(dateRaw);
-      if (!date) return; // ignora linhas sem data válida na col B
-
-      const key = agent + '|' + date;
-      if (!avMap[key]) avMap[key] = { POWER_BI:agent, SUPERVISOR:sup, date_str:date, avail_hours:0 };
-
-      // Soma tempo disponível: Reason = "Disponível" (col D)
-      const rNorm = reason.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
-      if (rNorm === 'disponivel') {
-        const h = hmsToH(tempo);
-        avMap[key].avail_hours += h;
-        console.log('[AV] disponivel:', agent, date, tempo, '->', h.toFixed(3)+'h');
-      }
-    });
-
-    // Passo 3: adiciona agentes sem nenhum registro com data válida como entrada zero
-    const agentsInMap = new Set(Object.values(avMap).map(r=>r.POWER_BI));
-    Object.entries(agentSupMap).forEach(([agent,sup])=>{
-      if(!agentsInMap.has(agent)){
-        avMap['__nodate__'+agent] = { POWER_BI:agent, SUPERVISOR:sup, date_str:'', avail_hours:0 };
-      }
-    });
-
-    RAW_AVAIL = Object.values(avMap).filter(r=>r.POWER_BI);
-    const withH = RAW_AVAIL.filter(r=>r.avail_hours>0).length;
-    console.log('[AV] RAW_AVAIL:', RAW_AVAIL.length, '| com horas>0:', withH);
-
-    // ── DATAS E SUPERVISORES ──────────────────────────────────────────────────
-    const dateSet = new Set([...RAW_BY_DAY.map(r=>r.date_str), ...RAW_AVAIL.map(r=>r.date_str)]);
-    ALL_DATES = [...dateSet].filter(Boolean).sort();
-    // Só inclui supervisores que têm ao menos 1 lead válido ou 1 registro de disponibilidade
-    const supsComDados = new Set([
-      ...RAW_BY_DAY.filter(r=>r.total_leads>0||r.ate1||r.ate2||r.gt2||r.sem_resp).map(r=>r.SUPERVISOR),
-      ...RAW_AVAIL.filter(r=>r.date_str).map(r=>r.SUPERVISOR)
-    ]);
-    const supSet = supsComDados;
-    const supArr=[...supSet].filter(s=>s&&!EQUIPES_REMOVIDAS.includes(s.toUpperCase()));
-    // Ordena: não-BENVE alfabético primeiro, BENVE ao final
-    supArr.sort((a,b)=>{
-      const aB=a.toUpperCase().includes('BENVE');
-      const bB=b.toUpperCase().includes('BENVE');
-      if(aB&&!bB) return 1;
-      if(!aB&&bB) return -1;
-      return a.localeCompare(b);
-    });
-    SUPS_ORDER=supArr.slice();
-    SUP_C={};
-    SUPS_ORDER.forEach((s,i)=>{ SUP_C[s]=SUP_PALETTE[i%SUP_PALETTE.length]; });
-    ALL_SUPS=SUPS_ORDER.slice();
-
-    console.log('[Dashboard] ALL_SUPS:', ALL_SUPS);
-
-    showLoading(false);
-    init();
-  } catch(err) {
-    showLoading(false);
-    showError(err.message);
-    console.error('[Dashboard] Erro:', err);
-  }
-}
-
-function showLoading(show) {
-  let el = document.getElementById('loading-overlay');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'loading-overlay';
-    el.style.cssText = 'position:fixed;inset:0;background:rgba(26,35,50,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;font-family:Segoe UI,sans-serif;gap:14px';
-    document.body.appendChild(el);
-  }
-  if (show) {
-    el.style.display = 'flex';
-    el.innerHTML = '<div style="font-size:34px">⏳</div>'
-      + '<div style="font-size:17px;font-weight:700">Carregando dados da planilha...</div>'
-      + '<div style="font-size:12px;color:#8FA3C0">Conectando ao Google Sheets</div>';
-  } else { el.style.display = 'none'; }
-}
-
-function showError(msg) {
-  let el = document.getElementById('loading-overlay');
-  if (!el) { el = document.createElement('div'); el.id='loading-overlay'; document.body.appendChild(el); }
-  el.style.cssText = 'position:fixed;inset:0;background:rgba(26,35,50,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;font-family:Segoe UI,sans-serif;gap:12px;padding:40px;text-align:center';
-  el.style.display = 'flex';
-  el.innerHTML = '<div style="font-size:36px">⚠️</div>'
-    + '<div style="font-size:18px;font-weight:800;color:#FC8181">Erro ao carregar dados</div>'
-    + '<div style="font-size:13px;color:#CBD5E0;max-width:500px;line-height:1.6">' + msg + '</div>'
-    + '<button onclick="loadData()" style="margin-top:14px;padding:10px 28px;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:700">🔄 Tentar novamente</button>';
-}
-
-// ── SUP COLORS ────────────────────────────────────────────────────────────────
-function normSup(s){
-  if(!s) return '';
-  const t=s.trim();
-  if(t.startsWith('=')) return 'DESLIGADO';
-  const u=t.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  if(u==='DESLIGADO'||u.includes('DESLIGADO')) return 'DESLIGADO';
-  // "BENVE" isolado → nome completo para exibição
-  if(u==='BENVE') return 'BENVE';
-  return t; // mantém nome original da planilha
-}
-// Supervisores e cores — preenchidos dinamicamente após carregar os dados
-let SUPS_ORDER=[];
-
-// Paleta de cores para equipes (atribuída na ordem de aparecimento)
-const SUP_PALETTE=[
-  {bg:'#EFF6FF',tc:'#1D4ED8'}, // azul
-  {bg:'#FAF5FF',tc:'#7C3AED'}, // roxo
-  {bg:'#FFF1F2',tc:'#BE123C'}, // rosa
-  {bg:'#FFFBEB',tc:'#B45309'}, // âmbar
-  {bg:'#F0FDF4',tc:'#15803D'}, // verde
-  {bg:'#FFF7ED',tc:'#C2410C'}, // laranja
-  {bg:'#F0F9FF',tc:'#0369A1'}, // ciano
-  {bg:'#FDF4FF',tc:'#A21CAF'}, // magenta
-  {bg:'#FEFCE8',tc:'#854D0E'}, // amarelo
-  {bg:'#F1F5F9',tc:'#334155'}, // cinza
-];
-let SUP_C={};
-const medals=['🥇','🥈','🥉'];
-
-// ── STATE ─────────────────────────────────────────────────────────────────────
-let currentTab=0;
-// state, sort vars e PAGE declarados acima no bloco loader
-
-// ── HELPERS ───────────────────────────────────────────────────────────────────
-function fmt(n){return Math.round(n).toLocaleString('pt-BR');}
-function pct(a,b){return b>0?((a/b)*100).toFixed(1)+'%':'–';}
-
-function aggTotals(rows){
-  const t={total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
-  rows.forEach(r=>{t.total_leads+=r.total_leads;t.ate1+=r.ate1;t.ate2+=r.ate2;t.gt2+=r.gt2;t.sem_resp+=r.sem_resp;});
-  return t;
-}
-function aggByAgent(rows){
-  const m={};
-  rows.forEach(r=>{
-    if(!m[r.POWER_BI])m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
-    const a=m[r.POWER_BI];
-    a.total_leads+=r.total_leads;a.ate1+=r.ate1;a.ate2+=r.ate2;a.gt2+=r.gt2;a.sem_resp+=r.sem_resp;
   });
-  return Object.values(m).map(a=>({...a,leadsResp:a.ate1+a.ate2+a.gt2,pctAte2:(a.ate1+a.ate2+a.gt2)>0?(a.ate1+a.ate2)/(a.ate1+a.ate2+a.gt2)*100:0}));
+  $("heat").innerHTML=h+"</tbody>";
+  $("heat").querySelectorAll("td[data-d]").forEach(td=>td.onclick=()=>{DAY=td.dataset.d;setTab("dia")});
 }
-function aggBySup(rows){
-  const m={};
-  rows.forEach(r=>{
-    if(!m[r.SUPERVISOR])m[r.SUPERVISOR]={sup:r.SUPERVISOR,total_leads:0,ate1:0,ate2:0,gt2:0,sem_resp:0};
-    const s=m[r.SUPERVISOR];
-    s.total_leads+=r.total_leads;s.ate1+=r.ate1;s.ate2+=r.ate2;s.gt2+=r.gt2;s.sem_resp+=r.sem_resp;
+function renderStack(id,rows,mode){
+  const svg=$(id);const Lm=170,R=70,T=6,RH=32,H=T+rows.length*RH+26;const W=sizeSvg(svg,700,H);
+  const mx=mode==="h"?Math.max(60,...rows.map(r=>r.logged)):100;
+  const stepH=niceStep(mx,8);const step=mode==="h"?stepH:20;const top=mode==="h"?Math.ceil(mx/step)*step:100;
+  const x=v=>Lm+v/top*(W-Lm-R);
+  for(let v=0;v<=top;v+=step){el("line",{x1:x(v),x2:x(v),y1:T,y2:H-22,stroke:cv("--line")},svg);txt(svg,x(v),H-6,mode==="h"?Math.round(v/60)+"h":v+"%",{"text-anchor":"middle","font-size":11})}
+  rows.forEach((r,i)=>{const y=T+i*RH+6;let acc=0;txt(svg,0,y+15,short(r.name),{"font-size":14,fill:cv("--ink"),"font-weight":600});
+    ORDER.forEach(k=>{const v=r.by[k]||0;if(!v)return;const val=mode==="h"?v:v/r.logged*100;const e=el("rect",{x:x(acc),y,width:Math.max(.5,x(acc+val)-x(acc)),height:20,fill:col(stC(k))},svg);hover(e,`<b>${esc(r.name)}</b><br>${esc(k)}: ${dur(v)} (${pct(v,r.logged)})`);acc+=val});
+    txt(svg,x(acc)+6,y+15,dur(r.logged),{fill:cv("--ink2")})});
+}
+
+/* ================= SEMANAL ================= */
+function renderSemana(){
+  const L=filtered();
+  if(!L.length){$("tWeek").innerHTML=`<tr><td class="empty">Nenhum registro com os filtros atuais.</td></tr>`;$("tWeekAg").innerHTML="";$("wkChart").innerHTML="";return}
+  const G=groupBy(L,d=>weekStart(d.date));const wks=Object.keys(G).sort();
+  const rows=wks.map(w=>Object.assign({w,lab:`${dFmt(w)} a ${dFmt(addD(w,6))}`},agg(G[w])));
+  table("tWeek",[{k:"w",h:"Semana",l:1,f:r=>`<b>${r.lab}</b>`},{k:"days",h:"Dias com registro"},{k:"ags",h:"Agentes"},{k:"work",h:"Trabalhado",f:r=>dur(r.work)},{k:"pa",h:"Média por agente",v:r=>r.work/r.ags,f:r=>dur(r.work/r.ags)},
+    {k:"lates",h:"Atrasos"},{k:"pont",h:"Pontualidade",f:r=>pbar(r.pont)},{k:"extra",h:"Extra dias úteis",f:r=>dur(r.extra)},{k:"weWork",h:"Fim de semana",f:r=>r.weWork?`<span class="tag t-wk">${dur(r.weWork)}</span>`:"–"},
+    {k:"dp",h:"Disponível",v:r=>r.disp/r.logged,f:r=>pct(r.disp,r.logged)},{k:"saldo",h:"Saldo",f:r=>`<span style="color:var(${r.saldo>=0?"--ok":"--late"})">${sdur(r.saldo)}</span>`}],rows,null,{k:"w",d:1});
+  // agente x semana
+  const ags=[...new Set(L.map(d=>d.ag))].sort();const supOf={};L.forEach(d=>supOf[d.ag]=d.sup);
+  let h=`<thead><tr><th>Agente</th><th class="l">Supervisor</th>${wks.map(w=>`<th>${dFmt(w)} a ${dFmt(addD(w,6))}</th>`).join("")}<th>Total</th></tr></thead><tbody>`;
+  ags.forEach(ag=>{let tot=0,ts=0;h+=`<tr><td><b>${esc(ag)}</b></td><td class="l">${esc(supOf[ag])}</td>${wks.map(w=>{const l=G[w].filter(d=>d.ag===ag);if(!l.length)return `<td class="muted">–</td>`;const a=agg(l);tot+=a.work;ts+=a.saldo;
+    return `<td><b>${dur(a.work)}</b>${a.lates?` <span style="color:var(--late)">(${a.lates})</span>`:""}<br><span style="font-size:12px;color:var(${a.saldo>=0?"--ok":"--late"})">${sdur(a.saldo)}</span>${a.we?` <span class="tag t-wk">fds</span>`:""}</td>`}).join("")}<td><b>${dur(tot)}</b><br><span style="font-size:12px;color:var(${ts>=0?"--ok":"--late"})">${sdur(ts)}</span></td></tr>`});
+  $("tWeekAg").innerHTML=h+"</tbody>";
+  // gráfico
+  const svg=$("wkChart");const H=260,Lm=46,R=46,T=20,B=34;const W=sizeSvg(svg,Math.max(560,wks.length*90),H);
+  const mx=Math.max(60,...rows.map(r=>r.work));const step=niceStep(mx,5);const top=Math.ceil(mx/step)*step;
+  const slot=(W-Lm-R)/rows.length,bw=Math.min(60,slot*.55),y=v=>H-B-v/top*(H-B-T),yp=p=>H-B-p/100*(H-B-T);
+  for(let v=0;v<=top;v+=step){el("line",{x1:Lm,x2:W-R,y1:y(v),y2:y(v),stroke:cv("--line")},svg);txt(svg,Lm-6,y(v)+4,(v/60)+"h",{"text-anchor":"end"})}
+  [0,50,100].forEach(p=>txt(svg,W-R+6,yp(p)+4,p+"%",{fill:cv("--ok")}));
+  const pts=[];
+  rows.forEach((r,i)=>{const cx=Lm+i*slot+(slot-bw)/2;const inn=r.work-r.extra-r.weWork;let acc=0;
+    [[inn,"--s-cot"],[r.extra,"--extra"],[r.weWork,"--wknd"]].forEach(([v,c],j)=>{if(v<=0)return;el("rect",{x:cx,y:y(acc+v),width:bw,height:y(acc)-y(acc+v),fill:cv(c),opacity:j===1?.55:1},svg);acc+=v});
+    txt(svg,cx+bw/2,H-B+16,r.lab,{"text-anchor":"middle","font-size":11});
+    const hit=el("rect",{x:Lm+i*slot,y:T,width:slot,height:H-B-T,fill:"transparent"},svg);hover(hit,`<b>Semana ${r.lab}</b><br>Trabalhado: ${dur(r.work)}<br>Pontualidade: ${r.pont==null?"–":Math.round(r.pont)+"%"}<br>Atrasos: ${r.lates}<br>Extra: ${dur(r.extra)}<br>Fim de semana: ${dur(r.weWork)}`);
+    if(r.pont!=null)pts.push([cx+bw/2,yp(r.pont)])});
+  if(pts.length){el("polyline",{points:pts.map(p=>p.join(",")).join(" "),fill:"none",stroke:cv("--ok"),"stroke-width":2.5},svg);pts.forEach(p=>el("circle",{cx:p[0],cy:p[1],r:4,fill:cv("--ok")},svg))}
+  legend("wkLeg",[["Dentro do expediente","var(--s-cot)"],["Extra dias úteis","color-mix(in srgb,var(--extra) 55%,transparent)"],["Fim de semana","var(--wknd)"],["Pontualidade (%)","var(--ok)"]]);
+}
+
+/* ================= DIA A DIA ================= */
+function renderDia(){
+  const L=filtered();const dates=[...new Set(L.map(d=>d.date))].sort();
+  if(!dates.length){$("daySel").innerHTML="";$("v-dia").querySelectorAll("section").forEach(s=>s.hidden=true);stats("dStats",[["–","Nenhum dia com os filtros atuais",""]]);return}
+  $("v-dia").querySelectorAll("section").forEach(s=>s.hidden=false);
+  if(!dates.includes(DAY))DAY=dates[dates.length-1];
+  $("daySel").innerHTML=dates.map(k=>`<option value="${k}" ${k===DAY?"selected":""}>${dFmt(k)} ${DOWL[dObj(k).getDay()]}</option>`).join("");
+  $("prevDay").disabled=dates.indexOf(DAY)===0;$("nextDay").disabled=dates.indexOf(DAY)===dates.length-1;
+  const D=L.filter(d=>d.date===DAY).sort((a,b)=>a.sup.localeCompare(b.sup)||a.ag.localeCompare(b.ag));
+  const wk=D[0].wk;
+  $("dayInfo").textContent=dLong(DAY)+(wk?" (fim de semana)":"");
+  const A=agg(D);
+  stats("dStats",wk?[
+    [dur(A.work),"Total trabalhado",`${D.length} agentes no fim de semana`],[pct(A.disp,A.logged),"Tempo disponível",dur(A.disp)],
+    [hm(Math.min(...D.map(d=>d.inp)))+" / "+hm(Math.max(...D.map(d=>d.out))),"Primeira entrada e última saída",""],[dur(A.work/D.length),"Média por agente",""]
+  ]:[
+    [dur(A.work),"Total trabalhado",`média de ${dur(A.work/D.length)} por agente`],[pct(A.disp,A.logged),"Tempo disponível",dur(A.disp)],
+    [`${A.lates} de ${D.length}`,"Chegaram atrasados",`tolerância de ${CFG.TOL} min`],[`${D.filter(d=>d.wAfter>0).length} de ${D.length}`,"Trabalharam após "+hm(CFG.S1),dur(sum(D,d=>d.wAfter))+" somados"],
+    [Math.round(A.adh)+"%","Aderência ao expediente",""],[hm(Math.min(...D.map(d=>d.inp)))+" / "+hm(Math.max(...D.map(d=>d.out))),"Primeira entrada e última saída",""]
+  ]);
+  renderGantt(D,wk);
+  const cD=[{k:"ag",h:"Agente",l:1,f:r=>`<b>${esc(r.ag)}</b>`},{k:"sup",h:"Supervisor",l:1},{k:"inp",h:"Entrada",f:r=>hm(r.inp)},
+    {k:"late",h:"Atraso",f:r=>r.wk?`<span class="tag t-wk">fds</span>`:tagLate(r.late)},{k:"out",h:"Saída",f:r=>hm(r.out)+(r.noLogout?' <span class="muted" title="sem logout">*</span>':"")},
+    {k:"wAfter",h:"Após "+hm(CFG.S1),f:r=>r.wk?"–":r.wAfter>0?`<span class="tag t-extra">${dur(r.wAfter)}</span>`:r.early?`<span class="tag t-late">saiu ${dur(r.early)} antes</span>`:"–"},
+    {k:"logged",h:"Logado",f:r=>dur(r.logged)},{k:"pausa",h:"Pausas",f:r=>dur(r.pausa)},{k:"work",h:"Trabalhado",f:r=>`<b>${dur(r.work)}</b>`},{k:"disp",h:"Disponível",f:r=>dur(r.disp)},
+    {k:"saldo",h:"Saldo",v:r=>r.work-(r.wk?0:CFG.META),f:r=>{const s=r.work-(r.wk?0:CFG.META);return `<span style="color:var(${s>=0?"--ok":"--late"})">${sdur(s)}</span>`}},
+    {k:"off",h:"Fora do sistema no expediente",v:r=>r.wk?0:(CFG.S1-CFG.S0)-r.loggedIn,f:r=>r.wk?"–":dur((CFG.S1-CFG.S0)-r.loggedIn)},{k:"adh",h:"Aderência",v:r=>r.wIn,f:r=>r.wk?"–":pbar(r.wIn/CFG.META*100)}];
+  table("tDay",cD,D,{ag:"Equipe",logged:dur(A.logged),pausa:dur(sum(D,d=>d.pausa)),work:dur(A.work),disp:dur(A.disp)},{k:"inp",d:1});
+  renderStack("stackD",D.map(d=>({name:d.ag,by:d.by,logged:d.logged})),MODED);
+  $("tStatusD").innerHTML=`<thead><tr><th>Agente</th>${ORDER.filter(k=>D.some(d=>d.by[k])).map(k=>`<th><span class="sw" style="background:${stC(k)}"></span>${esc(k)}</th>`).join("")}<th>Trocas</th><th>Maior bloco contínuo</th></tr></thead><tbody>${D.map(d=>`<tr><td><b>${esc(d.ag)}</b></td>${ORDER.filter(k=>D.some(x=>x.by[k])).map(k=>`<td>${d.by[k]?dur(d.by[k]):"–"}</td>`).join("")}<td>${d.changes}</td><td>${dur(d.longest.e-d.longest.s)} <span class="muted">${esc(d.longest.r)}</span></td></tr>`).join("")}</tbody>`;
+  renderCover(D,wk);renderAlerts(D);
+  const cur=$("logSel").value;$("logSel").innerHTML=D.map(d=>`<option ${d.ag===cur?"selected":""}>${esc(d.ag)}</option>`).join("");renderLog();
+}
+function renderGantt(D,wk){
+  const svg=$("gantt");const{S0,S1,TOL}=CFG;
+  const t0=Math.min(wk?1440:S0-60,Math.floor(Math.min(...D.map(d=>d.inp))/60)*60),t1=Math.max(wk?0:S1+60,Math.ceil(Math.max(...D.map(d=>d.out))/60)*60);
+  const Lm=160,R=24,T=30,RH=40,H=T+D.length*RH+10;const W=sizeSvg(svg,840,H);
+  const x=m=>Lm+(m-t0)/(t1-t0||1)*(W-Lm-R);
+  if(!wk)el("rect",{x:x(Math.max(S0,t0)),y:T-6,width:x(Math.min(S1,t1))-x(Math.max(S0,t0)),height:D.length*RH+4,fill:cv("--shift"),rx:6},svg);
+  else el("rect",{x:Lm,y:T-6,width:W-Lm-R,height:D.length*RH+4,fill:cv("--wk"),rx:6},svg);
+  const st=(t1-t0)>840?120:60;
+  for(let h=t0;h<=t1;h+=st){el("line",{x1:x(h),x2:x(h),y1:T-6,y2:H-6,stroke:cv("--line")},svg);txt(svg,x(h),16,hm(h),{"text-anchor":"middle",fill:(!wk&&(h===S0||h===S1))?cv("--ink"):cv("--ink3"),"font-weight":(!wk&&(h===S0||h===S1))?700:400})}
+  let lastSup=null;
+  D.forEach((a,i)=>{const y=T+i*RH,bh=20,by=y+(RH-bh)/2-2;
+    txt(svg,0,by+14,short(a.ag),{"font-size":14,fill:cv("--ink"),"font-weight":600});
+    if(new Set(D.map(d=>d.sup)).size>1&&a.sup!==lastSup){if(i>0)el("line",{x1:0,x2:W,y1:y,y2:y,stroke:cv("--ink3"),"stroke-dasharray":"2 3"},svg);txt(svg,0,by+27,a.sup,{"font-size":10,fill:cv("--ink3")})}lastSup=a.sup;
+    if(!wk&&a.late>0){const r=el("rect",{x:x(S0),y:by+bh/2-2,width:x(a.inp)-x(S0),height:4,fill:cv(a.late>TOL?"--late":"--warn"),rx:2},svg);hover(r,`<b>${esc(a.ag)}</b><br>Entrada ${hm(a.inp)}: atraso de ${dur(a.late)}`)}
+    a.gaps.forEach(g=>{const r=el("rect",{x:x(g.a),y:by+bh/2-1,width:Math.max(1,x(g.b)-x(g.a)),height:2,fill:cv("--ink3")},svg);hover(r,`<b>${esc(a.ag)}</b><br>Deslogado de ${hm(g.a)} a ${hm(g.b)} (${dur(g.b-g.a)})`)});
+    a.segs.forEach(s=>{if(s.e-s.s<=0)return;const r=el("rect",{x:x(s.s),y:by,width:Math.max(1,x(s.e)-x(s.s)),height:bh,fill:col(stC(s.r))},svg);hover(r,`<b>${esc(a.ag)}</b><br>${esc(s.r)}<br>${hm(s.s)} a ${hm(s.e)} (${dur(s.e-s.s)})`)});
+    if(!wk&&a.out>S1){const ses=a.sess.find(([p,q])=>q>S1);const s0=Math.max(S1,ses?ses[0]:S1);el("rect",{x:x(s0),y:by-3,width:x(a.out)-x(s0),height:bh+6,fill:"none",stroke:cv("--extra"),"stroke-width":2,rx:4},svg)}
+    const lab=txt(svg,x(a.out)+6,by+14,hm(a.out)+(a.noLogout?" sem logout":""),{fill:cv("--ink2")});
+    if(x(a.out)+90>W){lab.setAttribute("x",x(a.out)-6);lab.setAttribute("text-anchor","end");lab.setAttribute("y",by-5)}
   });
-  return Object.values(m);
+  if(!wk)[S0,S1].forEach(m=>{if(m>=t0&&m<=t1)el("line",{x1:x(m),x2:x(m),y1:T-6,y2:H-6,stroke:cv("--ink"),"stroke-width":1.5,"stroke-dasharray":"4 3"},svg)});
+  legend("legGantt",[...ORDER.filter(k=>D.some(d=>d.by[k])).map(k=>[k,stC(k)]),["Atraso","var(--late)"],["Deslogado","var(--ink3)"]]);
 }
-function aggAvByAgent(rows){
-  const m={};
-  rows.forEach(r=>{
-    if(!m[r.POWER_BI])m[r.POWER_BI]={name:r.POWER_BI,sup:r.SUPERVISOR,totalH:0,days:0,_dates:new Set()};
-    if(r.date_str){
-      m[r.POWER_BI].totalH+=r.avail_hours;
-      m[r.POWER_BI]._dates.add(r.date_str);
-    }
+function stateAt(a,m){const s=a.segs.find(s=>m>=s.s&&m<s.e);if(!s)return"off";const k=REG[s.r]?.kind;return k==="disp"?"disp":k==="pausa"?"pausa":"ativ"}
+function renderCover(D,wk){
+  const svg=$("cover");const{S0,S1}=CFG;
+  const t0=Math.min(wk?1440:S0-60,Math.floor(Math.min(...D.map(d=>d.inp))/60)*60),t1=Math.max(wk?0:S1,Math.ceil(Math.max(...D.map(d=>d.out))/60)*60),st=15;
+  const Lm=34,R=10,T=10,H=230,B=26;const W=sizeSvg(svg,820,H);const n=D.length;
+  const x=m=>Lm+(m-t0)/(t1-t0||1)*(W-Lm-R),y=v=>H-B-v/n*(H-B-T);
+  if(!wk)el("rect",{x:x(S0),y:T,width:x(S1)-x(S0),height:H-B-T,fill:cv("--shift")},svg);
+  const vs=n>10?Math.ceil(n/5):1;for(let v=0;v<=n;v+=vs){el("line",{x1:Lm,x2:W-R,y1:y(v),y2:y(v),stroke:cv("--line")},svg);txt(svg,Lm-8,y(v)+4,v,{"text-anchor":"end","font-size":11})}
+  for(let h=t0;h<=t1;h+=60)txt(svg,x(h),H-8,hm(h),{"text-anchor":"middle","font-size":11});
+  const cats=[["disp","--s-disp"],["ativ","--s-cot"],["pausa","--s-alm"]];const slots=[];
+  for(let m=t0;m<t1;m+=st){const c={disp:0,ativ:0,pausa:0,off:0,nm:{disp:[],ativ:[],pausa:[],off:[]}};D.forEach(a=>{const s=stateAt(a,m+st/2);c[s]++;c.nm[s].push(short(a.ag))});slots.push([m,c])}
+  const bw=(x(t0+st)-x(t0))-1;
+  slots.forEach(([m,c])=>{let acc=0;cats.forEach(([k,cl])=>{if(!c[k])return;el("rect",{x:x(m)+.5,y:y(acc+c[k]),width:bw,height:y(acc)-y(acc+c[k]),fill:cv(cl)},svg);acc+=c[k]});
+    const hit=el("rect",{x:x(m),y:T,width:bw+1,height:H-B-T,fill:"transparent"},svg);
+    hover(hit,`<b>${hm(m)} a ${hm(m+st)}</b><br>Disponível: ${c.disp}${c.disp&&c.disp<=6?" ("+c.nm.disp.join(", ")+")":""}<br>Em atendimento: ${c.ativ}<br>Em pausa: ${c.pausa}${c.pausa&&c.pausa<=6?" ("+c.nm.pausa.join(", ")+")":""}<br>Fora: ${c.off}`)});
+  if(!wk)[S0,S1].forEach(m=>el("line",{x1:x(m),x2:x(m),y1:T,y2:H-B,stroke:cv("--ink"),"stroke-width":1.5,"stroke-dasharray":"4 3"},svg));
+  legend("legCover",[["Disponível","var(--s-disp)"],["Em atendimento","var(--s-cot)"],["Em pausa","var(--s-alm)"]]);
+  const inS=wk?slots:slots.filter(([m])=>m>=S0&&m<S1);
+  if(!inS.length){$("coverNotes").textContent="";return}
+  const minOn=Math.min(...inS.map(([m,c])=>c.disp+c.ativ)),maxP=Math.max(...inS.map(([m,c])=>c.pausa));
+  const first=arr=>arr.length?arr[0]:"–";
+  const full=inS.filter(([m,c])=>c.disp+c.ativ===n).length*st;
+  $("coverNotes").innerHTML=`${wk?"No dia":"Durante o expediente"}, a equipe esteve completa e em atividade por <b>${dur(full)}</b>. Menor cobertura: <b>${minOn} de ${n}</b> agentes ativos (a partir de ${first(inS.filter(([m,c])=>c.disp+c.ativ===minOn).map(([m])=>hm(m)))}). Pico de pausas simultâneas: <b>${maxP}</b> (a partir de ${first(inS.filter(([m,c])=>c.pausa===maxP).map(([m])=>hm(m)))}).`;
+}
+function renderAlerts(D){
+  const{S0,S1,TOL}=CFG;const al=[];
+  D.forEach(a=>{
+    if(a.wk)al.push(["--wknd",`${a.ag} trabalhou ${dur(a.work)} no fim de semana`,`De ${hm(a.inp)} a ${hm(a.out)}.`,a.work]);
+    if(isLate(a))al.push(["--late",`${a.ag} chegou com ${dur(a.late)} de atraso`,`Primeiro registro às ${hm(a.inp)}.`,a.late]);
+    if(a.early>0)al.push(["--late",`${a.ag} saiu ${dur(a.early)} antes do fim do expediente`,`Último logout às ${hm(a.out)}.`,a.early]);
+    a.gaps.forEach(g=>{if(g.inShift>=10){const lunchy=!a.lunch&&g.a>=600&&g.a<=900;al.push(["--warn",`${a.ag} ficou deslogado ${dur(g.b-g.a)} no expediente`,`De ${hm(g.a)} a ${hm(g.b)}${lunchy?", provavelmente almoço sem o status de almoço":""}.`,g.inShift])}});
+    if(a.lunch&&a.lunch.d-60>TOL)al.push(["--warn",`${a.ag} fez almoço de ${dur(a.lunch.d)}`,`Começou às ${hm(a.lunch.s)}, ${dur(a.lunch.d-60)} acima de 1h.`,a.lunch.d-60]);
+    if(a.lunch&&!a.wk&&a.lunch.s>=870)al.push(["--warn",`${a.ag} almoçou tarde`,`Almoço iniciado às ${hm(a.lunch.s)}.`,5]);
+    if(!a.wk&&a.wAfter>=5)al.push(["--extra",`${a.ag} trabalhou ${dur(a.wAfter)} após ${hm(S1)}`,`Saída final às ${hm(a.out)}${a.gaps.some(g=>g.a>=S1)?", com nova sessão depois de já ter feito logout":""}.`,a.wAfter]);
+    a.segs.filter(s=>s.e-s.s>=180&&(a.wk||ov(s.s,s.e,S1,1440)>=120)).forEach(s=>al.push(["--late",`${a.ag} ficou ${dur(s.e-s.s)} seguidos em ${s.r}${a.wk?"":" após o expediente"}`,`De ${hm(s.s)} a ${hm(s.e)} sem trocar de status. Vale confirmar se houve esquecimento de logout.`,s.e-s.s]));
+    if(a.noLogout)al.push(["--late",`${a.ag} não registrou logout`,`O último registro foi ${a.segs[a.segs.length-1].r} às ${hm(a.out)}; o tempo depois disso não foi contado.`,100]);
   });
-  return Object.values(m).map(a=>({
-    name:a.name,sup:a.sup,totalH:a.totalH,
-    days:a._dates.size,
-    avgH:a._dates.size>0?a.totalH/a._dates.size:0
-  }));
+  const ord={"--late":0,"--warn":1,"--wknd":2,"--extra":3};al.sort((p,q)=>ord[p[0]]-ord[q[0]]||q[3]-p[3]);
+  $("alerts").innerHTML=al.map(([c,t,d])=>`<li><span class="dot" style="background:var(${c})"></span><div><strong>${esc(t)}</strong><p>${esc(d)}</p></div></li>`).join("")||'<li><span class="dot" style="background:var(--ok)"></span><div><strong>Nenhuma ocorrência</strong><p>Todos dentro do horário.</p></div></li>';
 }
-function availStatus(v){
-  if(v>=6)return{label:'Ideal',    color:'#10B981',bg:'#D1FAE5'};
-  if(v>=4)return{label:'Aceitável',color:'#F59E0B',bg:'#FEF3C7'};
-  return        {label:'Crítico',  color:'#EF4444',bg:'#FEE2E2'};
-}
-function agStatus(p){
-  if(p>=80)return{label:'Bom',     color:'#10B981',bg:'#D1FAE5'};
-  if(p>=51)return{label:'Atenção', color:'#F59E0B',bg:'#FEF3C7'};
-  return         {label:'Crítico', color:'#EF4444',bg:'#FEE2E2'};
-}
-function supBadge(sup){
-  const sc=SUP_C[sup]||{bg:'#EEE',tc:'#666'};
-  return `<span class="eq-badge" style="background:${sc.bg};color:${sc.tc}">${sup}</span>`;
+function renderLog(){
+  const D=filtered().filter(d=>d.date===DAY);const a=D.find(d=>d.ag===$("logSel").value)||D[0];if(!a){$("tLog").innerHTML="";return}
+  const{S0,S1}=CFG;
+  $("tLog").innerHTML=`<thead><tr><th>Horário</th><th class="l">Status</th><th>Duração</th><th>Período</th></tr></thead><tbody>${a.ev.map(([m,r],i)=>{const nx=a.ev[i+1]?a.ev[i+1][0]:null;const end=isEnd(r);const d=(!end&&nx!=null)?nx-m:null;
+    const per=a.wk?"fim de semana":m<S0?"antes do expediente":m>=S1?"após o expediente":"expediente";
+    return `<tr><td>${hm(m)}</td><td class="l">${REG[r]?`<span class="sw" style="background:${stC(r)}"></span>`:""}${esc(r)}</td><td>${d==null?(end?"–":'<span class="muted">sem logout</span>'):d<1?"menos de 1min":dur(d)}</td><td><span class="tag ${per==="expediente"?"t-ok":per==="fim de semana"?"t-wk":per.startsWith("após")?"t-extra":"t-warn"}">${per}</span></td></tr>`}).join("")}</tbody>`;
 }
 
-// ── WEEK HELPER ───────────────────────────────────────────────────────────────
-function getWeekDates(dateStr){
-  const d=new Date(dateStr+'T12:00:00');
-  const day=d.getDay(); // 0=Sun
-  const mon=new Date(d); mon.setDate(d.getDate()-(day===0?6:day-1));
-  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
-  const fmt2=dt=>dt.toISOString().slice(0,10);
-  return {from:fmt2(mon),to:fmt2(sun)};
-}
-
-function filterRows(raw, t){
-  const dm=state.dateMode[t], sd=state.selDate[t], sd2=state.selDate2[t];
-  const rfrom=state.selRangeFrom[t], rto=state.selRangeTo[t];
-  const sup=state.selSup[t];
-  const ym=state.selMonth[t]; // 'YYYY-MM' or 'all'
-  return raw.filter(r=>{
-    // remove equipes zeradas
-    if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
-    if(sup!=='Todos'&&r.SUPERVISOR!==sup)return false;
-    // filtro de mês
-    if(ym && ym!=='all' && !r.date_str.startsWith(ym)) return false;
-    if(dm==='acum') return true;
-    if(dm==='dia')  return r.date_str===sd;
-    if(dm==='2dias') return r.date_str===sd||r.date_str===sd2;
-    if(dm==='sem'){
-      const w=getWeekDates(sd);
-      return r.date_str>=w.from&&r.date_str<=w.to;
-    }
-    if(dm==='range') return r.date_str>=rfrom&&r.date_str<=rto;
-    return true;
-  });
-}
-function filterPR(t){ return filterRows(RAW_BY_DAY, t); }
-function filterAv(t){ return filterRows(RAW_AVAIL, t); }
-
-function periodLabel(){
-  const t=currentTab, dm=state.dateMode[t];
-  const ym=state.selMonth[t];
-  const mLabel=(ym&&ym!=='all')?` [${monthLabel(ym)}]`:'';
-  if(dm==='acum') return 'Acumulado'+mLabel;
-  if(dm==='dia'){
-    const d=new Date(state.selDate[t]+'T12:00:00');
-    return d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+/* ================= FIM DE SEMANA ================= */
+function renderFds(){
+  const all=filtered({ignoreDays:true});const W=all.filter(d=>d.wk),U=all.filter(d=>!d.wk);
+  let nW=0;if(F.from&&F.to)for(let k=F.from;k<=F.to;k=addD(k,1))if(dObj(k).getDay()===6||dObj(k).getDay()===0)nW++;
+  const A=agg(W);
+  stats("wStats",[[nW+" dias","Sábados e domingos no período",""],[W.length?A.ags:0,"Agentes que trabalharam",""],[dur(A.work),"Horas no fim de semana",W.length?`média de ${dur(A.work/W.length)} por agente/dia`:""],
+    [W.length?pct(A.disp,A.logged):"–","Tempo disponível",""],[pct(A.work,agg(all).work),"Do total trabalhado no período",""]]);
+  if(!W.length){$("tFdsAg").innerHTML=`<tbody><tr><td class="empty">Nenhum registro em sábado ou domingo no período selecionado.</td></tr></tbody>`;$("tFds").innerHTML="";}
+  else{
+    const G=groupBy(W,d=>d.ag);
+    table("tFdsAg",[{k:"ag",h:"Agente",l:1,f:r=>`<b>${esc(r.ag)}</b>`},{k:"sup",h:"Supervisor",l:1},{k:"sab",h:"Sábados"},{k:"dom",h:"Domingos"},{k:"work",h:"Trabalhado",f:r=>`<span class="tag t-wk">${dur(r.work)}</span>`},{k:"avg",h:"Média por dia",v:r=>r.work/r.n,f:r=>dur(r.work/r.n)},{k:"inAvg",h:"Entrada média",f:r=>hm(r.inAvg)},{k:"outAvg",h:"Saída média",f:r=>hm(r.outAvg)},{k:"dp",h:"Disponível",v:r=>r.disp/r.logged,f:r=>pct(r.disp,r.logged)}],
+      Object.entries(G).map(([ag,l])=>({ag,sup:l[0].sup,n:l.length,sab:l.filter(d=>d.dow===6).length,dom:l.filter(d=>d.dow===0).length,work:sum(l,d=>d.work),inAvg:avg(l,d=>d.inp),outAvg:avg(l,d=>d.out),disp:sum(l,d=>d.disp),logged:sum(l,d=>d.logged)})),null,{k:"work",d:-1});
+    table("tFds",[{k:"date",h:"Data",l:1,f:r=>`<a href="#" data-day="${r.date}" style="color:var(--extra)">${dFmt(r.date)} ${DOWL[r.dow]}</a>`},{k:"ag",h:"Agente",l:1},{k:"sup",h:"Supervisor",l:1},{k:"inp",h:"Entrada",f:r=>hm(r.inp)},{k:"out",h:"Saída",f:r=>hm(r.out)+(r.noLogout?" *":"")},{k:"work",h:"Trabalhado",f:r=>dur(r.work)},{k:"disp",h:"Disponível",f:r=>dur(r.disp)},{k:"pausa",h:"Pausas",f:r=>dur(r.pausa)}],W,null,{k:"date",d:1});
+    $("tFds").querySelectorAll("a[data-day]").forEach(a=>a.onclick=e=>{e.preventDefault();DAY=a.dataset.day;F.days="all";syncDays();setTab("dia")});
   }
-  if(dm==='2dias'){
-    const d1=new Date(state.selDate[t]+'T12:00:00');
-    const d2=new Date(state.selDate2[t]+'T12:00:00');
-    return d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
-      +' vs '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-  }
-  if(dm==='sem'){
-    const w=getWeekDates(state.selDate[t]);
-    const d1=new Date(w.from+'T12:00:00'), d2=new Date(w.to+'T12:00:00');
-    return 'Semana: '+d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
-      +' a '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-  }
-  if(dm==='range'){
-    const d1=new Date(state.selRangeFrom[t]+'T12:00:00');
-    const d2=new Date(state.selRangeTo[t]+'T12:00:00');
-    return d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
-      +' a '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-  }
-  return '';
+  const cmp=(l,lab)=>{const a=agg(l);return {lab,n:l.length,work:l.length?a.work/l.length:null,inp:avg(l,d=>d.inp),out:avg(l,d=>d.out),dp:l.length?a.disp/a.logged*100:null,pausa:avg(l,d=>d.pausa),ch:avg(l,d=>d.changes)}};
+  const rows=[cmp(U,"Dias úteis"),cmp(W,"Fim de semana")];
+  $("tFdsCmp").innerHTML=`<thead><tr><th>Tipo de dia</th><th>Agente/dias</th><th>Média trabalhada</th><th>Entrada média</th><th>Saída média</th><th>Disponível</th><th>Pausa média</th><th>Trocas de status por dia</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r.lab}</b></td><td>${r.n}</td><td>${dur(r.work)}</td><td>${hm(r.inp)}</td><td>${hm(r.out)}</td><td>${r.dp==null?"–":Math.round(r.dp)+"%"}</td><td>${dur(r.pausa)}</td><td>${r.ch==null?"–":r.ch.toFixed(1).replace(".",",")}</td></tr>`).join("")}</tbody>`;
 }
 
-// ── RENDER EQUIPE BUTTONS ─────────────────────────────────────────────────────
-function renderEquipeBtns(t){
-  const container=document.getElementById(`equipe-btns-${t}`);
-  const cur=state.selSup[t];
-  // Filtra equipes que têm dados reais (ao menos 1 registro)
-  const rawData=t===0?RAW_BY_DAY:RAW_AVAIL;
-  // Filtra pelo período/mês ativos — não mostra equipes sem dados no filtro atual
-  const filteredForBtns=t===0?filterPR(t).filter(r=>r.total_leads>0||r.ate1||r.ate2||r.gt2||r.sem_resp):filterAv(t).filter(r=>r.date_str);
-  const supsComDados=new Set(filteredForBtns.map(r=>r.SUPERVISOR));
-  const sups=['Todos',...ALL_SUPS.filter(s=>!EQUIPES_OCULTAS.includes(s)&&supsComDados.has(s))];
-  // Se equipe selecionada sumiu, volta para Todos
-  if(cur!=='Todos'&&!sups.includes(cur)){
-    state.selSup[t]='Todos';
-  }
-  container.innerHTML=sups.map(s=>{
-    const sc=s==='Todos'?{bg:'#E2E8F0',tc:'#1A2332'}:(SUP_C[s]||{bg:'#EEE',tc:'#666'});
-    const isActive=state.selSup[t]===s;
-    return `<button class="equipe-btn${isActive?' active':''}"
-      style="background:${sc.bg};color:${sc.tc};border-color:${isActive?sc.tc:'transparent'}"
-      onclick="selectEquipe('${s}',${t})">${s==='Todos'?'Todas as Equipes':s}</button>`;
-  }).join('');
-}
-
-function selectEquipe(sup,t){
-  state.selSup[t]=sup;
-  agPage=0;avPage=0;
-  render();
-}
-
-// ── MAIN SWITCHES ─────────────────────────────────────────────────────────────
-function switchTab(i){
-  currentTab=i;
-  document.querySelectorAll('.tab-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
-  document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('active',j===i));
-  render();
-}
-
-function setPeriod(mode,t){
-  state.dateMode[t]=mode;
-  compSortSlice=-1; // reset sort comparativo ao mudar período
-  const modes=['acum','dia','sem','2dias','range'];
-  modes.forEach(m=>{
-    const el=document.getElementById(`btn-${m}-${t}`);
-    if(el) el.classList.toggle('active',m===mode);
-  });
-  // show/hide date pickers
-  document.getElementById(`date-wrap-${t}`).style.display=
-    (mode==='dia'||mode==='sem')?'':'none';
-  document.getElementById(`date2-wrap-${t}`).style.display=
-    mode==='2dias'?'':'none';
-  // For 2dias: auto-seleciona os 2 últimos dias úteis (excluindo hoje)
-  if(mode==='2dias'){
-    document.getElementById(`date-wrap-${t}`).style.display='';
-    const allDates=(t===0?ALL_DATES:(ALL_AVAIL_DATES||ALL_DATES)).filter(Boolean);
-    const todayStr=new Date().toISOString().slice(0,10);
-    const workdays=allDates.filter(d=>{
-      if(d>=todayStr) return false;
-      const wd=new Date(d+'T12:00:00').getDay();
-      return wd>=1&&wd<=5;
-    }).sort();
-    const last2=workdays.slice(-2);
-    if(last2.length>=1){
-      const sd1=document.getElementById(`sel-date-${t}`);
-      const sd2=document.getElementById(`sel-date2-${t}`);
-      if(sd1) sd1.value=last2[0]||'';
-      if(sd2) sd2.value=last2[1]||last2[0]||'';
-      state.selDate[t]=last2[0]||'';
-      state.selDate2[t]=last2[1]||last2[0]||'';
-    }
-  }
-  const rangeShow=mode==='range';
-  document.getElementById(`range-wrap-${t}`).style.display=rangeShow?'':'none';
-  document.getElementById(`range-wrap2-${t}`).style.display=rangeShow?'':'none';
-  render();
-}
-
-// ── POPULATE DATE SELECTS ─────────────────────────────────────────────────────
-function buildDateSelect(el, dates, selected){
-  if (!el) return;
-  el.innerHTML='';
-  [...dates].slice().reverse().forEach(d=>{
-    const o=document.createElement('option');
-    o.value=d;
-    const dt=new Date(d+'T12:00:00');
-    o.textContent=dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit',year:'2-digit'});
-    if(d===selected)o.selected=true;
-    el.appendChild(o);
-  });
-}
-
-// ── MONTH HELPERS ─────────────────────────────────────────────────────────────
-const MONTH_NAMES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-
-function buildMonthIndex(dates){
-  const idx={};
-  dates.forEach(d=>{
-    const ym=d.slice(0,7);
-    if(!idx[ym])idx[ym]=[];
-    idx[ym].push(d);
-  });
-  return idx;
-}
-
-function monthLabel(ym){
-  if(!ym||ym==='all')return'Todos os meses';
-  const parts=ym.split('-');
-  if(parts.length<2)return ym;
-  const [y,m]=parts;
-  return MONTH_NAMES[+m-1]+'/'+y.slice(2);
-}
-
-function buildMonthSelect(el, monthIdx, selectedYM){
-  if(!el)return;
-  el.innerHTML='';
-  // option "Todos os meses"
-  const all=document.createElement('option');
-  all.value='all'; all.textContent='Todos os meses';
-  if(selectedYM==='all')all.selected=true;
-  el.appendChild(all);
-  Object.keys(monthIdx).sort().forEach(ym=>{
-    const o=document.createElement('option');
-    o.value=ym;
-    o.textContent=monthLabel(ym);
-    if(ym===selectedYM)o.selected=true;
-    el.appendChild(o);
-  });
-}
-
-function getDatesForMonth(t){
-  const monthIdx = t===0 ? MONTHS_PR : MONTHS_AV;
-  const ym = state.selMonth[t];
-  if(!ym || ym==='all'){
-    // all dates across all months
-    return Object.values(monthIdx).flat().slice().sort();
-  }
-  return (monthIdx[ym]||[]).slice().sort();
-}
-
-function onMonthChange(t){
-  const el=document.getElementById(`sel-month-${t}`);
-  state.selMonth[t]=el.value;
-  const dates=getDatesForMonth(t);
-  const lastDate  = dates.length>0?dates[dates.length-1]:'';
-  const prevDate  = dates.length>1?dates[dates.length-2]:lastDate;
-  const firstDate = dates.length>0?dates[0]:'';
-  state.selDate[t]      = lastDate;
-  state.selDate2[t]     = prevDate;
-  state.selRangeFrom[t] = firstDate;
-  state.selRangeTo[t]   = lastDate;
-  buildDateSelect(document.getElementById(`sel-date-${t}`),       dates, lastDate);
-  buildDateSelect(document.getElementById(`sel-date2-${t}`),      dates, prevDate);
-  buildDateSelect(document.getElementById(`sel-range-from-${t}`), dates, firstDate);
-  buildDateSelect(document.getElementById(`sel-range-to-${t}`),   dates, lastDate);
-  agPage=0; avPage=0;
-  render();
-}
-
-// ── INIT ─────────────────────────────────────────────────────────────────────
-function init(){
-  const prDates=[...new Set(
-    RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())).map(r=>r.date_str)
-  )].filter(Boolean).sort();
-  const avDates=[...new Set(
-    RAW_AVAIL.filter(r=>r.date_str&&r.date_str.match(/^\d{4}-\d{2}-\d{2}$/)&&!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())).map(r=>r.date_str)
-  )].filter(Boolean).sort();
-
-  MONTHS_PR=buildMonthIndex(prDates);
-  MONTHS_AV=buildMonthIndex(avDates);
-
-  for(let i=0;i<2;i++){
-    const monthIdx=i===0?MONTHS_PR:MONTHS_AV;
-    const yms=Object.keys(monthIdx).sort();
-    const lastYM=yms.length>0?yms[yms.length-1]:'all';
-    state.selMonth[i]=lastYM;
-
-    buildMonthSelect(document.getElementById(`sel-month-${i}`),monthIdx,lastYM);
-
-    const dates=getDatesForMonth(i);
-    const lastDate  = dates.length>0?dates[dates.length-1]:'';
-    const prevDate  = dates.length>1?dates[dates.length-2]:lastDate;
-    const firstDate = dates.length>0?dates[0]:'';
-    state.selDate[i]      = lastDate;
-    state.selDate2[i]     = prevDate;
-    state.selRangeFrom[i] = firstDate;
-    state.selRangeTo[i]   = lastDate;
-
-    buildDateSelect(document.getElementById(`sel-date-${i}`),       dates, lastDate);
-    buildDateSelect(document.getElementById(`sel-date2-${i}`),      dates, prevDate);
-    buildDateSelect(document.getElementById(`sel-range-from-${i}`), dates, firstDate);
-    buildDateSelect(document.getElementById(`sel-range-to-${i}`),   dates, lastDate);
-  }
-  render();
-}
-
-// ── RENDER ─────────────────────────────────────────────────────────────────────
+/* ================= controle ================= */
+function setTab(t){TAB=t;document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t===t));["geral","semana","dia","fds"].forEach(k=>$("v-"+k).hidden=k!==t);render();if(t==="dia")$("v-dia").scrollIntoView({block:"start"})}
+function syncDays(){document.querySelectorAll("#fDays button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===F.days))}
 function render(){
-  const t=currentTab;
-  const dm=state.dateMode[t];
-
-  // sync month select → state
-  const mEl=document.getElementById(`sel-month-${t}`);
-  if(mEl) state.selMonth[t]=mEl.value;
-
-  // sync date selects → state
-  const dEl=document.getElementById(`sel-date-${t}`);
-  if(dEl&&(dm==='dia'||dm==='sem'||dm==='2dias'))state.selDate[t]=dEl.value||'';
-  const d2El=document.getElementById(`sel-date2-${t}`);
-  if(d2El&&dm==='2dias')state.selDate2[t]=d2El.value||'';
-  const rfEl=document.getElementById(`sel-range-from-${t}`);
-  if(rfEl&&dm==='range')state.selRangeFrom[t]=rfEl.value||'';
-  const rtEl=document.getElementById(`sel-range-to-${t}`);
-  if(rtEl&&dm==='range')state.selRangeTo[t]=rtEl.value||'';
-
-  // update header
-  document.getElementById('period-label').textContent=`${periodLabel()} · ${state.selSup[t]==='Todos'?'Todas as equipes':state.selSup[t]}`;
-
-  if(t===0) renderPR();
-  if(t===1) renderAvail();
+  tip.style.opacity=0;
+  if(!DAYS.length){$("sub").textContent="Nenhum dado carregado.";return}
+  const [mn,mx]=dataRange();
+  $("sub").textContent=`${new Set(DAYS.map(d=>d.ag)).size} agentes, ${new Set(DAYS.map(d=>d.sup)).size} supervisores, registros de ${dFmt(mn)} a ${dFmt(mx)}/${mx.slice(0,4)}. Expediente das ${hm(CFG.S0)} às ${hm(CFG.S1)}.`;
+  ({geral:renderGeral,semana:renderSemana,dia:renderDia,fds:renderFds})[TAB]();
 }
-
-// ── PRIMEIRA RESPOSTA ─────────────────────────────────────────────────────────
-let _agData=[];
-function renderPR(){
-  const prRows=filterPR(0);
-  const tots=aggTotals(prRows);
-  const agData=aggByAgent(prRows);
-  _agData=agData;
-
-  renderEquipeBtns(0);
-
-  const isTodos = state.selSup[0]==='Todos';
-  const compDiv = document.getElementById('pr-comparativo');
-  const kpiDiv  = document.getElementById('pr-kpis');
-
-  // rows filtered by period + month (no sup filter) — mesmos dados dos cards
-  const allRows = RAW_BY_DAY.filter(r=>{
-    if(EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())) return false;
-    const ym=state.selMonth[0];
-    if(ym&&ym!=='all'&&!r.date_str.startsWith(ym)) return false;
-    const dm=state.dateMode[0], sd=state.selDate[0], sd2=state.selDate2[0];
-    const rfrom=state.selRangeFrom[0], rto=state.selRangeTo[0];
-    if(dm==='dia')  return r.date_str===sd;
-    if(dm==='2dias')return r.date_str===sd||r.date_str===sd2;
-    if(dm==='sem'){const w=getWeekDates(sd);return r.date_str>=w.from&&r.date_str<=w.to;}
-    if(dm==='range')return r.date_str>=rfrom&&r.date_str<=rto;
-    return true;
-  });
-
-  // Header usa allRows (inclui todos os supervisores, respeita mês e período)
-  const tots0all=aggTotals(allRows);
-  document.getElementById('h-leads').textContent=fmt(tots0all.ate1+tots0all.ate2+tots0all.gt2);
-  document.getElementById('h-ate2').textContent=fmt(tots0all.ate1+tots0all.ate2);
-  document.getElementById('h-ate2-pct').textContent=pct(tots0all.ate1+tots0all.ate2,tots0all.ate1+tots0all.ate2+tots0all.gt2);
-  document.getElementById('h-gt2').textContent=fmt(tots0all.gt2);
-  document.getElementById('h-gt2-pct').textContent=pct(tots0all.gt2,tots0all.ate1+tots0all.ate2+tots0all.gt2);
-
-  if(isTodos){
-    compDiv.style.display='block';
-    kpiDiv.style.display='none';
-    const dm=state.dateMode[0];
-    const ym=state.selMonth[0];
-    // Só mostra equipes com dados reais no período/filtro ativo
-    const supsComDadosAtual=new Set(allRows.filter(r=>r.total_leads>0||r.ate1||r.ate2||r.gt2||r.sem_resp).map(r=>r.SUPERVISOR));
-    const visibleSups=ALL_SUPS.filter(s=>!EQUIPES_OCULTAS.includes(s)&&supsComDadosAtual.has(s));
-
-    if(dm==='sem'||dm==='2dias'||dm==='range'){
-      // ── TABELA COMPARATIVA — todas as equipes × fatias de tempo ──────────
-      // Monta as fatias (colunas)
-      let slicesCmp=[];
-      const todayStr=new Date().toISOString().slice(0,10);
-      const fmtD=d=>new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-
-      if(dm==='sem'){
-        const weekSet={};
-        RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())
-          &&r.total_leads>0&&(ym&&ym!=='all'?r.date_str.startsWith(ym):true))
-          .forEach(r=>{const w=getWeekDates(r.date_str);const k=w.from+'_'+w.to;if(!weekSet[k])weekSet[k]=w;});
-        slicesCmp=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1).map((w,i)=>({
-          label:`${fmtD(w.from)} – ${fmtD(w.to)}`,
-          tag: todayStr>=w.from&&todayStr<=w.to?'● Atual':`Sem ${i+1}`,
-          isCur: todayStr>=w.from&&todayStr<=w.to,
-          filter: r=>r.date_str>=w.from&&r.date_str<=w.to
-        }));
-      } else if(dm==='2dias'){
-        const sd=state.selDate[0], sd2=state.selDate2[0];
-        slicesCmp=[
-          {label:fmtD(sd), tag:'Dia 1', isCur:sd===todayStr, filter:r=>r.date_str===sd},
-          {label:fmtD(sd2),tag:'Dia 2', isCur:sd2===todayStr, filter:r=>r.date_str===sd2},
-        ];
-      } else { // range — divide por semanas dentro do range
-        const rfrom=state.selRangeFrom[0], rto=state.selRangeTo[0];
-        const weekSet={};
-        RAW_BY_DAY.filter(r=>r.date_str>=rfrom&&r.date_str<=rto&&r.total_leads>0
-          &&!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase()))
-          .forEach(r=>{const w=getWeekDates(r.date_str);const k=w.from+'_'+w.to;if(!weekSet[k])weekSet[k]=w;});
-        slicesCmp=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1).map((w,i)=>({
-          label:`${fmtD(w.from)} – ${fmtD(w.to)}`,
-          tag:`Sem ${i+1}`,
-          isCur:todayStr>=w.from&&todayStr<=w.to,
-          filter:r=>r.date_str>=w.from&&r.date_str<=w.to
-        }));
-      }
-
-      const modeLabel={'sem':'Semanal','2dias':'2 Dias','range':'Período'}[dm];
-      if(!slicesCmp.length){
-        compDiv.innerHTML=`<div class="card"><div class="card-title">Sem dados para o período</div></div>`;
-      } else {
-        compDiv.innerHTML=`<div class="card" style="overflow-x:auto;margin-bottom:16px">
-          <div class="card-title">📊 Comparativo ${modeLabel} — Todas as Equipes${ym&&ym!=='all'?' · '+monthLabel(ym):''}</div>
-          <table style="width:100%;border-collapse:collapse;min-width:${200+slicesCmp.length*160}px">
-            <thead><tr style="background:#F7F9FC">
-              <th style="text-align:left;padding:10px 12px;font-size:10px;color:#94A3B8;font-weight:700;letter-spacing:.7px;text-transform:uppercase;border-bottom:2px solid #E2E8F0;min-width:160px">Equipe</th>
-              ${slicesCmp.map(s=>`<th style="text-align:center;padding:10px 8px;border-bottom:2px solid #E2E8F0;border-left:1px solid #E2E8F0;min-width:155px;background:${s.isCur?'#F0FDF4':'#F7F9FC'}">
-                <div style="font-size:11px;font-weight:800;color:#1A2332">${s.label}</div>
-                <div style="font-size:9px;color:${s.isCur?'#10B981':'#94A3B8'};font-weight:600">${s.tag}</div>
-              </th>`).join('')}
-            </tr></thead>
-            <tbody>${visibleSups.map(sup=>{
-              const sc=SUP_C[sup]||{bg:'#EEE',tc:'#666'};
-              const baseRows=RAW_BY_DAY.filter(r=>r.SUPERVISOR===sup&&r.total_leads>0
-                &&(ym&&ym!=='all'?r.date_str.startsWith(ym):true));
-              const cells=slicesCmp.map((s,si)=>{
-                const rows=baseRows.filter(s.filter);
-                const t=aggTotals(rows);
-                const _lr=t.ate1+t.ate2+t.gt2;
-                const p2=_lr>0?((t.ate1+t.ate2)/_lr*100):0;
-                const st=_lr>0?agStatus(p2):null;
-                let delta=null;
-                if(si>0){const pr=aggTotals(baseRows.filter(slicesCmp[si-1].filter));const _plr=pr.ate1+pr.ate2+pr.gt2;if(_plr>0&&_lr>0)delta=p2-((pr.ate1+pr.ate2)/_plr*100);}
-                return `<td style="text-align:center;padding:10px 8px;border-bottom:1px solid #F0F4F8;border-left:1px solid #F0F4F8;background:${s.isCur?'#F0FDF4':''}">
-                  ${_lr>0?`
-                    <div style="font-size:20px;font-weight:900;color:${st.color}">${p2.toFixed(1)}%</div>
-                    <div style="font-size:10px;color:#94A3B8">${fmt(_lr)} leads</div>
-                    <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
-                    ${delta!==null?`<div style="font-size:10px;font-weight:700;color:${delta>=0?'#10B981':'#EF4444'};margin-top:3px">${delta>=0?'▲':'▼'}${Math.abs(delta).toFixed(1)}%</div>`:''}
-                  `:'<span style="color:#CBD5E0;font-size:12px">–</span>'}
-                </td>`;
-              }).join('');
-              return `<tr onmouseover="this.style.background='#F7FAFB'" onmouseout="this.style.background=''">
-                <td style="padding:10px 12px;border-bottom:1px solid #F0F4F8"><span class="eq-badge" style="background:${sc.bg};color:${sc.tc};font-size:11px;padding:4px 8px">${sup}</span></td>
-                ${cells}</tr>`;
-            }).join('')}</tbody>
-          </table>
-        </div>`;
-      }
-
-    } else if(dm==='acum' && (!ym || ym==='all')){
-      // ── COMPARATIVO MENSAL — todas as equipes × meses ──────────────────────
-      const monthSet=[...new Set(
-        RAW_BY_DAY.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())&&r.total_leads>0)
-          .map(r=>r.date_str.slice(0,7))
-      )].filter(Boolean).sort();
-
-      if(!monthSet.length){
-        compDiv.innerHTML=`<div class="card"><div class="card-title">Sem dados</div></div>`;
-      } else {
-        const curYM=new Date().toISOString().slice(0,7);
-        const monthSlices=monthSet.map(ym2=>({
-          label: monthLabel(ym2),
-          ym: ym2,
-          isCur: ym2===curYM,
-          filter: r=>r.date_str.startsWith(ym2)
-        }));
-        compDiv.innerHTML=`<div class="card" style="overflow-x:auto;margin-bottom:16px">
-          <div class="card-title">📅 Comparativo Mensal — Todas as Equipes</div>
-          <table style="width:100%;border-collapse:collapse;min-width:${200+monthSlices.length*155}px">
-            <thead><tr style="background:#F7F9FC">
-              <th style="text-align:left;padding:10px 12px;font-size:10px;color:#94A3B8;font-weight:700;letter-spacing:.7px;text-transform:uppercase;border-bottom:2px solid #E2E8F0;min-width:160px">Equipe</th>
-              ${monthSlices.map(s=>`
-                <th style="text-align:center;padding:10px 8px;border-bottom:2px solid #E2E8F0;border-left:1px solid #E2E8F0;min-width:145px;background:${s.isCur?'#F0FDF4':'#F7F9FC'}">
-                  <div style="font-size:12px;font-weight:800;color:#1A2332">${s.label}</div>
-                  ${s.isCur?'<div style="font-size:9px;color:#10B981;font-weight:600">● atual</div>':''}
-                </th>`).join('')}
-            </tr></thead>
-            <tbody>${visibleSups.map(sup=>{
-              const sc=SUP_C[sup]||{bg:'#EEE',tc:'#666'};
-              const baseRows=RAW_BY_DAY.filter(r=>r.SUPERVISOR===sup&&r.total_leads>0);
-              const cells=monthSlices.map((s,si)=>{
-                const rows=baseRows.filter(s.filter);
-                const t=aggTotals(rows);
-                const lr=t.ate1+t.ate2+t.gt2;
-                const p2=lr>0?((t.ate1+t.ate2)/lr*100):0;
-                const st=lr>0?agStatus(p2):null;
-                let delta=null;
-                if(si>0){
-                  const pr=aggTotals(baseRows.filter(monthSlices[si-1].filter));
-                  const plr=pr.ate1+pr.ate2+pr.gt2;
-                  if(plr>0&&lr>0) delta=p2-((pr.ate1+pr.ate2)/plr*100);
-                }
-                return `<td style="text-align:center;padding:10px 8px;border-bottom:1px solid #F0F4F8;border-left:1px solid #F0F4F8;background:${s.isCur?'#F0FDF4':''}">
-                  ${lr>0?`
-                    <div style="font-size:20px;font-weight:900;color:${st.color}">${p2.toFixed(1)}%</div>
-                    <div style="font-size:10px;color:#94A3B8">${fmt(lr)} leads</div>
-                    <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
-                    ${delta!==null?`<div style="font-size:10px;font-weight:700;color:${delta>=0?'#10B981':'#EF4444'};margin-top:3px">${delta>=0?'▲':'▼'}${Math.abs(delta).toFixed(1)}%</div>`:''}
-                  `:'<span style="color:#CBD5E0;font-size:12px">–</span>'}
-                </td>`;
-              }).join('');
-              return `<tr onmouseover="this.style.background='#F7FAFB'" onmouseout="this.style.background=''">
-                <td style="padding:10px 12px;border-bottom:1px solid #F0F4F8">
-                  <span class="eq-badge" style="background:${sc.bg};color:${sc.tc};font-size:11px;padding:4px 8px">${sup}</span>
-                </td>${cells}</tr>`;
-            }).join('')}</tbody>
-          </table>
-        </div>`;
-      }
-
-    } else {
-      const supTots=visibleSups.map(s=>({sup:s,...aggTotals(allRows.filter(r=>r.SUPERVISOR===s&&r.total_leads>0))}));
-      const maxLeads=Math.max(...supTots.map(s=>s.ate1+s.ate2+s.gt2),1);
-      compDiv.innerHTML=`<div class="comp-grid">${supTots.map(s=>{
-        const sc=SUP_C[s.sup]||{bg:'#EEF',tc:'#333'};
-        const lr=s.ate1+s.ate2+s.gt2;
-        const p2=lr>0?((s.ate1+s.ate2)/lr*100):0;
-        const pGt=lr>0?(s.gt2/lr*100):0;
-        const barW=(lr/maxLeads*100).toFixed(1);
-        const st=agStatus(p2);
-        const supRows=allRows.filter(r=>r.SUPERVISOR===s.sup&&r.total_leads>0);
-        const agCnt=[...new Set(supRows.map(r=>r.POWER_BI))].length;
-        const agWithin=aggByAgent(supRows).filter(a=>a.pctAte2>=80).length;
-        return `<div class="comp-card">
-          <div class="comp-header" style="background:${sc.bg};color:${sc.tc}">${s.sup}</div>
-          <div class="comp-bar-wrap">
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:#94A3B8"><span>Leads</span><span style="font-weight:700;color:#1A2332">${fmt(lr)}</span></div>
-            <div class="comp-bar-track"><div class="comp-bar-fill" style="width:${barW}%;background:${sc.tc}40"></div></div>
-          </div>
-          <div class="comp-row"><div><div class="comp-lbl">≤ 2min</div><div class="comp-val" style="color:${st.color}">${fmt(s.ate1+s.ate2)}</div></div>
-            <div style="text-align:right"><div class="comp-sub" style="color:${st.color}">${p2.toFixed(1)}%</div><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></div></div>
-          <div class="comp-row"><div><div class="comp-lbl">&gt; 2min</div><div class="comp-val" style="color:#F59E0B">${fmt(s.gt2)}</div></div>
-            <div style="text-align:right"><div class="comp-sub" style="color:#F59E0B">${pGt.toFixed(1)}%</div></div></div>
-          <div class="comp-row"><div><div class="comp-lbl">Promotores</div><div class="comp-val" style="color:#2563EB">${agCnt}</div></div>
-            <div style="text-align:right"><div class="comp-lbl">Dentro meta</div><div class="comp-sub" style="color:#10B981">${agWithin}</div></div></div>
-        </div>`;
-      }).join('')}</div>`;
-    }
-
-  } else {
-    // ── KPIs + COMPARATIVO SEMANAL para equipe específica ──────────────────
-    compDiv.style.display='block';
-    kpiDiv.style.display='grid';
-    kpiDiv.innerHTML=[
-      {l:'Leads Totais',v:fmt(tots.ate1+tots.ate2+tots.gt2),accent:'#2563EB'},
-      {l:'Respondidos ≤2min',v:fmt(tots.ate1+tots.ate2),sub:pct(tots.ate1+tots.ate2,tots.ate1+tots.ate2+tots.gt2),accent:'#10B981'},
-      {l:'Respondidos >2min',v:fmt(tots.gt2),sub:pct(tots.gt2,tots.ate1+tots.ate2+tots.gt2),accent:'#F59E0B'},
-    ].map(k=>`<div class="kpi-inner">
-      <div class="val" style="color:${k.accent}">${k.v}</div>
-      <div class="lbl">${k.l}</div>
-      ${k.sub?`<div class="sub" style="color:${k.accent}">${k.sub}</div>`:''}
-    </div>`).join('');
-
-    // ── Comparativo semanal: usa semanas COM dados da equipe, respeitando mês
-    const sup=state.selSup[0];
-    const ym=state.selMonth[0];
-    const supRows=RAW_BY_DAY.filter(r=>r.SUPERVISOR===sup&&r.date_str&&r.total_leads>0
-      &&(ym&&ym!=='all'?r.date_str.startsWith(ym):true));
-    const weekSet={};
-    supRows.forEach(r=>{
-      const w=getWeekDates(r.date_str);
-      const key=w.from+'_'+w.to;
-      if(!weekSet[key]) weekSet[key]={from:w.from,to:w.to,rows:[]};
-      weekSet[key].rows.push(r);
-    });
-    const todayStr=new Date().toISOString().slice(0,10);
-    const weeks=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1);
-
-    if(weeks.length>0){
-      compDiv.innerHTML=`<div class="card" style="margin-bottom:16px">
-        <div class="card-title">📅 Comparativo Semanal — ${sup}${ym&&ym!=='all'?' · '+monthLabel(ym):''}</div>
-        <div style="display:grid;grid-template-columns:repeat(${weeks.length},1fr);gap:10px">
-        ${weeks.map((w,wi)=>{
-          const t2=aggTotals(w.rows);
-          const p2=t2.total_leads>0?((t2.ate1+t2.ate2)/t2.total_leads*100):0;
-          const st=agStatus(p2);
-          const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
-          const label=d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-          const agTotal=[...new Set(w.rows.map(r=>r.POWER_BI))].length;
-          const agWithin=aggByAgent(w.rows).filter(a=>a.pctAte2>=80).length;
-          const isCur=todayStr>=w.from&&todayStr<=w.to;
-          // delta vs semana anterior
-          let delta=null;
-          if(wi>0){
-            const pw=weeks[wi-1];
-            const pt=aggTotals(pw.rows);
-            if(pt.total_leads>0) delta=p2-((pt.ate1+pt.ate2)/pt.total_leads*100);
-          }
-          return `<div style="background:${isCur?'#F0FDF4':'#F8FAFC'};border:2px solid ${isCur?st.color:st.color+'44'};border-radius:10px;padding:12px;text-align:center">
-            <div style="font-size:10px;color:#94A3B8;font-weight:600;margin-bottom:6px">${isCur?'● ATUAL · ':''} ${label}</div>
-            <div style="font-size:22px;font-weight:900;color:${st.color}">${p2.toFixed(1)}%</div>
-            <div style="font-size:10px;color:#94A3B8;margin-bottom:4px">≤ 2min</div>
-            <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
-            ${delta!==null?`<div style="font-size:11px;font-weight:700;color:${delta>=0?'#10B981':'#EF4444'};margin-top:4px">${delta>=0?'▲':'▼'}${Math.abs(delta).toFixed(1)}%</div>`:''}
-            <div style="margin-top:8px;display:flex;justify-content:space-around">
-              <div><div style="font-size:11px;font-weight:700;color:#4A5568">${fmt(t2.ate1+t2.ate2+t2.gt2)}</div><div style="font-size:9px;color:#94A3B8">leads</div></div>
-              <div><div style="font-size:11px;font-weight:700;color:#10B981">${agWithin}/${agTotal}</div><div style="font-size:9px;color:#94A3B8">na meta</div></div>
-            </div>
-          </div>`;
-        }).join('')}
-        </div>
-      </div>`;
-    } else {
-      compDiv.innerHTML='';
-    }
-  }
-
-  // Top 10
-  const minL=5;
-  const sorted=[...agData].filter(a=>(a.ate1+a.ate2+a.gt2)>=minL);
-  const best=[...sorted].filter(a=>a.pctAte2>=80).sort((a,b)=>b.pctAte2-a.pctAte2).slice(0,10);
-  const worst=[...sorted].sort((a,b)=>a.pctAte2-b.pctAte2).slice(0,10);
-
-  ['best','worst'].forEach(type=>{
-    const data=type==='best'?best:worst;
-    const color=type==='best'?'#10B981':'#EF4444';
-    document.getElementById(`pr-top10-${type}`).innerHTML=data.map((a,i)=>{
-      const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
-      return `<div class="top10-row" style="border-left:3px solid ${i<3?color:'transparent'}">
-        <div class="top10-medal">${type==='best'?(medals[i]||`<span style="font-size:11px;color:#94A3B8;font-weight:700">${i+1}</span>`):`<span style="font-size:11px;color:#94A3B8;font-weight:700">${i+1}</span>`}</div>
-        <div>
-          <div class="top10-name">${a.name}</div>
-          <span class="top10-badge" style="background:${sc.bg};color:${sc.tc}">${a.sup}</span>
-        </div>
-        <div class="top10-leads">${fmt(a.ate1+a.ate2+a.gt2)}</div>
-        <div class="top10-pct" style="color:${color}">${a.pctAte2.toFixed(1)}%</div>
-      </div>`;
-    }).join('');
-  });
-
-  agPage=0;
-  renderAgTable();
+function banner(type,html){const b=$("banner");b.className="banner on "+type;b.innerHTML=html}
+function loadRows(rows,keep){
+  ROWS=rows;build();fillSelects();$("main").hidden=false;
+  const [mn,mx]=dataRange();
+  if(!keep||!F.from){F.from=mn;F.to=mx;$("dFrom").value=mn;$("dTo").value=mx;document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.p==="all"))}
+  $("dFrom").min=$("dTo").min=mn;$("dFrom").max=$("dTo").max=mx;
+  render();
 }
-
-function getWeekDates(dateStr){
-  const d=new Date(dateStr+'T12:00:00');
-  const day=d.getDay(); // 0=Dom
-  const diff=(day===0)?-6:1-day;
-  const mon=new Date(d); mon.setDate(d.getDate()+diff);
-  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
-  const f=dt=>dt.toISOString().slice(0,10);
-  return {from:f(mon),to:f(sun)};
+function loadTable(tab,keep){
+  const r=rowsFromTable(tab);
+  if(r.err){if(!ROWS.length)banner("warn",`<b>Os dados da planilha não puderam ser exibidos.</b> ${esc(r.err)} Confira se a aba de atividades dos agentes está publicada na Web em formato CSV.`);return false}
+  loadRows(r.rows,keep);$("banner").className="banner";return true;
 }
-
-function buildCompSlices(){
-  const dm=state.dateMode[0];
-  if(dm!=='sem'&&dm!=='2dias') return [];
-  if(dm==='2dias'){
-    const sd=state.selDate[0], sd2=state.selDate2[0];
-    const fD=d=>new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
-    return [
-      {label:fD(sd), short:'Dia 1', filter:r=>r.date_str===sd},
-      {label:fD(sd2),short:'Dia 2', filter:r=>r.date_str===sd2},
-    ];
-  }
-  // semanal: últimas 4 semanas com dados
-  const weekSet={};
-  RAW_BY_DAY.forEach(r=>{
-    if(!r.date_str) return;
-    const w=getWeekDates(r.date_str);
-    const key=w.from+'_'+w.to;
-    if(!weekSet[key]) weekSet[key]={from:w.from,to:w.to};
-  });
-  const todayStr=new Date().toISOString().slice(0,10);
-  return Object.values(weekSet)
-    .sort((a,b)=>a.from<b.from?-1:1)
-    .slice(-4)
-    .map((w,i,arr)=>{
-      const isCur=todayStr>=w.from&&todayStr<=w.to;
-      const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
-      const lbl=d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-      return {label:lbl, short:isCur?'Atual':`S${i+1}`, isCur, filter:r=>r.date_str>=w.from&&r.date_str<=w.to};
-    });
+async function loadUrl(keep){
+  if(!ROWS.length)banner("ok","Carregando dados da planilha...");
+  try{const res=await fetch(DEFAULT_URL+(DEFAULT_URL.includes("?")?"&":"?")+"t="+Date.now(),{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);const t=await res.text();if(/^\s*</.test(t))throw new Error("a planilha não está publicada em CSV");
+    return loadTable(parseCSV(t),keep)}
+  catch(e){if(!ROWS.length)banner("warn",`<b>Não foi possível acessar a planilha online.</b> ${esc(e.message)}. Verifique a conexão com a internet e se a aba está publicada na Web.`);return false}
 }
+$("dFrom").onchange=e=>{F.from=e.target.value;if(F.to&&F.from>F.to){F.to=F.from;$("dTo").value=F.to}document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed",false));render()};
+$("dTo").onchange=e=>{F.to=e.target.value;if(F.from&&F.to<F.from){F.from=F.to;$("dFrom").value=F.from}document.querySelectorAll("#presets button").forEach(b=>b.setAttribute("aria-pressed",false));render()};
+document.querySelectorAll("#presets button").forEach(b=>b.onclick=()=>preset(b.dataset.p));
+$("fSup").onchange=e=>{F.sup=e.target.value;fillSelects();render()};
+$("fAg").onchange=e=>{F.ag=e.target.value;render()};
+document.querySelectorAll("#fDays button").forEach(b=>b.onclick=()=>{F.days=b.dataset.v;syncDays();render()});
+$("fTol").onchange=e=>{CFG.TOL=+e.target.value;render()};
+["s0","s1"].forEach(id=>$(id).onchange=()=>{const a=toMin($("s0").value),b=toMin($("s1").value);if(b>a){CFG.S0=a;CFG.S1=b;CFG.META=Math.max(60,b-a-60);build();render()}});
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>setTab(b.dataset.t));
+$("daySel").onchange=e=>{DAY=e.target.value;render()};
+$("prevDay").onclick=()=>{const o=$("daySel");if(o.selectedIndex>0){DAY=o.options[o.selectedIndex-1].value;render()}};
+$("nextDay").onclick=()=>{const o=$("daySel");if(o.selectedIndex<o.options.length-1){DAY=o.options[o.selectedIndex+1].value;render()}};
+$("logSel").onchange=renderLog;
+document.querySelectorAll("#modeG button").forEach(b=>b.onclick=()=>{MODEG=b.dataset.v;document.querySelectorAll("#modeG button").forEach(x=>x.setAttribute("aria-pressed",x===b));render()});
+document.querySelectorAll("#modeD button").forEach(b=>b.onclick=()=>{MODED=b.dataset.v;document.querySelectorAll("#modeD button").forEach(x=>x.setAttribute("aria-pressed",x===b));render()});
+$("expAg").onclick=()=>{const r=window.__agRows||[];const h=["Agente","Supervisor","Dias","Atrasos","Atraso medio (min)","Entrada media","Saida media","Trabalhado (h)","Saldo (h)","Extra dias uteis (h)","Fim de semana (h)","Disponivel %","Saidas antecipadas","Sem logout"];
+  const lines=[h.join(";")].concat(r.map(x=>[x.ag,x.sup,x.n,x.lates,Math.round(x.lateAvg||0),hm(x.inAvg),hm(x.outAvg),(x.work/60).toFixed(2),(x.saldo/60).toFixed(2),(x.extra/60).toFixed(2),(x.weWork/60).toFixed(2),Math.round(x.disp/x.logged*100),x.early,x.noLog].join(";").replace(/\./g,",")));
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+lines.join("\n")],{type:"text/csv"}));a.download=`jornada_${F.from}_a_${F.to}.csv`;a.click()};
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(render,150)});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
 
-function renderAgTable(){
-  const search=(document.getElementById('ag-search')?.value||'').toLowerCase();
-  let data=[..._agData];
-  if(search) data=data.filter(a=>a.name.toLowerCase().includes(search)||a.sup.toLowerCase().includes(search));
-
-  // Slices comparativos
-  const slices=buildCompSlices();
-  const hasComp=slices.length>0;
-
-  // ── SORT ÚNICO — comparativo tem prioridade sobre sort normal ──────────────
-  if(hasComp && compSortSlice>=0 && compSortSlice<slices.length){
-    const sl=slices[compSortSlice];
-    const valCache=new Map();
-    data.forEach(ag=>{
-      const rows=RAW_BY_DAY.filter(r=>r.POWER_BI===ag.name && sl.filter(r));
-      const t=aggTotals(rows);
-      const lr=t.ate1+t.ate2+t.gt2;
-      valCache.set(ag.name, compSortField==='leads' ? lr : (lr>0?((t.ate1+t.ate2)/lr*100):0));
-    });
-    data.sort((a,b)=>(valCache.get(a.name)-valCache.get(b.name))*compSortDir);
-  } else {
-    data.sort((a,b)=>{
-      if(agSortCol==='name') return a.name.localeCompare(b.name)*agSortDir;
-      return (a[agSortCol]-b[agSortCol])*agSortDir;
-    });
-  }
-
-  // Paginação DEPOIS do sort
-  agTotalPages=Math.ceil(data.length/PAGE)||1;
-  agPage=Math.min(agPage,agTotalPages-1);
-  document.getElementById('ag-count').textContent=data.length;
-  document.getElementById('ag-page-info').textContent=`Pág. ${agPage+1}/${agTotalPages} · ${data.length} registros`;
-  const paged=data.slice(agPage*PAGE,(agPage+1)*PAGE);
-
-  // Atualiza header com colunas comparativas (clicáveis para sort)
-  const thead=document.getElementById('ag-thead');
-  if(hasComp){
-    thead.innerHTML=`<tr>
-      <th onclick="sortAg('name')" id="th-name" style="text-align:left;cursor:pointer">Promotor ↕</th>
-      <th>Equipe</th>
-      <th onclick="sortAg('total_leads')" id="th-total_leads" class="td-right sorted" style="cursor:pointer">Total Leads ↓</th>
-      <th onclick="sortAg('ate1')" id="th-ate1" class="td-right" style="cursor:pointer">≤1min ↕</th>
-      <th onclick="sortAg('ate2')" id="th-ate2" class="td-right" style="cursor:pointer">1-2min ↕</th>
-      <th onclick="sortAg('gt2')" id="th-gt2" class="td-right" style="cursor:pointer">&gt;2min ↕</th>
-      <th onclick="sortAg('pctAte2')" id="th-pctAte2" class="td-right" style="cursor:pointer">% ≤2min ↕</th>
-      <th class="td-right">Status</th>
-      <th class="td-right">Meta ≤2min</th>
-      <th colspan="${slices.length*2}" style="text-align:center;background:#F0F4F8;border-left:3px solid #CBD5E0;font-size:10px;color:#64748B;font-weight:700;letter-spacing:.7px">
-        COMPARATIVO ${slices.length===2&&state.dateMode[0]==='2dias'?'2 DIAS':'SEMANAL'}
-      </th>
-    </tr>
-    <tr>
-      <th colspan="9" style="border-bottom:1px solid #E2E8F0"></th>
-      ${slices.map((s,i)=>`
-        <th onclick="sortComp(${i},'leads')" class="td-right" style="border-left:${i===0?'3px solid #CBD5E0':'1px solid #E2E8F0'};background:${s.isCur?'#F0FDF4':'#F8FAFC'};font-size:9px;color:${s.isCur?'#10B981':'#1A2332'};padding:4px 8px;cursor:pointer" title="Ordenar por leads">
-          <div style="font-weight:800">${s.label}</div>
-          <div style="color:#94A3B8">${s.short}</div>
-          <div style="color:#CBD5E0">${compSortSlice===i&&compSortField==='leads'?(compSortDir===-1?'↓':'↑'):'↕'}</div>
-        </th>
-        <th onclick="sortComp(${i},'pct')" class="td-right" style="background:${s.isCur?'#F0FDF4':'#F8FAFC'};font-size:9px;padding:4px 8px;cursor:pointer;color:#1A2332" title="Ordenar por %≤2min">
-          %≤2min ${compSortSlice===i&&compSortField==='pct'?(compSortDir===-1?'↓':'↑'):'↕'}
-        </th>
-      `).join('')}
-    </tr>`;
-  } else {
-    thead.innerHTML=`<tr>
-      <th onclick="sortAg('name')" id="th-name" style="text-align:left">Promotor ↕</th>
-      <th>Equipe</th>
-      <th onclick="sortAg('total_leads')" id="th-total_leads" class="td-right sorted">Total Leads ↓</th>
-      <th onclick="sortAg('ate1')" id="th-ate1" class="td-right">≤1min ↕</th>
-      <th onclick="sortAg('ate2')" id="th-ate2" class="td-right">1-2min ↕</th>
-      <th onclick="sortAg('gt2')" id="th-gt2" class="td-right">&gt;2min ↕</th>
-      <th onclick="sortAg('pctAte2')" id="th-pctAte2" class="td-right">% ≤2min ↕</th>
-      <th class="td-right">Status</th>
-      <th class="td-right">Meta ≤2min</th>
-    </tr>`;
-  }
-
-  document.getElementById('ag-tbody').innerHTML=paged.map(a=>{
-    const sc=SUP_C[a.sup]||{bg:'#EEE',tc:'#666'};
-    const st=agStatus(a.pctAte2);
-    const lr=a.ate1+a.ate2+a.gt2;
-    const p1=lr>0?(a.ate1/lr*100).toFixed(0):0;
-    const p2=lr>0?(a.ate2/lr*100).toFixed(0):0;
-    const pGt=lr>0?(a.gt2/lr*100).toFixed(0):0;
-
-    // Colunas comparativas: busca dados do agente por período
-    let compCells='';
-    if(hasComp){
-      const agRows=RAW_BY_DAY.filter(r=>r.POWER_BI===a.name&&
-        (state.selSup[0]==='Todos'||r.SUPERVISOR===state.selSup[0]));
-      compCells=slices.map((sl,i)=>{
-        const rows=agRows.filter(sl.filter);
-        const t=aggTotals(rows);
-        const pct2=t.total_leads>0?((t.ate1+t.ate2)/t.total_leads*100):0;
-        const stt=t.total_leads>0?agStatus(pct2):null;
-        // delta vs fatia anterior
-        let delta=null;
-        if(i>0){
-          const prev=aggTotals(agRows.filter(slices[i-1].filter));
-          if(prev.total_leads>0&&t.total_leads>0)
-            delta=pct2-((prev.ate1+prev.ate2)/prev.total_leads*100);
-        }
-        const bg=sl.isCur?'#F0FDF4':'';
-        const borderL=i===0?'border-left:3px solid #CBD5E0':'';
-        return `
-          <td class="td-right" style="${borderL};background:${bg};font-weight:700;color:#4A5568">
-            ${(t.ate1+t.ate2+t.gt2)>0?fmt(t.ate1+t.ate2+t.gt2):'–'}
-          </td>
-          <td class="td-right" style="background:${bg}">
-            ${t.total_leads>0?`
-              <span style="font-size:12px;font-weight:900;color:${stt.color}">${pct2.toFixed(0)}%</span>
-              <span class="status-badge" style="background:${stt.bg};color:${stt.color};margin-left:3px">${stt.label}</span>
-              ${delta!==null?`<div style="font-size:9px;font-weight:700;color:${delta>=0?'#10B981':'#EF4444'}">${delta>=0?'▲':'▼'}${Math.abs(delta).toFixed(1)}%</div>`:''}
-            `:'<span style="color:#CBD5E0">–</span>'}
-          </td>`;
-      }).join('');
-    }
-
-    return `<tr>
-      <td style="font-weight:700;white-space:nowrap">${a.name}</td>
-      <td>${supBadge(a.sup)}</td>
-      <td class="td-right" style="font-weight:600;color:#4A5568">${fmt(lr)}</td>
-      <td class="td-right"><div style="color:#10B981;font-weight:700">${fmt(a.ate1)}</div><div style="font-size:9px;color:#94A3B8">${p1}%</div></td>
-      <td class="td-right"><div style="color:#F59E0B;font-weight:700">${fmt(a.ate2)}</div><div style="font-size:9px;color:#94A3B8">${p2}%</div></td>
-      <td class="td-right"><div style="color:#EF4444;font-weight:700">${fmt(a.gt2)}</div><div style="font-size:9px;color:#94A3B8">${pGt}%</div></td>
-      <td>
-        <div class="mini-bar-wrap">
-          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${Math.min(a.pctAte2,100)}%;background:${st.color}"></div></div>
-          <span style="font-size:12px;font-weight:800;color:${st.color};min-width:34px;text-align:right">${a.pctAte2.toFixed(0)}%</span>
-        </div>
-      </td>
-      <td class="td-right"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></td>
-      <td class="td-right"><span class="status-badge" style="background:${a.pctAte2>=80?'#D1FAE5':'#FEE2E2'};color:${a.pctAte2>=80?'#10B981':'#EF4444'}">${a.pctAte2>=80?'✓ Dentro':'✗ Fora'}</span></td>
-      ${compCells}
-    </tr>`;
-  }).join('');
-  document.getElementById('ag-pg-first').disabled=agPage===0;
-  document.getElementById('ag-pg-prev').disabled=agPage===0;
-  document.getElementById('ag-pg-next').disabled=agPage>=agTotalPages-1;
-  document.getElementById('ag-pg-last').disabled=agPage>=agTotalPages-1;
-}
-
-function sortAg(col){
-  if(agSortCol===col)agSortDir*=-1;else{agSortCol=col;agSortDir=-1;}
-  document.querySelectorAll('[id^="th-"]').forEach(th=>{
-    th.classList.toggle('sorted',th.id===`th-${col}`);
-    if(th.id===`th-${col}`)th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+' '+(agSortDir===-1?'↓':'↑');
-    else th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+'↕';
-  });
-  agPage=0;renderAgTable();
-}
-
-// ── DISPONIBILIDADE ───────────────────────────────────────────────────────────
-let _avData=[];
-function renderAvail(){
-  const avRows=filterAv(1);
-  const avData=aggAvByAgent(avRows);
-  _avData=avData;
-
-  renderEquipeBtns(1);
-
-  // KPIs
-  const ideal=avData.filter(a=>a.avgH>=6).length;
-  const aceit=avData.filter(a=>a.avgH>=4&&a.avgH<6).length;
-  const crit=avData.filter(a=>a.avgH<4).length;
-  document.getElementById('av-kpis').innerHTML=[
-    {l:'Promotores',v:fmt(avData.length),accent:'#2563EB'},
-    {l:'Ideal (≥6h)',v:fmt(ideal),sub:pct(ideal,avData.length),accent:'#10B981'},
-    {l:'Aceitável (4-6h)',v:fmt(aceit),sub:pct(aceit,avData.length),accent:'#F59E0B'},
-    {l:'Crítico (<4h)',v:fmt(crit),sub:pct(crit,avData.length),accent:'#EF4444'},
-  ].map(k=>`<div class="kpi-inner">
-    <div class="val" style="color:${k.accent}">${k.v}</div>
-    <div class="lbl">${k.l}</div>
-    ${k.sub?`<div class="sub" style="color:${k.accent}">${k.sub}</div>`:''}
-  </div>`).join('');
-
-  // ── COMPARATIVO DE EQUIPES (quando Todas as Equipes) ────────────────────
-  const avCompDiv=document.getElementById('av-comp-equipes');
-  const isTodosAv=state.selSup[1]==='Todos';
-  const ym=state.selMonth[1];
-  const dm=state.dateMode[1];
-
-  if(avCompDiv && isTodosAv){
-    // Só mostra equipes com dados no filtro ativo de disponibilidade
-    const avRowsFiltered=filterAv(1);
-    const supsAvComDados=new Set(avRowsFiltered.filter(r=>r.date_str).map(r=>r.SUPERVISOR));
-    const supsAv=SUPS_ORDER.filter(s=>!EQUIPES_OCULTAS.includes(s)&&supsAvComDados.has(s));
-
-    if(dm==='sem'||dm==='2dias'||dm==='range'){
-      // ── TABELA COMPARATIVA — todas as equipes × fatias de tempo ──────────
-      let slicesAv=[];
-      const todayStr=new Date().toISOString().slice(0,10);
-      const fmtD=d=>new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-
-      if(dm==='sem'){
-        const weekSet={};
-        RAW_AVAIL.filter(r=>r.date_str&&!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())
-          &&(ym&&ym!=='all'?r.date_str.startsWith(ym):true))
-          .forEach(r=>{const w=getWeekDates(r.date_str);const k=w.from+'_'+w.to;if(!weekSet[k])weekSet[k]=w;});
-        slicesAv=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1).map((w,i)=>({
-          label:`${fmtD(w.from)} – ${fmtD(w.to)}`,
-          tag:todayStr>=w.from&&todayStr<=w.to?'● Atual':`Sem ${i+1}`,
-          isCur:todayStr>=w.from&&todayStr<=w.to,
-          filter:r=>r.date_str>=w.from&&r.date_str<=w.to
-        }));
-      } else if(dm==='2dias'){
-        const sd=state.selDate[1],sd2=state.selDate2[1];
-        slicesAv=[
-          {label:fmtD(sd), tag:'Dia 1',isCur:sd===todayStr,filter:r=>r.date_str===sd},
-          {label:fmtD(sd2),tag:'Dia 2',isCur:sd2===todayStr,filter:r=>r.date_str===sd2},
-        ];
-      } else {
-        const rfrom=state.selRangeFrom[1],rto=state.selRangeTo[1];
-        const weekSet={};
-        RAW_AVAIL.filter(r=>r.date_str>=rfrom&&r.date_str<=rto
-          &&!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase()))
-          .forEach(r=>{const w=getWeekDates(r.date_str);const k=w.from+'_'+w.to;if(!weekSet[k])weekSet[k]=w;});
-        slicesAv=Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1).map((w,i)=>({
-          label:`${fmtD(w.from)} – ${fmtD(w.to)}`,tag:`Sem ${i+1}`,
-          isCur:todayStr>=w.from&&todayStr<=w.to,filter:r=>r.date_str>=w.from&&r.date_str<=w.to
-        }));
-      }
-
-      const modeLabel={'sem':'Semanal','2dias':'2 Dias','range':'Período'}[dm];
-      if(!slicesAv.length){avCompDiv.innerHTML='';} else {
-        avCompDiv.innerHTML=`<div class="card" style="overflow-x:auto;margin-bottom:16px">
-          <div class="card-title">📅 Comparativo ${modeLabel} Disponibilidade — Todas as Equipes${ym&&ym!=='all'?' · '+monthLabel(ym):''}</div>
-          <table style="width:100%;border-collapse:collapse;min-width:${200+slicesAv.length*150}px">
-            <thead><tr style="background:#F7F9FC">
-              <th style="text-align:left;padding:10px 12px;font-size:10px;color:#94A3B8;font-weight:700;letter-spacing:.7px;text-transform:uppercase;border-bottom:2px solid #E2E8F0;min-width:160px">Equipe</th>
-              ${slicesAv.map(s=>`<th style="text-align:center;padding:10px 8px;border-bottom:2px solid #E2E8F0;border-left:1px solid #E2E8F0;min-width:145px;background:${s.isCur?'#F0FDF4':'#F7F9FC'}">
-                <div style="font-size:11px;font-weight:800;color:#1A2332">${s.label}</div>
-                <div style="font-size:9px;color:${s.isCur?'#10B981':'#94A3B8'};font-weight:600">${s.tag}</div>
-              </th>`).join('')}
-            </tr></thead>
-            <tbody>${supsAv.map(sup=>{
-              const sc=SUP_C[sup]||{bg:'#EEE',tc:'#666'};
-              const baseRows=RAW_AVAIL.filter(r=>r.SUPERVISOR===sup&&r.date_str
-                &&(ym&&ym!=='all'?r.date_str.startsWith(ym):true));
-              const cells=slicesAv.map((s,si)=>{
-                const rows=baseRows.filter(s.filter);
-                const agd=aggAvByAgent(rows);
-                const avgH=agd.length>0?agd.reduce((sm,a)=>sm+a.avgH,0)/agd.length:0;
-                const hasDays=rows.length>0;
-                const st=hasDays?availStatus(avgH):null;
-                let delta=null;
-                if(si>0){const pr=aggAvByAgent(baseRows.filter(slicesAv[si-1].filter));const pA=pr.length>0?pr.reduce((sm,a)=>sm+a.avgH,0)/pr.length:null;if(pA!==null&&hasDays)delta=avgH-pA;}
-                return `<td style="text-align:center;padding:10px 8px;border-bottom:1px solid #F0F4F8;border-left:1px solid #F0F4F8;background:${s.isCur?'#F0FDF4':''}">
-                  ${hasDays?`
-                    <div style="font-size:20px;font-weight:900;color:${st.color}">${avgH.toFixed(1)}h</div>
-                    <div style="font-size:10px;color:#94A3B8">média/dia · ${agd.length} prom.</div>
-                    <span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span>
-                    ${delta!==null?`<div style="font-size:10px;font-weight:700;color:${delta>=0?'#10B981':'#EF4444'};margin-top:3px">${delta>=0?'▲':'▼'}${Math.abs(delta).toFixed(1)}h</div>`:''}
-                  `:'<span style="color:#CBD5E0;font-size:12px">–</span>'}
-                </td>`;
-              }).join('');
-              return `<tr onmouseover="this.style.background='#F7FAFB'" onmouseout="this.style.background=''">
-                <td style="padding:10px 12px;border-bottom:1px solid #F0F4F8"><span class="eq-badge" style="background:${sc.bg};color:${sc.tc};font-size:11px;padding:4px 8px">${sup}</span></td>
-                ${cells}</tr>`;
-            }).join('')}</tbody>
-          </table>
-        </div>`;
-      }
-
-    } else {
-      // Acumulado / Dia: cards por equipe
-      const maxH=Math.max(...supsAv.map(s=>{
-        const agd=aggAvByAgent(avRows.filter(r=>r.SUPERVISOR===s));
-        return agd.reduce((sum,a)=>sum+a.avgH,0)/(agd.length||1);
-      }),0.1);
-      avCompDiv.innerHTML=`<div class="comp-grid" style="margin-bottom:16px">${supsAv.map(s=>{
-        const sc=SUP_C[s]||{bg:'#EEE',tc:'#666'};
-        const agd=aggAvByAgent(avRows.filter(r=>r.SUPERVISOR===s));
-        const avgH=agd.length>0?agd.reduce((sum,a)=>sum+a.avgH,0)/agd.length:0;
-        const ideal=agd.filter(a=>a.avgH>=6).length;
-        const aceit=agd.filter(a=>a.avgH>=4&&a.avgH<6).length;
-        const crit2=agd.filter(a=>a.avgH<4).length;
-        const st=availStatus(avgH);
-        const barW=(avgH/12*100).toFixed(1);
-        return `<div class="comp-card">
-          <div class="comp-header" style="background:${sc.bg};color:${sc.tc}">${s}</div>
-          <div class="comp-bar-wrap">
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:#94A3B8"><span>Média/dia</span><span style="font-weight:700;color:${st.color}">${avgH.toFixed(1)}h</span></div>
-            <div class="comp-bar-track"><div class="comp-bar-fill" style="width:${barW}%;background:${sc.tc}40"></div></div>
-          </div>
-          <div class="comp-row">
-            <div><div class="comp-lbl">Promotores</div><div class="comp-val" style="color:#2563EB">${agd.length}</div></div>
-            <div style="text-align:right"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></div>
-          </div>
-          <div class="comp-row"><div><div class="comp-lbl">Ideal (≥6h)</div><div class="comp-val" style="color:#10B981">${ideal}</div></div><div style="text-align:right"><div class="comp-sub" style="color:#10B981">${agd.length?pct(ideal,agd.length):'–'}</div></div></div>
-          <div class="comp-row"><div><div class="comp-lbl">Aceitável (4-6h)</div><div class="comp-val" style="color:#F59E0B">${aceit}</div></div><div style="text-align:right"><div class="comp-sub" style="color:#F59E0B">${agd.length?pct(aceit,agd.length):'–'}</div></div></div>
-          <div class="comp-row"><div><div class="comp-lbl">Crítico (<4h)</div><div class="comp-val" style="color:#EF4444">${crit2}</div></div><div style="text-align:right"><div class="comp-sub" style="color:#EF4444">${agd.length?pct(crit2,agd.length):'–'}</div></div></div>
-        </div>`;
-      }).join('')}</div>`;
-    }
-  } else if(avCompDiv){
-    avCompDiv.innerHTML='';
-  }
-
-  avPage=0;
-  renderAvTable();
-}
-
-function buildAvCompSlices(){
-  const dm=state.dateMode[1];
-  if(dm!=='sem'&&dm!=='2dias') return [];
-  if(dm==='2dias'){
-    const sd=state.selDate[1], sd2=state.selDate2[1];
-    const fD=d=>new Date(d+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
-    return [
-      {label:fD(sd), short:'Dia 1', isCur:false, filter:r=>r.date_str===sd},
-      {label:fD(sd2),short:'Dia 2', isCur:false, filter:r=>r.date_str===sd2},
-    ];
-  }
-  // semanal: semanas com dados no mês selecionado
-  const ym=state.selMonth[1];
-  const weekSet={};
-  RAW_AVAIL.filter(r=>!EQUIPES_REMOVIDAS.includes((r.SUPERVISOR||'').toUpperCase())
-    &&(ym&&ym!=='all'?r.date_str.startsWith(ym):true))
-    .forEach(r=>{
-      const w=getWeekDates(r.date_str);
-      const key=w.from+'_'+w.to;
-      if(!weekSet[key]) weekSet[key]={from:w.from,to:w.to};
-    });
-  const todayStr=new Date().toISOString().slice(0,10);
-  return Object.values(weekSet).sort((a,b)=>a.from<b.from?-1:1)
-    .map((w,i)=>{
-      const isCur=todayStr>=w.from&&todayStr<=w.to;
-      const d1=new Date(w.from+'T12:00:00'),d2=new Date(w.to+'T12:00:00');
-      const lbl=d1.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' – '+d2.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
-      return {label:lbl, short:isCur?'Atual':`S${i+1}`, isCur, filter:r=>r.date_str>=w.from&&r.date_str<=w.to};
-    });
-}
-
-function renderAvTable(){
-  const search=(document.getElementById('av-search')?.value||'').toLowerCase();
-  let data=[..._avData];
-  if(search) data=data.filter(a=>a.name.toLowerCase().includes(search)||a.sup.toLowerCase().includes(search));
-  data.sort((a,b)=>{
-    if(avSortCol==='name')return a.name.localeCompare(b.name)*avSortDir;
-    return(a[avSortCol]-b[avSortCol])*avSortDir;
-  });
-  avTotalPages=Math.ceil(data.length/PAGE)||1;
-  avPage=Math.min(avPage,avTotalPages-1);
-  document.getElementById('av-page-info').textContent=`Pág. ${avPage+1}/${avTotalPages} · ${data.length} registros`;
-  const cntLbl=document.getElementById('av-count-label');
-  if(cntLbl) cntLbl.textContent=`${data.length} promotores`;
-
-  const slices=buildAvCompSlices();
-  const hasComp=slices.length>0;
-
-  // Update header
-  const avThead=document.getElementById('av-thead');
-  const baseHeader=`<th onclick="sortAv('name')" id="av-th-name" style="text-align:left">Promotor ↕</th>
-    <th>Equipe</th>
-    <th onclick="sortAv('totalH')" id="av-th-totalH" class="td-right">Total Horas ↕</th>
-    <th onclick="sortAv('days')"   id="av-th-days"   class="td-right">Dias ↕</th>
-    <th onclick="sortAv('avgH')"   id="av-th-avgH"   class="td-right sorted">Média Diária ↓</th>
-    <th class="td-right">Status</th>`;
-  if(avThead){
-    if(hasComp){
-      avThead.innerHTML=`<tr>${baseHeader}
-        <th colspan="${slices.length*2}" style="text-align:center;background:#F0F4F8;border-left:3px solid #CBD5E0;font-size:10px;color:#64748B;font-weight:700;letter-spacing:.7px">
-          COMPARATIVO ${state.dateMode[1]==='2dias'?'2 DIAS':'SEMANAL'}
-        </th></tr>
-        <tr><th colspan="6" style="border-bottom:1px solid #E2E8F0"></th>
-        ${slices.map((s,i)=>`
-          <th class="td-right" style="border-left:${i===0?'3px solid #CBD5E0':'1px solid #E2E8F0'};background:${s.isCur?'#F0FDF4':'#F8FAFC'};font-size:9px;color:${s.isCur?'#10B981':'#94A3B8'};padding:4px 8px">
-            <div style="font-weight:800;color:#1A2332">${s.label}</div><div>${s.short}</div>
-          </th>
-          <th class="td-right" style="background:${s.isCur?'#F0FDF4':'#F8FAFC'};font-size:9px;color:#94A3B8;padding:4px 8px">Média/dia</th>
-        `).join('')}</tr>`;
-    } else {
-      avThead.innerHTML=`<tr>${baseHeader}</tr>`;
-    }
-  }
-
-  const paged=data.slice(avPage*PAGE,(avPage+1)*PAGE);
-  document.getElementById('av-tbody').innerHTML=paged.map(a=>{
-    const st=availStatus(a.avgH);
-
-    let compCells='';
-    if(hasComp){
-      const agRows=RAW_AVAIL.filter(r=>r.POWER_BI===a.name
-        &&(state.selSup[1]==='Todos'||r.SUPERVISOR===state.selSup[1]));
-      compCells=slices.map((sl,i)=>{
-        const rows=agRows.filter(sl.filter);
-        const agd=aggAvByAgent(rows);
-        const avgH=agd.length>0?agd.reduce((s,x)=>s+x.avgH,0)/agd.length:0;
-        const hasDays=rows.length>0;
-        const stt=hasDays?availStatus(avgH):null;
-        let delta=null;
-        if(i>0){
-          const prev=aggAvByAgent(agRows.filter(slices[i-1].filter));
-          const prevAvg=prev.length>0?prev.reduce((s,x)=>s+x.avgH,0)/prev.length:null;
-          if(prevAvg!==null&&hasDays) delta=avgH-prevAvg;
-        }
-        const bg=sl.isCur?'#F0FDF4':'';
-        const borderL=i===0?'border-left:3px solid #CBD5E0':'';
-        return `<td class="td-right" style="${borderL};background:${bg};font-weight:700;color:#4A5568">${hasDays?rows.length+'d':'–'}</td>
-          <td class="td-right" style="background:${bg}">
-            ${hasDays?`<span style="font-size:12px;font-weight:900;color:${stt.color}">${avgH.toFixed(1)}h</span>
-            <span class="status-badge" style="background:${stt.bg};color:${stt.color};margin-left:3px">${stt.label}</span>
-            ${delta!==null?`<div style="font-size:9px;font-weight:700;color:${delta>=0?'#10B981':'#EF4444'}">${delta>=0?'▲':'▼'}${Math.abs(delta).toFixed(1)}h</div>`:''}
-            `:'<span style="color:#CBD5E0">–</span>'}
-          </td>`;
-      }).join('');
-    }
-
-    return `<tr>
-      <td style="font-weight:700;white-space:nowrap">${a.name}</td>
-      <td>${supBadge(a.sup)}</td>
-      <td class="td-right" style="color:#4A5568">${a.totalH.toFixed(1)}h</td>
-      <td class="td-right" style="color:#4A5568">${a.days}</td>
-      <td>
-        <div class="mini-bar-wrap">
-          <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${Math.min((a.avgH/12)*100,100)}%;background:${st.color}"></div></div>
-          <span style="font-size:13px;font-weight:800;color:${st.color};min-width:34px;text-align:right">${a.avgH.toFixed(1)}h</span>
-        </div>
-      </td>
-      <td class="td-right"><span class="status-badge" style="background:${st.bg};color:${st.color}">${st.label}</span></td>
-      ${compCells}
-    </tr>`;
-  }).join('');
-  document.getElementById('av-pg-first').disabled=avPage===0;
-  document.getElementById('av-pg-prev').disabled=avPage===0;
-  document.getElementById('av-pg-next').disabled=avPage>=avTotalPages-1;
-  document.getElementById('av-pg-last').disabled=avPage>=avTotalPages-1;
-}
-
-function sortAv(col){
-  if(avSortCol===col)avSortDir*=-1;else{avSortCol=col;avSortDir=-1;}
-  document.querySelectorAll('[id^="av-th-"]').forEach(th=>{
-    th.classList.toggle('sorted',th.id===`av-th-${col}`);
-    if(th.id===`av-th-${col}`)th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+' '+(avSortDir===-1?'↓':'↑');
-    else th.textContent=th.textContent.replace(/[ ↑↓↕]/g,'')+'↕';
-  });
-  avPage=0;renderAvTable();
-}
+/* ---------- início ---------- */
+loadUrl(false);
+setInterval(()=>loadUrl(true),10*60*1000);
 </script>
-
-<script>document.addEventListener("DOMContentLoaded", loadData);</script>
 </body>
 </html>

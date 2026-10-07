@@ -269,6 +269,7 @@ details.src summary{cursor:pointer;font-weight:600;font-size:14px}
 
 <script>
 const DEFAULT_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vRomc077FhuUT3C3g1HyZths8tuDiGwN4__wxtdp4G75zbtNFrFIQwwXHwoL5aXP0obFv7mi66yaZMy/pub?gid=8224132&single=true&output=csv";
+const MONTHS={jan:1,fev:2,feb:2,mar:3,abr:4,apr:4,mai:5,may:5,jun:6,jul:7,ago:8,aug:8,set:9,sep:9,out:10,oct:10,nov:11,dez:12,dec:12};
 const DOW=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 const DOWL=["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
 const MES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
@@ -351,6 +352,8 @@ function rowsFromTable(tab){
     if(typeof v==="number"||/^\d+(\.\d+)?$/.test(String(v).trim())){const n=+v;if(n>20000){const o=new Date(Date.UTC(1899,11,30)+Math.floor(n)*864e5);return {date:`${o.getUTCFullYear()}-${String(o.getUTCMonth()+1).padStart(2,"0")}-${String(o.getUTCDate()).padStart(2,"0")}`,min:(n%1)*1440,hasT:n%1>0}}if(n<1)return {date:null,min:n*1440,hasT:true};return null}
     if(v instanceof Date)return {date:dKey(v),min:v.getHours()*60+v.getMinutes()+v.getSeconds()/60,hasT:true};
     const s=String(v);let date=null,min=null;
+    const tx=s.match(/(\d{1,2})\s*(?:de\s+)?([A-Za-zÀ-ÿ]{3,})\.?,?\s*(?:de\s+)?(\d{4})/);
+    if(tx){const mo=MONTHS[norm(tx[2]).slice(0,3)];if(mo){date=`${tx[3]}-${String(mo).padStart(2,"0")}-${String(+tx[1]).padStart(2,"0")}`;const rest=s.replace(tx[0],"");const tm=rest.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm|AM|PM)?/);if(tm){let h=+tm[1];const ap=(tm[4]||"").toLowerCase();if(ap==="pm"&&h<12)h+=12;if(ap==="am"&&h===12)h=0;min=h*60+(+tm[2])+(+(tm[3]||0))/60}return {date,min,hasT:min!=null}}}
     const m=s.match(/(\d{1,4})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
     if(m){let y,mo,d;const a=+m[1],b=+m[2],cc=+m[3];if(order==="ymd"&&m[1].length===4){y=a;mo=b;d=cc}else if(order==="mdy"){mo=a;d=b;y=cc}else{d=a;mo=b;y=cc}if(y<100)y+=2000;date=`${y}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`}
     const tm=s.replace(m?m[0]:"","").match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm|AM|PM)?/);

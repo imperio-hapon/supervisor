@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+:root{--s-open:#2563EB;--s-wait:#F5A524;--s-pend:#D6336C;--s-close:#8A97A8;--s-other:#7C3AED;--cA:#1F2937;--cB:#F5A524;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 --bg:#EEF1F5;--panel:#FFFFFF;--ink:#16202C;--muted:#5E6B7A;--line:#DCE2EA;--soft:#F5F7FA;
 --fabio:#1F5FD6;--fabio-s:#DCE7FB;--josy:#0E8A72;--josy-s:#D4F0E8;--warn:#B4541A;--good:#0E8A72;}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F151D;--panel:#17202B;--ink:#E7ECF2;--muted:#94A1B0;--line:#2A3644;--soft:#1D2834;--fabio:#6C9BF2;--fabio-s:#1E3254;--josy:#3CC3A2;--josy-s:#173E36;--warn:#F0A167}}
@@ -60,10 +60,12 @@ button.primary{background:var(--ink);color:var(--panel);border-color:var(--ink)}
 .pname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ptrack{height:18px;background:var(--soft);border-radius:4px;display:flex;overflow:hidden}
 .ptrack i{display:block;height:100%}
-.st-OPEN{background:var(--c)}.st-AWATING_RESPONSE{background:var(--c);opacity:.6}.st-PENDING{background:var(--c);opacity:.35}.st-CLOSE{background:var(--muted);opacity:.55}
+.st-OPEN{background:var(--s-open)}.st-AWATING_RESPONSE{background:var(--s-wait)}.st-PENDING{background:var(--s-pend)}.st-CLOSE{background:var(--s-close)}.st-OTHER{background:var(--s-other)}
+.ptrack i{border-right:2px solid var(--panel);font-size:11px;font-weight:700;color:#fff;display:flex!important;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap}
+.ptrack i:last-child{border-right:0}.ptrack i.st-AWATING_RESPONSE{color:#3a2600}
 .pn{text-align:right;font-weight:700}
 .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);margin-top:4px}
-.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:12px;height:12px;border-radius:3px;display:inline-block;background:var(--ink)}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--ink)}.legend i{width:14px;height:14px;border-radius:3px;display:inline-block}
 
 table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
@@ -121,6 +123,38 @@ td.wr{white-space:normal;min-width:180px}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--good);margin-right:6px;vertical-align:middle}
 .dot.off{background:var(--warn)}
 @media (max-width:700px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.ptrack{height:22px}
+input[type=date]{font:inherit;font-size:14px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;color-scheme:light dark}
+.range{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.days{display:flex;gap:4px;align-items:flex-end;height:170px;overflow-x:auto;padding:18px 2px 0;user-select:none;touch-action:pan-x}
+.dcol{flex:1 0 26px;max-width:64px;display:flex;flex-direction:column;align-items:stretch;height:100%;cursor:pointer;border-radius:6px;padding:0 2px;position:relative}
+.dcol .stack{flex:1;display:flex;flex-direction:column-reverse}
+.dcol .stack i{display:block;width:100%}
+.dcol .hf{background:var(--fabio)}.dcol .hj{background:var(--josy)}
+.dcol .lab{font-size:10px;color:var(--muted);text-align:center;padding:4px 0 2px;line-height:1.2;white-space:nowrap}
+.dcol .v{font-size:11px;font-weight:700;text-align:center}
+.dcol.out .stack{opacity:.25}.dcol.sel{background:var(--soft);outline:2px solid var(--ink);outline-offset:-1px}
+.dcol.wk .lab{color:var(--ink);font-weight:700}
+.cmpbar{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:6px}
+.cmpbar fieldset{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0}
+.cmpbar legend{font-size:12px;font-weight:700;padding:0 4px}
+.swA{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--cA);vertical-align:middle;margin-right:4px}
+.swB{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--cB);vertical-align:middle;margin-right:4px}
+.up{color:var(--good);font-weight:700}.down{color:var(--warn);font-weight:700}.flat{color:var(--muted)}
+.gbars{display:flex;gap:6px;align-items:flex-end;height:170px;overflow-x:auto;padding-top:16px}
+.gb{flex:1 0 30px;display:flex;flex-direction:column;height:100%}
+.gb .pair{flex:1;display:flex;gap:2px;align-items:flex-end}
+.gb .pair i{flex:1;display:block;border-radius:3px 3px 0 0;position:relative}
+.gb .pair .a{background:var(--cA)}.gb .pair .b{background:var(--cB)}
+.gb .lab{font-size:10px;color:var(--muted);text-align:center;padding-top:4px;border-top:1px solid var(--line)}
+:root[data-theme="dark"]{--cA:#E7ECF2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--cA:#E7ECF2}}
+.hero3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:18px}
+@media (max-width:760px){.hero3{grid-template-columns:1fr}}
+.hero3 .panel{margin:0}
+.matrix td.n{text-align:center}.matrix td.z{color:var(--line);text-align:center}
+.cap{font-size:13px;color:var(--muted);margin:6px 0 0}
+.legend span[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -138,14 +172,16 @@ td.wr{white-space:normal;min-width:180px}
       <button data-g="Josy" aria-pressed="false">Josy</button>
     </div>
     <select id="fSup" aria-label="Supervisor"></select>
-    <select id="fDay" aria-label="Dia de entrada"></select>
+    <select id="fPreset" aria-label="Período">
+      <option value="all">Todo o período</option><option value="today">Último dia</option><option value="yday">Dia anterior</option><option value="7d">Últimos 7 dias</option><option value="week">Esta semana</option><option value="lweek">Semana passada</option><option value="month">Este mês</option><option value="custom">Personalizado</option></select>
+    <span class="range"><input type="date" id="fFrom" aria-label="De"> até <input type="date" id="fTo" aria-label="Até"></span>
     <button class="primary" id="btnSync">Atualizar agora</button>
     <button id="btnLoad" title="Fonte de dados">Fonte de dados</button>
   </div>
 </header>
 
 <div class="banner" id="banner" hidden></div>
-<nav class="nav" role="tablist"><button role="tab" data-v="leads" aria-selected="true">Leads e conversão</button><button role="tab" data-v="tags" aria-selected="false">Controle de tags</button><button role="tab" data-v="base" aria-selected="false">Base de sessões</button></nav>
+<nav class="nav" role="tablist"><button role="tab" data-v="leads" aria-selected="true">Leads e conversão</button><button role="tab" data-v="cmp" aria-selected="false">Comparar períodos</button><button role="tab" data-v="atag" aria-selected="false">Agent Tags</button><button role="tab" data-v="ctag" aria-selected="false">Tags de encerramento</button><button role="tab" data-v="base" aria-selected="false">Base de sessões</button></nav>
 <div class="view" id="view-leads">
 <section class="split" aria-label="Divisão de leads entre gestões">
   <div class="split-row">
@@ -157,9 +193,15 @@ td.wr{white-space:normal;min-width:180px}
 </section>
 
 <section class="panel">
+  <h2>Leads por dia</h2>
+  <p class="hint">Clique em um dia para filtrar o painel, ou arraste para selecionar vários. Clique no dia selecionado para voltar a todo o período.</p>
+  <div class="days" id="days"></div>
+</section>
+
+<section class="panel">
   <h2>Leads por promotor, por supervisor</h2>
   <p class="hint">Promotor = responsável atual da sessão. Barras divididas por status.</p>
-  <div class="legend"><span><i class="st-OPEN" style="--c:var(--ink)"></i>Aberto</span><span><i class="st-AWATING_RESPONSE" style="--c:var(--ink)"></i>Aguardando cliente</span><span><i class="st-PENDING" style="--c:var(--ink)"></i>Pendente</span><span><i class="st-CLOSE"></i>Encerrado</span></div>
+  <div class="legend"><span><i class="st-OPEN"></i>Aberto</span><span><i class="st-AWATING_RESPONSE"></i>Aguardando cliente</span><span><i class="st-PENDING"></i>Pendente</span><span><i class="st-CLOSE"></i>Encerrado</span><span id="lgOther" hidden><i class="st-OTHER"></i>Outros status</span></div>
   <div id="sups"></div>
 </section>
 
@@ -184,54 +226,51 @@ td.wr{white-space:normal;min-width:180px}
 </section>
 
 </div>
-<div class="view" id="view-tags" hidden>
-<div class="duo">
-  <section class="panel" style="margin:0">
-    <h2>Tags de chat</h2>
-    <p class="hint">Promotores que aplicaram ao menos uma Agent Tag.</p>
-    <div class="big" id="aBig"></div>
-    <div class="meter"><i id="aMeter"></i></div>
-    <div class="sub" id="aSub"></div>
-  </section>
-  <section class="panel" style="margin:0">
-    <h2>Tags de encerramento</h2>
-    <p class="hint">Sessões encerradas que receberam tag de encerramento.</p>
-    <div class="big" id="cBig"></div>
-    <div class="meter"><i id="cMeter"></i></div>
-    <div class="sub" id="cSub"></div>
-  </section>
+<div class="view" id="view-cmp" hidden>
+<section class="panel">
+  <h2>Comparar períodos</h2>
+  <p class="hint" id="cmpRef">Respeita os filtros de gestão e supervisor. O período do topo não se aplica aqui.</p>
+  <div class="cmpbar">
+    <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">Comparação
+      <select id="cPreset"><option value="d">Último dia × dia anterior</option><option value="dw">Último dia × mesmo dia da semana passada</option><option value="wtd" selected>Semana atual × mesmos dias da semana passada</option><option value="w">Semana passada × semana retrasada</option><option value="7">Últimos 7 dias × 7 dias anteriores</option><option value="custom">Personalizado</option></select></label>
+    <fieldset><legend><span class="swA"></span>Período A</legend><input type="date" id="aFrom" aria-label="A de"> até <input type="date" id="aTo" aria-label="A até"></fieldset>
+    <fieldset><legend><span class="swB"></span>Período B</legend><input type="date" id="bFrom" aria-label="B de"> até <input type="date" id="bTo" aria-label="B até"></fieldset>
+  </div>
+</section>
+<div class="grid">
+  <section class="panel"><h2>Indicadores</h2><p class="hint">Variação de A em relação a B.</p><div class="scroll"><table id="cKpi"></table></div></section>
+  <section class="panel"><h2>Por supervisor</h2><p class="hint">Leads recebidos em cada período.</p><div class="scroll"><table id="cSup"></table></div></section>
+</div>
+<section class="panel"><h2>Entrada por hora</h2><p class="hint"><span class="swA"></span>A &nbsp; <span class="swB"></span>B. Passe o mouse para ver os valores.</p><div class="gbars" id="cHour"></div></section>
+<section class="panel" id="cWdWrap"><h2>Entrada por dia da semana</h2><p class="hint"><span class="swA"></span>A &nbsp; <span class="swB"></span>B</p><div class="gbars" id="cWd"></div></section>
+<div class="grid">
+  <section class="panel"><h2>Por promotor</h2><p class="hint">Ordenado pela maior variação.</p><div class="scroll"><table id="cProm"></table></div></section>
+  <section class="panel"><h2>Por fila</h2><p class="hint">Ordenado pela maior variação.</p><div class="scroll"><table id="cFila"></table></div></section>
+</div>
 </div>
 
-<section class="panel">
-  <h2>Por supervisor</h2>
-  <p class="hint">Adesão às tags em cada equipe.</p>
-  <div class="scroll"><table id="tSup"></table></div>
-</section>
-
-<section class="panel">
-  <h2>Por promotor</h2>
-  <p class="hint">Clique no título de uma coluna para ordenar.</p>
-  <div class="scroll"><table id="tPromTag"></table></div>
-</section>
-
-<div class="duo">
-  <section class="panel" style="margin:0">
-    <h2>Agent Tags usadas</h2>
-    <p class="hint">Frequência de cada tag e quem aplicou.</p>
-    <div class="scroll"><table id="tAF"></table></div>
-  </section>
-  <section class="panel" style="margin:0">
-    <h2>Tags de encerramento usadas</h2>
-    <p class="hint">Frequência de cada tag e quem aplicou.</p>
-    <div class="scroll"><table id="tCF"></table></div>
-  </section>
+<div class="view" id="view-atag" hidden>
+<div class="hero3">
+  <section class="panel"><h2>Promotores que usam</h2><p class="hint">Aplicaram ao menos uma Agent Tag.</p><div class="big" id="aBig"></div><div class="meter"><i id="aMeter"></i></div></section>
+  <section class="panel"><h2>Leads com tag</h2><p class="hint">Sessões com Agent Tag preenchida.</p><div class="big" id="aBig2"></div><div class="meter"><i id="aMeter2"></i></div></section>
+  <section class="panel"><h2>Tags diferentes</h2><p class="hint">Variedade de tags aplicadas.</p><div class="big" id="aBig3"></div><div class="sub" id="aTop"></div></section>
+</div>
+<section class="panel"><h2>Por supervisor</h2><p class="hint">Adesão à Agent Tag em cada equipe.</p><div class="scroll"><table id="aSup"></table></div></section>
+<section class="panel"><h2>Por promotor</h2><p class="hint">Clique no título de uma coluna para ordenar.</p><div class="scroll"><table id="aProm"></table></div></section>
+<section class="panel"><h2>Tag × supervisor</h2><p class="hint">Quantas vezes cada Agent Tag foi usada em cada equipe.</p><div class="scroll"><table class="matrix" id="aMx"></table></div></section>
+<section class="panel"><h2>Pontos de atenção</h2><p class="hint">Sessões abertas há mais de 24h sem Agent Tag e promotores que não usam.</p><div id="aAtt"></div></section>
 </div>
 
-<section class="panel">
-  <h2>Pontos de atenção</h2>
-  <p class="hint">Sessões que pedem ação dos supervisores.</p>
-  <div id="att"></div>
-</section>
+<div class="view" id="view-ctag" hidden>
+<div class="hero3">
+  <section class="panel"><h2>Encerradas com tag</h2><p class="hint">Sessões encerradas com tag de encerramento.</p><div class="big" id="cBig"></div><div class="meter"><i id="cMeter"></i></div></section>
+  <section class="panel"><h2>Encerradas sem tag</h2><p class="hint">Precisam de classificação.</p><div class="big" id="cBig2"></div><div class="sub" id="cSub2"></div></section>
+  <section class="panel"><h2>Conversões</h2><p class="hint">Tags que contêm as palavras de venda.</p><div class="big" id="cBig3"></div><div class="sub" id="cSub3"></div></section>
+</div>
+<section class="panel"><h2>Por supervisor</h2><p class="hint">Uso da tag de encerramento em cada equipe.</p><div class="scroll"><table id="ctSup"></table></div></section>
+<section class="panel"><h2>Por promotor</h2><p class="hint">Clique no título de uma coluna para ordenar.</p><div class="scroll"><table id="ctProm"></table></div></section>
+<section class="panel"><h2>Tag × supervisor</h2><p class="hint">Quantas vezes cada tag de encerramento foi usada em cada equipe.</p><div class="scroll"><table class="matrix" id="ctMx"></table></div></section>
+<section class="panel"><h2>Encerradas sem tag</h2><p class="hint">Sessões encerradas que ficaram sem classificação.</p><div id="ctAtt"></div></section>
 </div>
 <div class="view" id="view-base" hidden>
 <section class="panel"><h2>Base de sessões</h2><p class="hint" id="baseHint"></p><div class="conv-cfg"><input type="text" class="search" id="q" placeholder="Buscar por promotor, fila, tag, telefone ou sessão"></div><div class="scroll"><table id="tBase"></table></div></section>
@@ -261,7 +300,7 @@ const DEFAULT_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vRomc077FhuUT
 const ORIGINAL=[];
 const ST_ORDER=['OPEN','AWATING_RESPONSE','PENDING','CLOSE'];
 const ST_LABEL={OPEN:'Aberto',AWATING_RESPONSE:'Aguardando cliente',PENDING:'Pendente',CLOSE:'Encerrado'};
-let rows=[], state={g:'all',sup:'',day:''};
+let rows=[], state={g:'all',sup:'',from:null,to:null,preset:'all'};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pct=(a,b)=>b?(a/b*100):0; const fp=v=>v.toFixed(v>0&&v<10?1:0).replace('.',',')+'%';
@@ -276,15 +315,16 @@ function parseDate(v){
   m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})[ T]?(\d{2})?:?(\d{2})?/);
   if(m)return new Date(+m[1],m[2]-1,+m[3],+(m[4]||0),+(m[5]||0));
   return null}
-function shape(raw){
+let skipped=0;
+function shape(raw){skipped=0;
   return raw.map(r=>{const o={};for(const k in r){const t=MAP[norm(k)];if(t)o[t]=r[k]}
-    o.sup=String(o.sup||'').trim().toUpperCase(); o.prom=String(o.prom||'(sem responsável)').trim()||'(sem responsável)';
+    o.sup=String(o.sup||'').trim().toUpperCase(); o.prom=String(o.prom||'').trim();
     o.status=String(o.status||'').trim().toUpperCase(); o.fila=String(o.fila||'').trim()||'(sem fila)';
     o.atag=String(o.atag||'').trim(); o.ctag=String(o.ctag||'').trim();
     o.d=parseDate(o.start); o.hasFirst=!!String(o.first||'').trim(); o.fd=parseDate(o.first); o.cd=parseDate(o.close);
     o.closed=o.status==='CLOSE'||o.status==='CLOSED'||!!o.cd; o.id=String(o.id||'').trim();
     o.frMin=(o.d&&o.fd&&o.fd>=o.d)?(o.fd-o.d)/6e4:null; o.durMin=(o.d&&o.cd&&o.cd>=o.d)?(o.cd-o.d)/6e4:null;
-    o.g=o.sup==='FABIO'?'Fabio':'Josy'; return o}).filter(o=>o.sup||o.prom!=='(sem responsável)')}
+    o.g=o.sup==='FABIO'?'Fabio':'Josy'; return o}).filter(o=>{if(!o.prom){skipped++;return false}return true})}
 function parseText(txt){
   txt=String(txt).replace(/^\uFEFF/,'');
   const first=txt.split(/\r?\n/)[0]||'';
@@ -302,7 +342,18 @@ function parseText(txt){
   return out.slice(1).map(c=>{const o={};h.forEach((k,i)=>{if(k)o[k]=(c[i]||'').trim()});return o})}
 
 function fmtMin(m){if(m==null)return'—';if(m<1)return'<1 min';if(m<60)return Math.round(m)+' min';const h=Math.floor(m/60),mi=Math.round(m%60);return h<48?h+'h'+(mi?String(mi).padStart(2,'0'):''):Math.round(h/24)+' dias'}
-function filtered(){return rows.filter(r=>(state.g==='all'||r.g===state.g)&&(!state.sup||r.sup===state.sup)&&(!state.day||(r.d&&dayKey(r.d)===state.day)))}
+const DAY=864e5;
+const sod=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+const addD=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+const iso=d=>d?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`:'';
+const fromIso=s=>{if(!s)return null;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const ddmm=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+const monday=d=>addD(sod(d),-((d.getDay()+6)%7));
+function inRng(r,f,t){if(!f&&!t)return true;if(!r.d)return false;const x=sod(r.d);return(!f||x>=f)&&(!t||x<=t)}
+function inRange(r){return inRng(r,state.from,state.to)}
+const scope=r=>(state.g==='all'||r.g===state.g)&&(!state.sup||r.sup===state.sup);
+function refDay(){let m=0;rows.forEach(r=>{if(r.d&&r.d>m)m=r.d});return m?sod(m):sod(new Date())}
+function filtered(){return rows.filter(r=>scope(r)&&inRange(r))}
 function dayKey(d){return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}
 function kwList(){return $('#kw').value.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)}
 function isConv(r){const t=r.ctag.toLowerCase();return !!t&&kwList().some(k=>t.includes(k))}
@@ -312,16 +363,14 @@ function fillFilters(){
   const sups=[...new Set(rows.filter(r=>state.g==='all'||r.g===state.g).map(r=>r.sup))].sort((a,b)=>(a!=='FABIO')-(b!=='FABIO')||a.localeCompare(b));
   if(state.sup&&!sups.includes(state.sup))state.sup='';
   $('#fSup').innerHTML='<option value="">Todos os supervisores</option>'+sups.map(s=>`<option ${s===state.sup?'selected':''}>${esc(s)}</option>`).join('');
-  const days=[...new Set(rows.filter(r=>r.d).map(r=>r.d.toDateString()))].map(s=>new Date(s)).sort((a,b)=>a-b).map(dayKey);
-  if(state.day&&!days.includes(state.day))state.day='';
-  $('#fDay').innerHTML='<option value="">Todos os dias</option>'+days.map(s=>`<option ${s===state.day?'selected':''}>${s}</option>`).join('');
+  syncRangeInputs();
 }
 
 function render(){
-  const all=rows.filter(r=>(!state.day||(r.d&&dayKey(r.d)===state.day)));
+  const all=rows.filter(inRange);
   const F=filtered();
   const ds=rows.filter(r=>r.d).map(r=>r.d.getTime()); const mn=new Date(ds.length?Math.min(...ds):0),mx=new Date(ds.length?Math.max(...ds):0);
-  $('#sub').textContent=`${rows.length} sessões, com entradas de ${ds.length?dayKey(mn):'-'} a ${ds.length?dayKey(mx):'-'}`;
+  $('#sub').textContent=`${rows.length} sessões${skipped?` (${skipped} sem responsável fora da contagem)`:''}, com entradas de ${ds.length?dayKey(mn):'-'} a ${ds.length?dayKey(mx):'-'}`;
   // split (always both sides, honoring sup/day filters but not gestão toggle)
   const base=all.filter(r=>!state.sup||r.sup===state.sup);
   const nf=base.filter(r=>r.g==='Fabio').length, nj=base.filter(r=>r.g==='Josy').length, tot=nf+nj;
@@ -339,12 +388,15 @@ function render(){
   // supervisors
   const bySup=group(F,r=>r.sup);
   const supKeys=[...bySup.keys()].sort((a,b)=>(a!=='FABIO')-(b!=='FABIO')||bySup.get(b).length-bySup.get(a).length);
+  const bucket=r=>r.closed?'CLOSE':(['OPEN','AWATING_RESPONSE','PENDING'].includes(r.status)?r.status:'OTHER');
+  $('#lgOther').hidden=!F.some(r=>bucket(r)==='OTHER');
+  const SB=['OPEN','AWATING_RESPONSE','PENDING','OTHER','CLOSE'],SL={...ST_LABEL,OTHER:'Outros'};
   const maxP=Math.max(1,...[...group(F,r=>r.sup+'|'+r.prom).values()].map(a=>a.length));
   $('#sups').innerHTML=supKeys.length?supKeys.map(s=>{const arr=bySup.get(s),g=arr[0].g,c=g==='Fabio'?'var(--fabio)':'var(--josy)';
     const bp=[...group(arr,r=>r.prom).entries()].sort((a,b)=>b[1].length-a[1].length);
     return `<div class="sup"><div class="sup-h"><span>${esc(s)} <span class="tagg ${g}">Gestão ${g}</span></span><span>${arr.length} leads · ${bp.length} promotores</span></div>`+
-      bp.map(([p,a])=>`<div class="prow"><div class="pname" title="${esc(p)}">${esc(p)}</div><div class="ptrack" style="--c:${c}" title="${ST_ORDER.map(st=>ST_LABEL[st]+': '+a.filter(r=>r.status===st).length).join(' · ')}">`+
-        ST_ORDER.map(st=>{const n=a.filter(r=>r.status===st).length;return n?`<i class="st-${st}" style="width:${n/maxP*100}%"></i>`:''}).join('')+
+      bp.map(([p,a])=>`<div class="prow"><div class="pname" title="${esc(p)}">${esc(p)}</div><div class="ptrack" style="--c:${c}" title="${SB.map(st=>SL[st]+': '+a.filter(r=>bucket(r)===st).length).filter(s=>!s.endsWith(': 0')).join(' · ')}">`+
+        SB.map(st=>{const n=a.filter(r=>bucket(r)===st).length,w=n/maxP*100;return n?`<i class="st-${st}" style="width:${w}%">${w>4&&n>1?n:''}</i>`:''}).join('')+
         `</div><div class="pn">${a.length}</div></div>`).join('')+`</div>`}).join(''):'<p class="note">Nenhum lead para os filtros escolhidos.</p>';
 
   // hours
@@ -371,62 +423,189 @@ function render(){
   $('#convNote').innerHTML=conv?`${conv} leads convertidos no filtro.`:
     `Nenhuma tag de encerramento na base atual indica venda${ctags.length?` (tags encontradas: ${ctags.map(esc).join('; ')})`:''}. Ajuste as palavras acima para os nomes reais das tags de venda, e a taxa passa a ser calculada.`;
 
-  renderTags(F);renderBase(F);
+  renderDays();renderATag(F);renderCTag(F);renderBase(F);renderCmp();
 }
 
-let sortK='n',sortD=-1;
 const gl=g=>`<span class="g${g[0]}">${g}</span>`;
 const pillT=(u,n)=>n===0?'<span style="color:var(--muted);font-size:12px">—</span>':u===0?'<span class="pill no">Não usa</span>':u<n?'<span class="pill part">Parcial</span>':'<span class="pill ok">Usa sempre</span>';
 const fmtD=d=>d?d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'-';
-function stats(a){return{n:a.length,t:a.filter(r=>r.atag).length,cl:a.filter(r=>r.closed).length,ct:a.filter(r=>r.closed&&r.ctag).length}}
-function renderTags(F){
-  const ds=rows.filter(r=>r.d).map(r=>r.d);
-  const P=[...group(F,r=>r.sup+'|'+r.prom).entries()].map(([k,a])=>({p:a[0].prom,sup:a[0].sup,g:a[0].g,...stats(a),tags:[...new Set(a.map(r=>r.atag).filter(Boolean))],ctags:[...new Set(a.map(r=>r.ctag).filter(Boolean))]}));
-  const users=P.filter(x=>x.t).length, s=stats(F);
-  $('#aBig').innerHTML=`${users}<small> de ${P.length} promotores</small>`;
-  $('#aMeter').style.width=pct(users,P.length)+'%';
-  $('#aSub').textContent=`${s.t} de ${s.n} leads com tag de chat (${fp(pct(s.t,s.n))}).`;
-  $('#cBig').innerHTML=`${s.ct}<small> de ${s.cl} encerradas</small>`;
-  $('#cMeter').style.width=pct(s.ct,s.cl)+'%';
-  $('#cSub').textContent=s.cl?`${fp(pct(s.ct,s.cl))} das sessões encerradas têm tag. ${s.n-s.cl} sessões ainda não foram encerradas.`:'Nenhuma sessão encerrada no filtro.';
-  // supervisor
-  const S=[...group(F,r=>r.sup).entries()].map(([k,a])=>{const pp=new Set(a.map(r=>r.prom)),pu=new Set(a.filter(r=>r.atag).map(r=>r.prom));return{k,g:a[0].g,pp:pp.size,pu:pu.size,...stats(a)}}).sort((a,b)=>(a.k!=='FABIO')-(b.k!=='FABIO')||b.n-a.n);
-  $('#tSup').innerHTML=`<tr><th>Supervisor</th><th>Gestão</th><th class="r">Promotores</th><th class="r">Usam tag de chat</th><th class="r">Leads</th><th class="r">Leads com tag</th><th class="r">% leads</th><th class="r">Encerradas</th><th class="r">Com tag encerr.</th></tr>`+
-   S.map(x=>`<tr><td><b>${esc(x.k)}</b></td><td>${gl(x.g)}</td><td class="r">${x.pp}</td><td class="r">${x.pu}</td><td class="r">${x.n}</td><td class="r">${x.t}</td><td class="r"><span class="mini"><i style="width:${pct(x.t,x.n)}%"></i></span>${fp(pct(x.t,x.n))}</td><td class="r">${x.cl}</td><td class="r">${x.cl?x.ct+' ('+fp(pct(x.ct,x.cl))+')':'—'}</td></tr>`).join('')+
-   ['Fabio','Josy'].filter(g=>state.g==='all'||state.g===g).map(g=>{const a=F.filter(r=>r.g===g);if(!a.length)return'';const st=stats(a),pp=new Set(a.map(r=>r.prom)).size,pu=new Set(a.filter(r=>r.atag).map(r=>r.prom)).size;
-     return `<tr style="background:var(--soft)"><td><b>Total gestão ${g}</b></td><td>${gl(g)}</td><td class="r"><b>${pp}</b></td><td class="r"><b>${pu}</b></td><td class="r"><b>${st.n}</b></td><td class="r"><b>${st.t}</b></td><td class="r"><b>${fp(pct(st.t,st.n))}</b></td><td class="r"><b>${st.cl}</b></td><td class="r"><b>${st.cl?st.ct+' ('+fp(pct(st.ct,st.cl))+')':'—'}</b></td></tr>`}).join('');
-  // promoter
-  P.forEach(x=>{x.pa=x.n?x.t/x.n:0;x.pc=x.cl?x.ct/x.cl:-1});
-  P.sort((a,b)=>{const va=a[sortK],vb=b[sortK];return (typeof va==='string'?va.localeCompare(vb):va-vb)*sortD||b.n-a.n});
-  const cols=[['p','Promotor'],['sup','Supervisor'],['n','Leads','r'],['t','Com tag chat','r'],['pa','% chat','r'],['','Status chat'],['cl','Encerradas','r'],['ct','Com tag encerr.','r'],['','Status encerr.'],['','Tags aplicadas']];
-  $('#tPromTag').innerHTML='<tr>'+cols.map(([k,l,c])=>`<th ${k?`data-k="${k}"`:''} class="${c||''}">${l}${k===sortK?(sortD>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>'+
-   P.map(x=>`<tr><td>${esc(x.p)}</td><td>${esc(x.sup)} ${gl(x.g)}</td><td class="r">${x.n}</td><td class="r">${x.t}</td><td class="r">${fp(x.pa*100)}</td><td>${pillT(x.t,x.n)}</td><td class="r">${x.cl}</td><td class="r">${x.ct}</td><td>${x.cl?pillT(x.ct,x.cl):'<span style="color:var(--muted);font-size:12px">sem encerramento</span>'}</td><td class="wr">${[...x.tags,...x.ctags].map(t=>`<span class="chip">${esc(t)}</span>`).join('')||'<span style="color:var(--muted)">—</span>'}</td></tr>`).join('');
-  document.querySelectorAll('#tPromTag th[data-k]').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(sortK===k)sortD=-sortD;else{sortK=k;sortD=(k==='p'||k==='sup')?1:-1}render()});
-  // freq
-  const freq=(key)=>{const m=[...group(F.filter(r=>r[key]),r=>r[key]).entries()].sort((a,b)=>b[1].length-a[1].length);
-    return m.length?`<tr><th>Tag</th><th class="r">Qtd.</th><th>Promotores</th></tr>`+m.map(([t,a])=>`<tr><td class="wr">${esc(t)}</td><td class="r">${a.length}</td><td class="wr">${[...group(a,r=>r.prom).entries()].map(([p,b])=>`<span class="chip">${esc(p)} (${b.length})</span>`).join('')}</td></tr>`).join(''):'<tr><td style="color:var(--muted)">Nenhuma tag aplicada no filtro.</td></tr>'};
-  $('#tAF').innerHTML=freq('atag'); $('#tCF').innerHTML=freq('ctag');
-  // attention
-  const closedNo=F.filter(r=>r.closed&&!r.ctag);
-  const never=P.filter(x=>!x.t).sort((a,b)=>b.n-a.n);
-  const oldNoTag=F.filter(r=>!r.closed&&!r.atag&&r.d&&(Date.now()-r.d)>864e5).sort((a,b)=>a.d-b.d);
-  const tbl=(list)=>`<div class="scroll"><table><tr><th>Sessão</th><th>Entrada</th><th>Promotor</th><th>Supervisor</th><th>Fila</th><th>Status</th></tr>`+list.map(r=>`<tr><td>${esc(r.id||'')}</td><td>${fmtD(r.d)}</td><td>${esc(r.prom)}</td><td>${esc(r.sup)}</td><td>${esc(r.fila)}</td><td>${ST_LABEL[r.status]||esc(r.status)}</td></tr>`).join('')+'</table></div>';
-  $('#att').innerHTML=
-   `<h3 style="font-size:15px;margin:6px 0">Encerradas sem tag de encerramento: ${closedNo.length}</h3>`+(closedNo.length?tbl(closedNo):'<p class="note">Todas as sessões encerradas receberam tag.</p>')+
-   `<h3 style="font-size:15px;margin:18px 0 6px">Abertas há mais de 24h sem tag de chat: ${oldNoTag.length}</h3>`+(oldNoTag.length?tbl(oldNoTag):'<p class="note">Nenhuma.</p>')+
-   `<h3 style="font-size:15px;margin:18px 0 6px">Promotores que não usaram tag de chat: ${never.length}</h3><div>${never.map(x=>`<span class="chip">${esc(x.p)} · ${x.n} lead${x.n>1?'s':''}</span>`).join('')}</div>`;
+const gmed=a=>{a=a.filter(x=>x!=null).sort((x,y)=>x-y);return a.length?(a.length%2?a[(a.length-1)/2]:(a[a.length/2-1]+a[a.length/2])/2):null};
+const supOrder=(a,b)=>(a!=='FABIO')-(b!=='FABIO')||a.localeCompare(b);
+const chips=m=>[...m.entries()].sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span class="chip">${esc(k)} (${v})</span>`).join('')||'<span style="color:var(--muted)">—</span>';
+function countMap(arr,fn){const m=new Map();arr.forEach(x=>{const k=fn(x);if(k)m.set(k,(m.get(k)||0)+1)});return m}
+
+/* ---------- período global ---------- */
+function syncRangeInputs(){$('#fPreset').value=state.preset;$('#fFrom').value=iso(state.from);$('#fTo').value=iso(state.to)}
+function applyPreset(p){
+  const ref=refDay();state.preset=p;
+  const set=(f,t)=>{state.from=f;state.to=t};
+  if(p==='all')set(null,null);else if(p==='today')set(ref,ref);else if(p==='yday')set(addD(ref,-1),addD(ref,-1));
+  else if(p==='7d')set(addD(ref,-6),ref);else if(p==='week')set(monday(ref),ref);
+  else if(p==='lweek')set(addD(monday(ref),-7),addD(monday(ref),-1));
+  else if(p==='month')set(new Date(ref.getFullYear(),ref.getMonth(),1),ref);
+  syncRangeInputs();
+}
+
+/* ---------- timeline diária interativa ---------- */
+let drag=null;
+function renderDays(){
+  const S=rows.filter(r=>scope(r)&&r.d);const box=$('#days');
+  if(!S.length){box.innerHTML='<p class="note">Sem dados.</p>';return}
+  let mn=Infinity,mx=0;S.forEach(r=>{const x=sod(r.d).getTime();if(x<mn)mn=x;if(x>mx)mx=x});
+  let start=new Date(mn);const end=new Date(mx);if((end-start)/DAY>120)start=addD(end,-120);
+  const cnt={};S.forEach(r=>{const k=iso(r.d);(cnt[k]=cnt[k]||{f:0,j:0})[r.g==='Fabio'?'f':'j']++});
+  const days=[];for(let d=start;d<=end;d=addD(d,1))days.push(d);
+  const m=Math.max(1,...days.map(d=>{const c=cnt[iso(d)];return c?c.f+c.j:0}));
+  const wd=['dom','seg','ter','qua','qui','sex','sáb'];
+  box.innerHTML=days.map(d=>{const c=cnt[iso(d)]||{f:0,j:0},tot=c.f+c.j,inr=inRng({d},state.from,state.to),sel=(state.from||state.to)&&inr;
+    return `<div class="dcol ${sel?'sel':''} ${(state.from||state.to)&&!inr?'out':''} ${d.getDay()===1?'wk':''}" data-d="${iso(d)}" title="${d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'})}: ${tot} leads (Fabio ${c.f}, Josy ${c.j})">
+      <div class="v">${tot||''}</div><div class="stack"><i class="hf" style="height:${c.f/m*100}%"></i><i class="hj" style="height:${c.j/m*100}%"></i></div>
+      <div class="lab">${wd[d.getDay()]}<br>${ddmm(d)}</div></div>`}).join('');
+  if(state.to&&!drag){const el=box.querySelector(`[data-d="${iso(state.to)}"]`);if(el)el.scrollIntoView({block:'nearest',inline:'nearest'})}
+}
+(function(){const box=$('#days');
+  const at=e=>{const el=document.elementFromPoint(e.clientX,e.clientY);return el&&el.closest('.dcol')};
+  const paint=()=>{if(!drag)return;const[a,b]=[drag.a,drag.b].sort();box.querySelectorAll('.dcol').forEach(c=>{const on=c.dataset.d>=a&&c.dataset.d<=b;c.classList.toggle('sel',on);c.classList.toggle('out',!on)})};
+  box.addEventListener('pointerdown',e=>{const c=at(e);if(!c)return;drag={a:c.dataset.d,b:c.dataset.d,moved:false};paint();e.preventDefault()});
+  box.addEventListener('pointermove',e=>{if(!drag)return;const c=at(e);if(c&&c.dataset.d!==drag.b){drag.b=c.dataset.d;drag.moved=true;paint()}});
+  window.addEventListener('pointerup',()=>{if(!drag)return;const[a,b]=[drag.a,drag.b].sort();
+    const same=!drag.moved&&state.from&&state.to&&iso(state.from)===a&&iso(state.to)===a;drag=null;
+    if(same){state.from=state.to=null;state.preset='all'}else{state.from=fromIso(a);state.to=fromIso(b);state.preset='custom'}
+    syncRangeInputs();render()});
+})();
+
+/* ---------- comparação ---------- */
+const cmp={preset:'wtd',aFrom:null,aTo:null,bFrom:null,bTo:null};
+function cmpPreset(){
+  if(cmp.preset==='custom')return;const r=refDay(),mo=monday(r);let A,B;
+  switch(cmp.preset){
+    case 'd':A=[r,r];B=[addD(r,-1),addD(r,-1)];break;
+    case 'dw':A=[r,r];B=[addD(r,-7),addD(r,-7)];break;
+    case 'w':A=[addD(mo,-7),addD(mo,-1)];B=[addD(mo,-14),addD(mo,-8)];break;
+    case '7':A=[addD(r,-6),r];B=[addD(r,-13),addD(r,-7)];break;
+    default:A=[mo,r];B=[addD(mo,-7),addD(r,-7)];}
+  [cmp.aFrom,cmp.aTo]=A;[cmp.bFrom,cmp.bTo]=B;
+}
+function dcell(a,b,opt={}){
+  if(a==null||b==null)return '<td class="r flat">—</td>';
+  const d=a-b;if(Math.abs(d)<1e-9)return '<td class="r flat">0</td>';
+  const good=opt.good===undefined?null:(opt.good?d>0:d<0);
+  const cls=good===null?(d>0?'up':'down'):(good?'up':'down');
+  let txt;if(opt.pp)txt=(d>0?'+':'')+d.toFixed(1).replace('.',',')+' p.p.';
+  else if(opt.min)txt=(d>0?'+':'−')+fmtMin(Math.abs(d));
+  else{txt=(d>0?'+':'')+(Number.isInteger(d)?d:d.toFixed(1).replace('.',','));if(b>0)txt+=` (${d>0?'+':''}${fp(d/b*100)})`}
+  return `<td class="r ${cls}">${d>0?'▲':'▼'} ${txt}</td>`;
+}
+function metrics(a,days){const cl=a.filter(r=>r.closed);const proms=new Set(a.map(r=>r.prom)).size;
+  return{n:a.length,perDay:days?a.length/days:0,proms,perProm:proms?a.length/proms:0,noResp:a.filter(r=>!r.hasFirst).length,fr:gmed(a.map(r=>r.frMin)),
+    cl:cl.length,conv:pct(a.filter(isConv).length,a.length),atag:pct(a.filter(r=>r.atag).length,a.length),ctag:cl.length?pct(cl.filter(r=>r.ctag).length,cl.length):null}}
+function gbars(el,labels,A,B){const m=Math.max(1,...A,...B);
+  el.innerHTML=labels.map((l,i)=>`<div class="gb" title="${l}: A ${A[i]} · B ${B[i]}"><div class="pair"><i class="a" style="height:${A[i]/m*100}%"></i><i class="b" style="height:${B[i]/m*100}%"></i></div><div class="lab">${l}</div></div>`).join('')}
+function renderCmp(){
+  cmpPreset();
+  ['aFrom','aTo','bFrom','bTo'].forEach(k=>$('#'+k).value=iso(cmp[k]));
+  const A=rows.filter(r=>scope(r)&&inRng(r,cmp.aFrom,cmp.aTo)),B=rows.filter(r=>scope(r)&&inRng(r,cmp.bFrom,cmp.bTo));
+  const span=(f,t)=>f&&t?Math.round((t-f)/DAY)+1:0;const dA=span(cmp.aFrom,cmp.aTo),dB=span(cmp.bFrom,cmp.bTo);
+  const lbl=(f,t)=>f&&t?(iso(f)===iso(t)?f.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}):`${ddmm(f)} a ${ddmm(t)}`):'—';
+  $('#cmpRef').textContent=`A: ${lbl(cmp.aFrom,cmp.aTo)} (${dA} dia${dA>1?'s':''}) · B: ${lbl(cmp.bFrom,cmp.bTo)} (${dB} dia${dB>1?'s':''}). Último dia com dados: ${ddmm(refDay())}. Respeita os filtros de gestão e supervisor; o período do topo não se aplica aqui.`;
+  const ma=metrics(A,dA),mb=metrics(B,dB);
+  const n1=v=>v.toFixed(1).replace('.',',');
+  const K=[['Leads recebidos','n',v=>v,{}],['Leads por dia','perDay',n1,{}],['Promotores ativos','proms',v=>v,{}],['Leads por promotor','perProm',n1,{}],
+    ['Sem 1ª resposta','noResp',v=>v,{good:false}],['1ª resposta (mediana)','fr',fmtMin,{good:false,min:true}],['Encerrados','cl',v=>v,{}],
+    ['Conversão','conv',fp,{good:true,pp:true}],['Leads com Agent Tag','atag',fp,{good:true,pp:true}],['Encerrados com tag','ctag',v=>v==null?'—':fp(v),{good:true,pp:true}]];
+  $('#cKpi').innerHTML=`<tr><th>Indicador</th><th class="r"><span class="swA"></span>A</th><th class="r"><span class="swB"></span>B</th><th class="r">Variação</th></tr>`+
+    K.map(([l,k,f,o])=>`<tr><td>${l}</td><td class="r"><b>${ma[k]==null?'—':f(ma[k])}</b></td><td class="r">${mb[k]==null?'—':f(mb[k])}</td>${dcell(ma[k],mb[k],o)}</tr>`).join('');
+  const diffTable=(el,key,title,limit)=>{const ca=countMap(A,key),cb=countMap(B,key);const keys=[...new Set([...ca.keys(),...cb.keys()])];
+    const L=keys.map(k=>({k,a:ca.get(k)||0,b:cb.get(k)||0})).sort((x,y)=>Math.abs(y.a-y.b)-Math.abs(x.a-x.b)||y.a-x.a);
+    $(el).innerHTML=`<tr><th>${title}</th><th class="r"><span class="swA"></span>A</th><th class="r"><span class="swB"></span>B</th><th class="r">Variação</th></tr>`+
+      (L.length?L.slice(0,limit||999).map(x=>`<tr><td>${esc(x.k)}</td><td class="r"><b>${x.a}</b></td><td class="r">${x.b}</td>${dcell(x.a,x.b)}</tr>`).join(''):'<tr><td colspan="4" style="color:var(--muted)">Sem leads nos dois períodos.</td></tr>')+
+      (limit&&L.length>limit?`<tr><td colspan="4" class="cap">Mostrando ${limit} de ${L.length}.</td></tr>`:'')};
+  {const ca=countMap(A,r=>r.sup),cb=countMap(B,r=>r.sup);const keys=[...new Set([...ca.keys(),...cb.keys()])].sort(supOrder);
+   const g=s=>s==='FABIO'?'Fabio':'Josy';
+   $('#cSup').innerHTML=`<tr><th>Supervisor</th><th class="r"><span class="swA"></span>A</th><th class="r"><span class="swB"></span>B</th><th class="r">Variação</th></tr>`+
+    keys.map(k=>`<tr><td><b>${esc(k)}</b> ${gl(g(k))}</td><td class="r"><b>${ca.get(k)||0}</b></td><td class="r">${cb.get(k)||0}</td>${dcell(ca.get(k)||0,cb.get(k)||0)}</tr>`).join('')+
+    ['Fabio','Josy'].filter(x=>state.g==='all'||state.g===x).map(x=>{const a=A.filter(r=>r.g===x).length,b=B.filter(r=>r.g===x).length;return `<tr style="background:var(--soft)"><td><b>Total gestão ${x}</b></td><td class="r"><b>${a}</b></td><td class="r"><b>${b}</b></td>${dcell(a,b)}</tr>`}).join('')}
+  diffTable('#cProm',r=>r.prom,'Promotor',40); diffTable('#cFila',r=>r.fila,'Fila',40);
+  const hA=Array(24).fill(0),hB=Array(24).fill(0);A.forEach(r=>{if(r.d)hA[r.d.getHours()]++});B.forEach(r=>{if(r.d)hB[r.d.getHours()]++});
+  const hs=[...Array(24).keys()].filter(h=>hA[h]||hB[h]);const h0=hs.length?Math.min(...hs):8,h1=hs.length?Math.max(...hs):18;const H=[];for(let h=h0;h<=h1;h++)H.push(h);
+  gbars($('#cHour'),H.map(h=>h+'h'),H.map(h=>hA[h]),H.map(h=>hB[h]));
+  $('#cWdWrap').hidden=!(dA>1||dB>1);
+  if(dA>1||dB>1){const order=[1,2,3,4,5,6,0],nm=['dom','seg','ter','qua','qui','sex','sáb'];const wA=Array(7).fill(0),wB=Array(7).fill(0);
+    A.forEach(r=>{if(r.d)wA[r.d.getDay()]++});B.forEach(r=>{if(r.d)wB[r.d.getDay()]++});
+    gbars($('#cWd'),order.map(i=>nm[i]),order.map(i=>wA[i]),order.map(i=>wB[i]))}
+}
+
+/* ---------- tabela ordenável ---------- */
+function sortTable(el,cols,data,st,rerender){
+  const c=cols.find(x=>x.k===st.k)||cols[0];
+  data.sort((a,b)=>{const va=c.s?c.s(a):a[c.k],vb=c.s?c.s(b):b[c.k];return (typeof va==='string'?va.localeCompare(vb):va-vb)*st.d||b.n-a.n});
+  el.innerHTML='<tr>'+cols.map(x=>`<th ${x.k?`data-k="${x.k}"`:''} class="${x.r?'r':''}">${x.l}${x.k===st.k?(st.d>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>'+
+    data.map(row=>'<tr>'+cols.map(x=>`<td class="${x.r?'r':''} ${x.w?'wr':''}">${x.v?x.v(row):row[x.k]}</td>`).join('')+'</tr>').join('');
+  el.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(st.k===k)st.d=-st.d;else{st.k=k;st.d=typeof data[0]?.[k]==='string'?1:-1}rerender()});
+}
+const listTbl=(list,cap=200)=>`<div class="scroll"><table><tr><th>Sessão</th><th>Entrada</th><th>Promotor</th><th>Supervisor</th><th>Fila</th><th>Status</th></tr>`+
+  list.slice(0,cap).map(r=>`<tr><td>${esc(r.id||'')}</td><td>${fmtD(r.d)}</td><td>${esc(r.prom)}</td><td>${esc(r.sup)}</td><td>${esc(r.fila)}</td><td>${r.closed?'Encerrado':(ST_LABEL[r.status]||esc(r.status))}</td></tr>`).join('')+'</table></div>'+(list.length>cap?`<p class="cap">Mostrando ${cap} de ${list.length}. Use a aba Base de sessões para ver todas.</p>`:'');
+function matrix(el,F,key,extra){
+  const sups=[...new Set(F.map(r=>r.sup))].sort(supOrder);const tagged=F.filter(r=>r[key]);
+  const tags=[...countMap(tagged,r=>r[key]).entries()].sort((a,b)=>b[1]-a[1]);
+  if(!tags.length){el.innerHTML='<tr><td style="color:var(--muted)">Nenhuma tag aplicada no filtro.</td></tr>';return}
+  const cell={};tagged.forEach(r=>{const k=r[key]+'|'+r.sup;cell[k]=(cell[k]||0)+1});
+  el.innerHTML=`<tr><th>Tag</th>${extra?`<th>${extra.l}</th>`:''}${sups.map(s=>`<th class="r">${esc(s)}</th>`).join('')}<th class="r">Total</th><th class="r">Promotores</th></tr>`+
+    tags.map(([t,n])=>`<tr><td class="wr">${esc(t)}</td>${extra?`<td>${extra.v(t)}</td>`:''}${sups.map(s=>{const v=cell[t+'|'+s]||0;return v?`<td class="n">${v}</td>`:'<td class="z">·</td>'}).join('')}<td class="r"><b>${n}</b></td><td class="r">${new Set(tagged.filter(r=>r[key]===t).map(r=>r.prom)).size}</td></tr>`).join('')+
+    `<tr style="background:var(--soft)"><td><b>Total</b></td>${extra?'<td></td>':''}${sups.map(s=>`<td class="n"><b>${tagged.filter(r=>r.sup===s).length}</b></td>`).join('')}<td class="r"><b>${tagged.length}</b></td><td></td></tr>`;
+}
+
+/* ---------- Agent Tags ---------- */
+const stA={k:'n',d:-1},stC={k:'cl',d:-1};
+function renderATag(F){
+  const P=[...group(F,r=>r.sup+'|'+r.prom).values()].map(a=>{const t=a.filter(r=>r.atag).length;return{p:a[0].prom,sup:a[0].sup,g:a[0].g,n:a.length,t,pa:a.length?t/a.length:0,tags:countMap(a,r=>r.atag)}});
+  const users=P.filter(x=>x.t).length,tot=F.filter(r=>r.atag).length,tm=countMap(F,r=>r.atag);
+  $('#aBig').innerHTML=`${users}<small> de ${P.length}</small>`;$('#aMeter').style.width=pct(users,P.length)+'%';
+  $('#aBig2').innerHTML=`${fp(pct(tot,F.length))}<small> ${tot} de ${F.length}</small>`;$('#aMeter2').style.width=pct(tot,F.length)+'%';
+  const top=[...tm.entries()].sort((a,b)=>b[1]-a[1])[0];
+  $('#aBig3').innerHTML=`${tm.size}<small> tags</small>`;$('#aTop').textContent=top?`Mais usada: ${top[0]} (${top[1]})`:'Nenhuma tag aplicada.';
+  const S=[...group(F,r=>r.sup).values()].map(a=>{const pp=new Set(a.map(r=>r.prom)).size,pu=new Set(a.filter(r=>r.atag).map(r=>r.prom)).size,t=a.filter(r=>r.atag).length;return{k:a[0].sup,g:a[0].g,pp,pu,n:a.length,t}}).sort((a,b)=>supOrder(a.k,b.k));
+  const row=(x,b)=>`<tr ${b?'style="background:var(--soft)"':''}><td><b>${esc(x.k)}</b></td><td>${gl(x.g)}</td><td class="r">${x.pp}</td><td class="r">${x.pu}</td><td class="r">${fp(pct(x.pu,x.pp))}</td><td class="r">${x.n}</td><td class="r">${x.t}</td><td class="r"><span class="mini"><i style="width:${pct(x.t,x.n)}%"></i></span>${fp(pct(x.t,x.n))}</td></tr>`;
+  $('#aSup').innerHTML=`<tr><th>Supervisor</th><th>Gestão</th><th class="r">Promotores</th><th class="r">Usam tag</th><th class="r">% promotores</th><th class="r">Leads</th><th class="r">Com tag</th><th class="r">% leads</th></tr>`+S.map(x=>row(x)).join('')+
+    ['Fabio','Josy'].filter(g=>state.g==='all'||state.g===g).map(g=>{const a=F.filter(r=>r.g===g);if(!a.length)return'';return row({k:'Total gestão '+g,g,pp:new Set(a.map(r=>r.prom)).size,pu:new Set(a.filter(r=>r.atag).map(r=>r.prom)).size,n:a.length,t:a.filter(r=>r.atag).length},true)}).join('');
+  sortTable($('#aProm'),[{k:'p',l:'Promotor'},{k:'sup',l:'Supervisor',v:x=>`${esc(x.sup)} ${gl(x.g)}`},{k:'n',l:'Leads',r:1},{k:'t',l:'Com tag',r:1},{k:'pa',l:'% uso',r:1,v:x=>fp(x.pa*100)},{l:'Status',v:x=>pillT(x.t,x.n)},{l:'Tags aplicadas',w:1,v:x=>chips(x.tags)}],P,stA,()=>renderATag(filtered()));
+  matrix($('#aMx'),F,'atag');
+  const old=F.filter(r=>!r.closed&&!r.atag&&r.d&&(Date.now()-r.d)>DAY).sort((a,b)=>a.d-b.d);const never=P.filter(x=>!x.t).sort((a,b)=>b.n-a.n);
+  $('#aAtt').innerHTML=`<h3 style="font-size:15px;margin:6px 0">Abertas há mais de 24h sem Agent Tag: ${old.length}</h3>`+(old.length?listTbl(old):'<p class="note">Nenhuma.</p>')+
+    `<h3 style="font-size:15px;margin:18px 0 6px">Promotores que não usaram Agent Tag: ${never.length}</h3><div>${never.map(x=>`<span class="chip">${esc(x.p)} · ${x.n} lead${x.n>1?'s':''}</span>`).join('')||'<p class="note">Todos usaram.</p>'}</div>`;
+}
+
+/* ---------- Tags de encerramento ---------- */
+function renderCTag(F){
+  const P=[...group(F,r=>r.sup+'|'+r.prom).values()].map(a=>{const c=a.filter(r=>r.closed),ct=c.filter(r=>r.ctag).length;return{p:a[0].prom,sup:a[0].sup,g:a[0].g,n:a.length,cl:c.length,ct,sem:c.length-ct,pc:c.length?ct/c.length:-1,cv:a.filter(isConv).length,tags:countMap(a,r=>r.ctag)}});
+  const C=F.filter(r=>r.closed),ct=C.filter(r=>r.ctag).length,cv=F.filter(isConv).length;
+  $('#cBig').innerHTML=`${ct}<small> de ${C.length}</small>`;$('#cMeter').style.width=pct(ct,C.length)+'%';
+  $('#cBig2').innerHTML=`${C.length-ct}`;$('#cSub2').textContent=C.length?`${fp(pct(C.length-ct,C.length))} das sessões encerradas.`:'Nenhuma sessão encerrada no filtro.';
+  $('#cBig3').innerHTML=`${cv}<small> de ${F.length}</small>`;$('#cSub3').textContent=`Taxa de ${fp(pct(cv,F.length))}. Palavras de venda configuradas na aba Leads e conversão.`;
+  const S=[...group(F,r=>r.sup).values()].map(a=>{const c=a.filter(r=>r.closed),t=c.filter(r=>r.ctag).length;return{k:a[0].sup,g:a[0].g,n:a.length,cl:c.length,ct:t,cv:a.filter(isConv).length}}).sort((a,b)=>supOrder(a.k,b.k));
+  const row=(x,b)=>`<tr ${b?'style="background:var(--soft)"':''}><td><b>${esc(x.k)}</b></td><td>${gl(x.g)}</td><td class="r">${x.n}</td><td class="r">${x.cl}</td><td class="r">${x.ct}</td><td class="r">${x.cl-x.ct}</td><td class="r">${x.cl?`<span class="mini"><i style="width:${pct(x.ct,x.cl)}%"></i></span>${fp(pct(x.ct,x.cl))}`:'—'}</td><td class="r">${x.cv}</td></tr>`;
+  $('#ctSup').innerHTML=`<tr><th>Supervisor</th><th>Gestão</th><th class="r">Leads</th><th class="r">Encerradas</th><th class="r">Com tag</th><th class="r">Sem tag</th><th class="r">% com tag</th><th class="r">Convertidas</th></tr>`+S.map(x=>row(x)).join('')+
+    ['Fabio','Josy'].filter(g=>state.g==='all'||state.g===g).map(g=>{const a=F.filter(r=>r.g===g);if(!a.length)return'';const c=a.filter(r=>r.closed);return row({k:'Total gestão '+g,g,n:a.length,cl:c.length,ct:c.filter(r=>r.ctag).length,cv:a.filter(isConv).length},true)}).join('');
+  sortTable($('#ctProm'),[{k:'p',l:'Promotor'},{k:'sup',l:'Supervisor',v:x=>`${esc(x.sup)} ${gl(x.g)}`},{k:'n',l:'Leads',r:1},{k:'cl',l:'Encerradas',r:1},{k:'ct',l:'Com tag',r:1},{k:'sem',l:'Sem tag',r:1},{k:'pc',l:'% com tag',r:1,v:x=>x.cl?fp(x.pc*100):'—'},{l:'Status',v:x=>x.cl?pillT(x.ct,x.cl):'<span style="color:var(--muted);font-size:12px">sem encerramento</span>'},{k:'cv',l:'Convertidas',r:1},{l:'Tags aplicadas',w:1,v:x=>chips(x.tags)}],P,stC,()=>renderCTag(filtered()));
+  matrix($('#ctMx'),F,'ctag',{l:'Conversão?',v:t=>kwList().some(k=>t.toLowerCase().includes(k))?'<span class="pill ok">Sim</span>':'<span style="color:var(--muted)">Não</span>'});
+  const no=C.filter(r=>!r.ctag).sort((a,b)=>b.d-a.d);
+  $('#ctAtt').innerHTML=no.length?listTbl(no):'<p class="note">Todas as sessões encerradas receberam tag.</p>';
 }
 function renderBase(F){
   const q=($('#q').value||'').toLowerCase().trim();
   const list=F.filter(r=>!q||[r.id,r.tel,r.prom,r.sup,r.fila,r.atag,r.ctag,r.firstTo,r.status].join(' ').toLowerCase().includes(q)||String(r.raw||'').includes(q)).sort((a,b)=>(b.d||0)-(a.d||0));
-  $('#baseHint').textContent=`${list.length} de ${F.length} sessões no filtro.`;
+  $('#baseHint').textContent=`${list.length} de ${F.length} sessões no filtro${list.length>400?'. Mostrando as 400 mais recentes, use a busca para encontrar outras':''}.`;
   $('#tBase').innerHTML=`<tr><th>Sessão</th><th>Entrada</th><th>Gestão</th><th>Supervisor</th><th>Promotor</th><th>Fila</th><th>Status</th><th>Prioridade</th><th>1ª resposta</th><th>Encerramento</th><th>Agent Tag</th><th>Tag de encerramento</th></tr>`+
-   list.map(r=>`<tr><td>${esc(r.id||'')}</td><td>${fmtD(r.d)}</td><td>${gl(r.g)}</td><td>${esc(r.sup)}</td><td>${esc(r.prom)}${r.firstTo&&String(r.firstTo).trim()!==r.prom?`<br><small style="color:var(--muted)">antes: ${esc(r.firstTo)}</small>`:''}</td><td>${esc(r.fila)}</td><td>${ST_LABEL[r.status]||esc(r.status)}</td><td>${esc(r.prio||'')}</td><td>${r.hasFirst?fmtD(r.fd)+(r.frMin!=null?`<br><small style="color:var(--muted)">${fmtMin(r.frMin)}</small>`:''):'<span class="pill no">Sem resposta</span>'}</td><td>${r.cd?fmtD(r.cd)+(r.durMin!=null?`<br><small style="color:var(--muted)">${fmtMin(r.durMin)}</small>`:''):''}</td><td>${r.atag?`<span class="chip">${esc(r.atag)}</span>`:''}</td><td class="wr">${r.ctag?`<span class="chip">${esc(r.ctag)}</span>`:''}</td></tr>`).join('');
+   list.slice(0,400).map(r=>`<tr><td>${esc(r.id||'')}</td><td>${fmtD(r.d)}</td><td>${gl(r.g)}</td><td>${esc(r.sup)}</td><td>${esc(r.prom)}${r.firstTo&&String(r.firstTo).trim()!==r.prom?`<br><small style="color:var(--muted)">antes: ${esc(r.firstTo)}</small>`:''}</td><td>${esc(r.fila)}</td><td>${ST_LABEL[r.status]||esc(r.status)}</td><td>${esc(r.prio||'')}</td><td>${r.hasFirst?fmtD(r.fd)+(r.frMin!=null?`<br><small style="color:var(--muted)">${fmtMin(r.frMin)}</small>`:''):'<span class="pill no">Sem resposta</span>'}</td><td>${r.cd?fmtD(r.cd)+(r.durMin!=null?`<br><small style="color:var(--muted)">${fmtMin(r.durMin)}</small>`:''):''}</td><td>${r.atag?`<span class="chip">${esc(r.atag)}</span>`:''}</td><td class="wr">${r.ctag?`<span class="chip">${esc(r.ctag)}</span>`:''}</td></tr>`).join('');
 }
 function load(raw,remember){rows=shape(raw);if(remember){try{localStorage.setItem('painelBase',JSON.stringify(raw))}catch(e){}}fillFilters();render()}
 document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{state.g=b.dataset.g;document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b));fillFilters();render()});
 $('#fSup').onchange=e=>{state.sup=e.target.value;render()};
-$('#fDay').onchange=e=>{state.day=e.target.value;render()};
+$('#fPreset').onchange=e=>{applyPreset(e.target.value);render()};
+$('#fFrom').onchange=()=>{state.preset='custom';state.from=fromIso($('#fFrom').value);render()};
+$('#fTo').onchange=()=>{state.preset='custom';state.to=fromIso($('#fTo').value);render()};
+$('#cPreset').onchange=()=>{cmp.preset=$('#cPreset').value;cmpPreset();renderCmp()};
+['aFrom','aTo','bFrom','bTo'].forEach(id=>$('#'+id).onchange=()=>{cmp.preset='custom';$('#cPreset').value='custom';cmp[id]=fromIso($('#'+id).value);renderCmp()});
 $('#kw').oninput=()=>{try{localStorage.setItem('leadsKw',$('#kw').value)}catch(e){};render()};
 const dlg=$('#dlg');
 const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};

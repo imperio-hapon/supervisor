@@ -227,6 +227,17 @@ td.r,th.r{white-space:nowrap}
 .tlegend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:12px;color:var(--muted);align-items:center}
 .tlegend .lg{display:inline-flex;gap:6px;align-items:center}
 .tlegend .tl2{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11px}
+
+/* correção: nomes inteiros e colunas de tag compactas */
+th,td{overflow-wrap:break-word}
+.rotT th,.rotT td{overflow-wrap:normal;word-break:normal}
+.rotT th:first-child,.rotT td:first-child{min-width:170px;white-space:normal}
+.rotT td.rotc,.rotT th.tagh,.rotT td.r,.rotT th.r{white-space:nowrap}
+.rotT.compact th.tagh{width:34px;min-width:30px;max-width:40px;padding:6px 1px}
+.rotT.compact .tc{min-width:0;padding:2px 4px;font-size:11px}
+.rotT.compact td.rotc{padding:6px 1px;font-size:12px}
+.rotT.compact th.r,.rotT.compact td.r{padding-left:5px;padding-right:5px}
+.rotT.compact th.r{white-space:normal}
 </style>
 </head>
 <body>
@@ -615,7 +626,7 @@ function tagParts(tg){const m=String(tg).match(/^\s*(\d+)\s*[-–_.:]*\s*(.*)$/)
 function tagKind(tg){const s=tg.toLowerCase();return kwList().some(k=>s.includes(k))?'cv':/improdutiv|sem interesse|excluir|perdid|descart/.test(s)?'neg':'neu'}
 function tagHead(tg,extra=''){const{code,det}=tagParts(tg);const k=tagKind(tg);
   return `<span class="tc ${k}">${code||esc(det.slice(0,3).toUpperCase())}</span><span class="tn">${esc(det)}</span>${extra}`}
-function tagLegend(el,tags){if(!el)return;el.innerHTML=tags.length?'<span class="tl2">Legenda</span>'+tags.map(tg=>{const{code}=tagParts(tg);return `<span class="lg"><span class="tc ${tagKind(tg)}">${code||'—'}</span>${esc(tg)}</span>`}).join(''):''}
+function tagLegend(el,tags){if(!el)return;el.innerHTML=tags.length?'<span class="tl2">Legenda</span>'+tags.map(tg=>{const{code,det}=tagParts(tg);return `<span class="lg"><span class="tc ${tagKind(tg)}">${code||esc(det.slice(0,3).toUpperCase())}</span>${esc(tg)}</span>`}).join(''):''}
 function sortTable(el,cols,data,st,rerender,foot){
   const c=cols.find(x=>x.k===st.k)||cols[0];
   data.sort((a,b)=>{const va=c.s?c.s(a):a[c.k],vb=c.s?c.s(b):b[c.k];return (typeof va==='string'?va.localeCompare(vb):va-vb)*st.d||b.n-a.n});

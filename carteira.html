@@ -166,6 +166,15 @@ input[type=date]{font:inherit;font-size:14px;color:var(--ink);background:var(--p
 .pmx th.tg{white-space:normal;min-width:90px;max-width:140px;vertical-align:bottom;text-align:center}
 .pmx td.hi{font-weight:700}
 .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:8px;font-size:14px;z-index:50}
+.rotT th.rot{height:170px;min-width:40px;width:40px;max-width:40px;padding:0!important;vertical-align:bottom;white-space:nowrap;background:transparent!important;border-bottom:1px solid var(--line);cursor:pointer}
+.rotT th.rot>div{transform:translate(20px,-8px) rotate(-45deg);transform-origin:bottom left;width:40px}
+.rotT th.rot>div>span{display:inline-block;max-width:220px;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--line);padding:2px 6px;font-size:12px;color:var(--ink);font-weight:600}
+.rotT th.rot:hover>div>span{color:var(--fabio)}
+.rotT td.rotc{text-align:center;border-left:1px solid var(--line)}
+.rotT td.rotc .zz{color:var(--line)}
+.rotT tr:hover td{background:var(--soft)}
+.rotT tr.tfoot td{background:var(--soft);border-top:2px solid var(--line)}
+.rotWrap{padding-right:180px}#ctProm{width:auto;min-width:100%}
 </style>
 </head>
 <body>
@@ -228,7 +237,7 @@ input[type=date]{font:inherit;font-size:14px;color:var(--ink);background:var(--p
 <section class="panel">
   <h2>Conversão por fila e por promotor</h2>
   <p class="hint">Convertido = tag de encerramento contendo uma das palavras abaixo.</p>
-  <div class="conv-cfg"><label for="kw">Palavras de venda</label><input type="text" id="kw" value="Venda, Convertido, Ganho"></div>
+  <div class="conv-cfg"><label for="kw">Palavras de venda</label><input type="text" id="kw" value="Pagamento Efetuado, Venda, Convertido, Ganho"></div>
   <div class="grid">
     <div class="scroll"><table id="tFila"></table></div>
     <div class="scroll"><table id="tProm"></table></div>
@@ -279,7 +288,7 @@ input[type=date]{font:inherit;font-size:14px;color:var(--ink);background:var(--p
   <section class="panel"><h2>Conversões</h2><p class="hint">Tags que contêm as palavras de venda.</p><div class="big" id="cBig3"></div><div class="sub" id="cSub3"></div></section>
 </div>
 <section class="panel"><h2>Por supervisor</h2><p class="hint">Uso da tag de encerramento em cada equipe.</p><div class="scroll"><table id="ctSup"></table></div></section>
-<section class="panel"><h2>Por promotor</h2><p class="hint">Clique no título de uma coluna para ordenar.</p><div class="scroll"><table id="ctProm"></table></div></section>
+<section class="panel"><h2>Por promotor</h2><p class="hint">Clique no título de uma coluna para ordenar.</p><div class="scroll rotWrap"><table id="ctProm" class="rotT"></table></div><p class="cap">★ tag que conta como conversão. Clique no nome de uma tag para ordenar pelos promotores que mais a usaram.</p></section>
 <section class="panel"><h2>Tag × supervisor</h2><p class="hint">Quantas vezes cada tag de encerramento foi usada em cada equipe.</p><div class="scroll"><table class="matrix" id="ctMx"></table></div></section>
 <section class="panel"><div class="phead"><div><h2>Tag × promotor</h2><p class="hint">Quantas vezes cada promotor usou cada tag de encerramento, agrupado por supervisor.</p></div><div class="xbar"><button class="xbtn" data-x="ctag" data-f="xlsx">Exportar Excel</button><button class="xbtn" data-x="ctag" data-f="csv">Exportar CSV</button></div></div><div class="scroll mxwrap"><table class="matrix pmx" id="ctPx"></table></div></section>
 <section class="panel"><h2>Encerradas sem tag</h2><p class="hint">Sessões encerradas que ficaram sem classificação.</p><div id="ctAtt"></div></section>
@@ -548,12 +557,13 @@ function renderCmp(){
 }
 
 /* ---------- tabela ordenável ---------- */
-function sortTable(el,cols,data,st,rerender){
+function sortTable(el,cols,data,st,rerender,foot){
   const c=cols.find(x=>x.k===st.k)||cols[0];
   data.sort((a,b)=>{const va=c.s?c.s(a):a[c.k],vb=c.s?c.s(b):b[c.k];return (typeof va==='string'?va.localeCompare(vb):va-vb)*st.d||b.n-a.n});
-  el.innerHTML='<tr>'+cols.map(x=>`<th ${x.k?`data-k="${x.k}"`:''} class="${x.r?'r':''}">${x.l}${x.k===st.k?(st.d>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>'+
-    data.map(row=>'<tr>'+cols.map(x=>`<td class="${x.r?'r':''} ${x.w?'wr':''}">${x.v?x.v(row):row[x.k]}</td>`).join('')+'</tr>').join('');
-  el.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(st.k===k)st.d=-st.d;else{st.k=k;st.d=typeof data[0]?.[k]==='string'?1:-1}rerender()});
+  const arr=x=>x.k===st.k?(st.d>0?' ▲':' ▼'):'';
+  el.innerHTML='<tr>'+cols.map(x=>x.rot?`<th data-k="${x.k}" class="rot" title="${esc(x.l)}"><div><span>${esc(x.l)}${arr(x)}</span></div></th>`:`<th ${x.k?`data-k="${x.k}"`:''} class="${x.r?'r':''}">${x.l}${arr(x)}</th>`).join('')+'</tr>'+
+    data.map(row=>'<tr>'+cols.map(x=>`<td class="${x.r?'r':''} ${x.w?'wr':''} ${x.rot?'rotc':''}">${x.v?x.v(row):row[x.k]}</td>`).join('')+'</tr>').join('')+(foot?foot(cols):'');
+  el.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(st.k===k)st.d=-st.d;else{st.k=k;st.d=(k==='p'||k==='sup')?1:-1}rerender()});
 }
 const listTbl=(list,cap=200)=>`<div class="scroll"><table><tr><th>Sessão</th><th>Entrada</th><th>Promotor</th><th>Supervisor</th><th>Fila</th><th>Status</th></tr>`+
   list.slice(0,cap).map(r=>`<tr><td>${esc(r.id||'')}</td><td>${fmtD(r.d)}</td><td>${esc(r.prom)}</td><td>${esc(r.sup)}</td><td>${esc(r.fila)}</td><td>${r.closed?'Encerrado':(ST_LABEL[r.status]||esc(r.status))}</td></tr>`).join('')+'</table></div>'+(list.length>cap?`<p class="cap">Mostrando ${cap} de ${list.length}. Use a aba Base de sessões para ver todas.</p>`:'');
@@ -645,7 +655,12 @@ function renderCTag(F){
   const row=(x,b)=>`<tr ${b?'style="background:var(--soft)"':''}><td><b>${esc(x.k)}</b></td><td>${gl(x.g)}</td><td class="r">${x.n}</td><td class="r">${x.cl}</td><td class="r">${x.ct}</td><td class="r">${x.cl-x.ct}</td><td class="r">${x.cl?`<span class="mini"><i style="width:${pct(x.ct,x.cl)}%"></i></span>${fp(pct(x.ct,x.cl))}`:'—'}</td><td class="r">${x.cv}</td></tr>`;
   $('#ctSup').innerHTML=`<tr><th>Supervisor</th><th>Gestão</th><th class="r">Leads</th><th class="r">Encerradas</th><th class="r">Com tag</th><th class="r">Sem tag</th><th class="r">% com tag</th><th class="r">Convertidas</th></tr>`+S.map(x=>row(x)).join('')+
     ['Fabio','Josy'].filter(g=>state.g==='all'||state.g===g).map(g=>{const a=F.filter(r=>r.g===g);if(!a.length)return'';const c=a.filter(r=>r.closed);return row({k:'Total gestão '+g,g,n:a.length,cl:c.length,ct:c.filter(r=>r.ctag).length,cv:a.filter(isConv).length},true)}).join('');
-  sortTable($('#ctProm'),[{k:'p',l:'Promotor'},{k:'sup',l:'Supervisor',v:x=>`${esc(x.sup)} ${gl(x.g)}`},{k:'n',l:'Leads',r:1},{k:'cl',l:'Encerradas',r:1},{k:'ct',l:'Com tag',r:1},{k:'sem',l:'Sem tag',r:1},{k:'pc',l:'% com tag',r:1,v:x=>x.cl?fp(x.pc*100):'—'},{l:'Status',v:x=>x.cl?pillT(x.ct,x.cl):'<span style="color:var(--muted);font-size:12px">sem encerramento</span>'},{k:'cv',l:'Convertidas',r:1},{l:'Tags aplicadas',w:1,v:x=>chips(x.tags)}],P,stC,()=>renderCTag(filtered()));
+  const ctagList=[...countMap(F,r=>r.ctag).entries()].sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  const isCv=tg=>kwList().some(k=>tg.toLowerCase().includes(k));
+  const tagCols=ctagList.map(tg=>({k:'tg:'+tg,l:tg+(isCv(tg)?' ★':''),rot:1,s:x=>x.tags.get(tg)||0,v:x=>{const n=x.tags.get(tg)||0;return n?`<b>${n}</b>`:'<span class="zz">·</span>'}}));
+  sortTable($('#ctProm'),[{k:'p',l:'Promotor'},{k:'sup',l:'Supervisor',v:x=>`${esc(x.sup)} ${gl(x.g)}`},{k:'n',l:'Leads',r:1},{k:'cl',l:'Encerradas',r:1},{k:'ct',l:'Com tag',r:1},{k:'sem',l:'Sem tag',r:1},{k:'pc',l:'% com tag',r:1,v:x=>x.cl?fp(x.pc*100):'—'},{k:'cv',l:'Convertidas',r:1},...tagCols],P,stC,()=>renderCTag(filtered()),
+    cols=>{const T=k=>P.reduce((s,x)=>s+(x[k]||0),0);const tc=T('cl'),tt=T('ct');
+      return '<tr class="tfoot">'+cols.map(x=>{if(x.k==='p')return'<td><b>Total</b></td>';if(x.k==='sup')return'<td></td>';if(['n','cl','ct','sem','cv'].includes(x.k))return`<td class="r"><b>${T(x.k)}</b></td>`;if(x.k==='pc')return`<td class="r"><b>${tc?fp(pct(tt,tc)):'—'}</b></td>`;if(x.rot){const tg=x.k.slice(3);return`<td class="rotc"><b>${P.reduce((s,y)=>s+(y.tags.get(tg)||0),0)}</b></td>`}return'<td></td>'}).join('')+'</tr>'});
   renderPx(F);
   matrix($('#ctMx'),F,'ctag',{l:'Conversão?',v:t=>kwList().some(k=>t.toLowerCase().includes(k))?'<span class="pill ok">Sim</span>':'<span style="color:var(--muted)">Não</span>'});
   const no=C.filter(r=>!r.ctag).sort((a,b)=>b.d-a.d);
@@ -712,7 +727,7 @@ $('#btnApply').onclick=async()=>{
   }catch(e){$('#err').textContent=e.message}};
 $('#q').oninput=()=>renderBase(filtered());
 document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!=='view-'+b.dataset.v)});
-(function init(){let raw=[];try{const s=localStorage.getItem('painelBase');if(s)raw=JSON.parse(s);const k=localStorage.getItem('leadsKw');if(k)$('#kw').value=k}catch(e){}
+(function init(){let raw=[];try{const s=localStorage.getItem('painelBase');if(s)raw=JSON.parse(s);const k=localStorage.getItem('leadsKw');if(k)$('#kw').value=/pagamento efetuado/i.test(k)?k:'Pagamento Efetuado, '+k}catch(e){}
   load(raw,false); sync(); schedule();
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&every&&lastOk&&Date.now()-lastOk>every*60000)sync()});})();
 </script>

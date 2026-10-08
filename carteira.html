@@ -155,6 +155,17 @@ input[type=date]{font:inherit;font-size:14px;color:var(--ink);background:var(--p
 .matrix td.n{text-align:center}.matrix td.z{color:var(--line);text-align:center}
 .cap{font-size:13px;color:var(--muted);margin:6px 0 0}
 .legend span[hidden]{display:none}
+.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.xbar{display:flex;gap:6px;flex-wrap:wrap}.xbtn{font-size:13px;padding:6px 12px}
+.pmx th,.pmx td{font-size:13px}
+.pmx th:first-child,.pmx td:first-child{position:sticky;left:0;background:var(--panel);z-index:1;box-shadow:1px 0 0 var(--line)}
+.pmx tr.sh td{background:var(--soft);font-weight:700;padding-top:12px}
+.pmx tr.sh td:first-child{background:var(--soft)}
+.pmx tr.st td{background:var(--soft);font-weight:700;border-bottom:2px solid var(--line)}
+.pmx tr.st td:first-child{background:var(--soft)}
+.pmx th.tg{white-space:normal;min-width:90px;max-width:140px;vertical-align:bottom;text-align:center}
+.pmx td.hi{font-weight:700}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:8px;font-size:14px;z-index:50}
 </style>
 </head>
 <body>
@@ -256,7 +267,7 @@ input[type=date]{font:inherit;font-size:14px;color:var(--ink);background:var(--p
   <section class="panel"><h2>Tags diferentes</h2><p class="hint">Variedade de tags aplicadas.</p><div class="big" id="aBig3"></div><div class="sub" id="aTop"></div></section>
 </div>
 <section class="panel"><h2>Por supervisor</h2><p class="hint">Adesão à Agent Tag em cada equipe.</p><div class="scroll"><table id="aSup"></table></div></section>
-<section class="panel"><h2>Por promotor</h2><p class="hint">Clique no título de uma coluna para ordenar.</p><div class="scroll"><table id="aProm"></table></div></section>
+<section class="panel"><div class="phead"><div><h2>Por promotor</h2><p class="hint">Clique no título de uma coluna para ordenar. A exportação segue os filtros e a ordem da tabela e traz uma coluna para cada tag.</p></div><div class="xbar"><button class="xbtn" data-x="atag" data-f="xlsx">Exportar Excel</button><button class="xbtn" data-x="atag" data-f="csv">Exportar CSV</button></div></div><div class="scroll"><table id="aProm"></table></div></section>
 <section class="panel"><h2>Tag × supervisor</h2><p class="hint">Quantas vezes cada Agent Tag foi usada em cada equipe.</p><div class="scroll"><table class="matrix" id="aMx"></table></div></section>
 <section class="panel"><h2>Pontos de atenção</h2><p class="hint">Sessões abertas há mais de 24h sem Agent Tag e promotores que não usam.</p><div id="aAtt"></div></section>
 </div>
@@ -270,6 +281,7 @@ input[type=date]{font:inherit;font-size:14px;color:var(--ink);background:var(--p
 <section class="panel"><h2>Por supervisor</h2><p class="hint">Uso da tag de encerramento em cada equipe.</p><div class="scroll"><table id="ctSup"></table></div></section>
 <section class="panel"><h2>Por promotor</h2><p class="hint">Clique no título de uma coluna para ordenar.</p><div class="scroll"><table id="ctProm"></table></div></section>
 <section class="panel"><h2>Tag × supervisor</h2><p class="hint">Quantas vezes cada tag de encerramento foi usada em cada equipe.</p><div class="scroll"><table class="matrix" id="ctMx"></table></div></section>
+<section class="panel"><div class="phead"><div><h2>Tag × promotor</h2><p class="hint">Quantas vezes cada promotor usou cada tag de encerramento, agrupado por supervisor.</p></div><div class="xbar"><button class="xbtn" data-x="ctag" data-f="xlsx">Exportar Excel</button><button class="xbtn" data-x="ctag" data-f="csv">Exportar CSV</button></div></div><div class="scroll mxwrap"><table class="matrix pmx" id="ctPx"></table></div></section>
 <section class="panel"><h2>Encerradas sem tag</h2><p class="hint">Sessões encerradas que ficaram sem classificação.</p><div id="ctAtt"></div></section>
 </div>
 <div class="view" id="view-base" hidden>
@@ -568,6 +580,7 @@ function renderATag(F){
   const row=(x,b)=>`<tr ${b?'style="background:var(--soft)"':''}><td><b>${esc(x.k)}</b></td><td>${gl(x.g)}</td><td class="r">${x.pp}</td><td class="r">${x.pu}</td><td class="r">${fp(pct(x.pu,x.pp))}</td><td class="r">${x.n}</td><td class="r">${x.t}</td><td class="r"><span class="mini"><i style="width:${pct(x.t,x.n)}%"></i></span>${fp(pct(x.t,x.n))}</td></tr>`;
   $('#aSup').innerHTML=`<tr><th>Supervisor</th><th>Gestão</th><th class="r">Promotores</th><th class="r">Usam tag</th><th class="r">% promotores</th><th class="r">Leads</th><th class="r">Com tag</th><th class="r">% leads</th></tr>`+S.map(x=>row(x)).join('')+
     ['Fabio','Josy'].filter(g=>state.g==='all'||state.g===g).map(g=>{const a=F.filter(r=>r.g===g);if(!a.length)return'';return row({k:'Total gestão '+g,g,pp:new Set(a.map(r=>r.prom)).size,pu:new Set(a.filter(r=>r.atag).map(r=>r.prom)).size,n:a.length,t:a.filter(r=>r.atag).length},true)}).join('');
+  lastAP={P:[...P],tags:[...tm.entries()].sort((a,b)=>b[1]-a[1]).map(x=>x[0])};
   sortTable($('#aProm'),[{k:'p',l:'Promotor'},{k:'sup',l:'Supervisor',v:x=>`${esc(x.sup)} ${gl(x.g)}`},{k:'n',l:'Leads',r:1},{k:'t',l:'Com tag',r:1},{k:'pa',l:'% uso',r:1,v:x=>fp(x.pa*100)},{l:'Status',v:x=>pillT(x.t,x.n)},{l:'Tags aplicadas',w:1,v:x=>chips(x.tags)}],P,stA,()=>renderATag(filtered()));
   matrix($('#aMx'),F,'atag');
   const old=F.filter(r=>!r.closed&&!r.atag&&r.d&&(Date.now()-r.d)>DAY).sort((a,b)=>a.d-b.d);const never=P.filter(x=>!x.t).sort((a,b)=>b.n-a.n);
@@ -576,6 +589,52 @@ function renderATag(F){
 }
 
 /* ---------- Tags de encerramento ---------- */
+
+let lastAP={P:[],tags:[]},lastPX={rows:[],tags:[]};
+function renderPx(F){
+  const C=F.filter(r=>r.closed);const tags=[...countMap(C,r=>r.ctag).entries()].sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  const el=$('#ctPx');
+  if(!C.length){el.innerHTML='<tr><td style="color:var(--muted)">Nenhuma sessão encerrada no filtro.</td></tr>';lastPX={rows:[],tags:[]};return}
+  const isC=t=>kwList().some(k=>t.toLowerCase().includes(k));
+  const mk=a=>{const m=countMap(a,r=>r.ctag);const tot=[...m.values()].reduce((s,v)=>s+v,0);return{cl:a.length,m,tot,sem:a.length-tot}};
+  const sups=[...group(C,r=>r.sup).entries()].sort((a,b)=>supOrder(a[0],b[0]));
+  const out=[];
+  const cells=(x,bold)=>`<td class="r">${x.cl}</td>`+tags.map(tg=>{const v=x.m.get(tg)||0;return v?`<td class="n ${bold?'hi':''}">${v}</td>`:'<td class="z">·</td>'}).join('')+`<td class="r"><b>${x.tot}</b></td><td class="r">${x.sem||'<span style="color:var(--muted)">0</span>'}</td><td class="r">${x.cl?fp(pct(x.tot,x.cl)):'—'}</td>`;
+  let html=`<tr><th>Promotor</th><th class="r">Encerradas</th>${tags.map(tg=>`<th class="tg">${esc(tg)}${isC(tg)?' <span class="pill ok">venda</span>':''}</th>`).join('')}<th class="r">Com tag</th><th class="r">Sem tag</th><th class="r">% com tag</th></tr>`;
+  sups.forEach(([s,a])=>{const g=a[0].g;
+    html+=`<tr class="sh"><td colspan="${tags.length+5}">${esc(s)} ${gl(g)}</td></tr>`;
+    [...group(a,r=>r.prom).entries()].map(([p,b])=>({p,...mk(b)})).sort((x,y)=>y.tot-x.tot||y.cl-x.cl).forEach(x=>{
+      html+=`<tr><td>${esc(x.p)}</td>${cells(x)}</tr>`;out.push({sup:s,g,p:x.p,...x})});
+    const st=mk(a);html+=`<tr class="st"><td>Total ${esc(s)}</td>${cells(st,true)}</tr>`;out.push({sup:s,g,p:'TOTAL '+s,...st,total:true})});
+  const all=mk(C);html+=`<tr class="st"><td>Total geral</td>${cells(all,true)}</tr>`;out.push({sup:'',g:'',p:'TOTAL GERAL',...all,total:true});
+  el.innerHTML=html;lastPX={rows:out,tags};
+}
+function periodTag(){return state.from||state.to?`${iso(state.from)||'inicio'}_a_${iso(state.to)||'hoje'}`:'todo_periodo'}
+function exportData(kind){
+  if(kind==='atag'){const{P,tags}=lastAP;
+    const H=['Supervisor','Gestão','Promotor','Leads','Leads com Agent Tag','% de uso','Status',...tags];
+    const R=P.map(x=>[x.sup,x.g,x.p,x.n,x.t,x.n?+(x.t/x.n*100).toFixed(1):0,x.t===0?'Não usa':x.t<x.n?'Parcial':'Usa sempre',...tags.map(tg=>x.tags.get(tg)||0)]);
+    return{H,R,name:'agent_tags_por_promotor_'+periodTag(),sheet:'Agent Tags'}}
+  const{rows:L,tags}=lastPX;
+  const H=['Supervisor','Gestão','Promotor','Encerradas',...tags,'Com tag','Sem tag','% com tag'];
+  const R=L.map(x=>[x.sup,x.g,x.p,x.cl,...tags.map(tg=>x.m.get(tg)||0),x.tot,x.sem,x.cl?+(x.tot/x.cl*100).toFixed(1):0]);
+  return{H,R,name:'tags_encerramento_por_promotor_'+periodTag(),sheet:'Tags encerramento'}
+}
+function toast(m){const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+document.addEventListener('click',e=>{const b=e.target.closest('.xbtn');if(!b)return;
+  const{H,R,name,sheet}=exportData(b.dataset.x);
+  if(!R.length){toast('Nada para exportar com os filtros atuais.');return}
+  const meta=[`Gestão: ${state.g==='all'?'Todas':state.g}`,`Supervisor: ${state.sup||'Todos'}`,`Período: ${state.from||state.to?`${state.from?ddmm(state.from):'início'} a ${state.to?ddmm(state.to):'hoje'}`:'todo o período'}`].join(' · ');
+  if(b.dataset.f==='xlsx'){
+    if(!window.XLSX){toast('Excel indisponível sem internet. Exportando em CSV.');b.dataset.f='csv'}
+    else{const ws=XLSX.utils.aoa_to_sheet([[meta],[],H,...R]);ws['!cols']=H.map((h,i)=>({wch:i<3?24:Math.min(28,Math.max(10,String(h).length+2))}));ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:2,c:0},e:{r:2+R.length,c:H.length-1}})};
+      const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,sheet);XLSX.writeFile(wb,name+'.xlsx');toast('Arquivo Excel gerado.');return}}
+  const q=v=>{v=String(v??'');return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const csv='\uFEFF'+[H,...R].map(r=>r.map(v=>typeof v==='number'?String(v).replace('.',','):q(v)).join(';')).join('\r\n');
+  download(new Blob([csv],{type:'text/csv;charset=utf-8'}),name+'.csv');toast('Arquivo CSV gerado.');if(b.textContent.includes('Excel'))b.dataset.f='xlsx';
+});
+
 function renderCTag(F){
   const P=[...group(F,r=>r.sup+'|'+r.prom).values()].map(a=>{const c=a.filter(r=>r.closed),ct=c.filter(r=>r.ctag).length;return{p:a[0].prom,sup:a[0].sup,g:a[0].g,n:a.length,cl:c.length,ct,sem:c.length-ct,pc:c.length?ct/c.length:-1,cv:a.filter(isConv).length,tags:countMap(a,r=>r.ctag)}});
   const C=F.filter(r=>r.closed),ct=C.filter(r=>r.ctag).length,cv=F.filter(isConv).length;
@@ -587,6 +646,7 @@ function renderCTag(F){
   $('#ctSup').innerHTML=`<tr><th>Supervisor</th><th>Gestão</th><th class="r">Leads</th><th class="r">Encerradas</th><th class="r">Com tag</th><th class="r">Sem tag</th><th class="r">% com tag</th><th class="r">Convertidas</th></tr>`+S.map(x=>row(x)).join('')+
     ['Fabio','Josy'].filter(g=>state.g==='all'||state.g===g).map(g=>{const a=F.filter(r=>r.g===g);if(!a.length)return'';const c=a.filter(r=>r.closed);return row({k:'Total gestão '+g,g,n:a.length,cl:c.length,ct:c.filter(r=>r.ctag).length,cv:a.filter(isConv).length},true)}).join('');
   sortTable($('#ctProm'),[{k:'p',l:'Promotor'},{k:'sup',l:'Supervisor',v:x=>`${esc(x.sup)} ${gl(x.g)}`},{k:'n',l:'Leads',r:1},{k:'cl',l:'Encerradas',r:1},{k:'ct',l:'Com tag',r:1},{k:'sem',l:'Sem tag',r:1},{k:'pc',l:'% com tag',r:1,v:x=>x.cl?fp(x.pc*100):'—'},{l:'Status',v:x=>x.cl?pillT(x.ct,x.cl):'<span style="color:var(--muted);font-size:12px">sem encerramento</span>'},{k:'cv',l:'Convertidas',r:1},{l:'Tags aplicadas',w:1,v:x=>chips(x.tags)}],P,stC,()=>renderCTag(filtered()));
+  renderPx(F);
   matrix($('#ctMx'),F,'ctag',{l:'Conversão?',v:t=>kwList().some(k=>t.toLowerCase().includes(k))?'<span class="pill ok">Sim</span>':'<span style="color:var(--muted)">Não</span>'});
   const no=C.filter(r=>!r.ctag).sort((a,b)=>b.d-a.d);
   $('#ctAtt').innerHTML=no.length?listTbl(no):'<p class="note">Todas as sessões encerradas receberam tag.</p>';

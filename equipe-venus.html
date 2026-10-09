@@ -124,7 +124,7 @@ let __rt; window.addEventListener('resize', () => { clearTimeout(__rt); __rt = s
     <div class="tile"><div class="lab">Vendas em outubro (equipe)</div><div class="num dash-skeleton" data-source="totais" data-field="vendas_out" data-row="0">—</div><div class="note">Propostas processadas na BASE_PF</div></div>
     <div class="tile"><div class="lab">Vidas em outubro</div><div class="num dash-skeleton" data-source="totais" data-field="vidas_out" data-row="0">—</div><div class="note">Soma de QTDE VIDAS</div></div>
     <div class="tile"><div class="lab">Projeção de vidas no mês (equipe)</div><div class="num dash-skeleton" data-source="totais" data-field="proj_mes" data-row="0">—</div><div class="note"><b data-source="totais" data-field="acima_ranking" data-row="0">—</b> de 4 vendedoras projetadas na meta ranking (<span data-source="calendario" data-field="meta_ranking_vidas" data-row="0">—</span> vidas)</div></div>
-    <div class="tile alert"><div class="lab">Vendas da planilha fora da base</div><div class="num dash-skeleton" data-source="totais" data-field="nao_encontradas" data-row="0">—</div><div class="note"><b data-source="totais" data-field="outro_vendedor" data-row="0">—</b> outras creditadas a outro vendedor</div></div>
+    <div class="tile alert"><div class="lab">Vendas divergentes</div><div class="num dash-skeleton" data-source="totais" data-field="divergentes" data-row="0">—</div><div class="note"><b data-source="totais" data-field="nao_encontradas" data-row="0">—</b> Vendas da planilha fora da base</div><div class="note"><b data-source="totais" data-field="outro_vendedor" data-row="0">—</b> vendas creditadas a outro vendedor</div></div>
   </section>
 
   <section class="card" id="projecao">
@@ -157,7 +157,7 @@ let __rt; window.addEventListener('resize', () => { clearTimeout(__rt); __rt = s
   </section>
 
   <section class="card" id="conferencia">
-    <h2>Conferência com a planilha das vendedoras (Pasta 4)</h2>
+    <h2>Conferência com a planilha das vendedoras</h2>
     <p class="note">Cada venda da planilha foi procurada na BASE_PF pelo nº de controle, depois pelo orçamento e por último pelo CPF. Vendas processadas antes de outubro ficam de fora.</p>
     <div class="tw" style="max-height:none">
       <table data-source="conf_resumo" data-row-key="vendedora" id="tab-resumo">
@@ -270,6 +270,7 @@ dash.calc('totais', {
     vidas_out: projecao.reduce((s, r) => s + r.vidas_out, 0),
     proj_mes: projecao.reduce((s, r) => s + r.proj_mes, 0),
     acima_ranking: projecao.filter(r => r.situacao !== 'Abaixo da meta').length,
+    divergentes: conf_resumo.reduce((s, r) => s + r.nao_encontrada + r.outro, 0),
     nao_encontradas: conf_resumo.reduce((s, r) => s + r.nao_encontrada, 0),
     outro_vendedor: conf_resumo.reduce((s, r) => s + r.outro, 0)
   }]

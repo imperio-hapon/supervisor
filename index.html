@@ -2,6 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<!-- Pede ao navegador para não guardar esta página em cache -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Painel Império Hap-on</title>
 
 <style>
@@ -48,6 +52,18 @@ body {
   color: #fff;
 }
 
+/* 🔒 Ocultar botões específicos */
+button[onclick*="vidas.html"],
+button[onclick*="disponivel.html"],
+button[onclick*="carteira.html"],
+button[onclick*="disparos.html"],
+button[onclick*="conversao.html"],
+button[onclick*="leads.html"],
+button[onclick*="qualidade.html"],
+button[onclick*="absenteismo.html"] {
+  display: none;
+}
+
 iframe {
   flex: 1;
   border: none;
@@ -61,68 +77,61 @@ iframe {
 <div class="menu">
 <h2>📊 Império Hap-on</h2>
 
-<button onclick="loadPage('vidas.html', this)" style="display:none">
-    Vidas / Conversão
-</button>
-
-<button onclick="loadPage('eugenia.html', this)" style="display:none">
-    EugênIA
-</button>
-
-<button onclick="loadPage('funil.html', this)" class="active">
-    Disparos
-</button>
-
-<button onclick="loadPage('recuperacao.html', this)" style="display:none">
-    Ação de Recuperação
-</button>
-
-<button onclick="loadPage('Painel_Gerencial.html', this)">
-    Painel Gerencial
-</button>
-
-<button onclick="loadPage('disponivel.html', this)">
-    Disponível
-</button>
-
-<button onclick="loadPage('carteira.html', this)">
-  Leads
-</button>
-
-<button onclick="loadPage('teste.html', this)" style="display:none">
-    Teste
-</button>
-
-<button onclick="loadPage('leads.html', this)" style="display:none">
-    LeaAAds
-</button>
-
-<button onclick="loadPage('qualidade.html', this)" style="display:none">
-    Qualidade
-</button>
-
-<button onclick="loadPage('absenteismo.html', this)" style="display:none">
-    Absenteísmo
-</button>
-
-<button onclick="loadPage('equipe-venus.html', this)" style="display:none">
-    Equipe Vênus
-</button>
+<button onclick="loadPage('painel-hora-a-hora.html', this)" class="active">Hora a Hora</button>
+<button onclick="loadPage('vidas.html', this)">Vidas/Conversão</button>
+<button onclick="loadPage('conversao.html', this)">Conversão</button>
+<button onclick="loadPage('disponivel.html', this)">Disponível / 1º resposta</button>
+<button onclick="loadPage('carteira.html', this)">Carteira de Clientes</button>
+<button onclick="loadPage('disparos.html', this)">Disparos</button>
+<button onclick="loadPage('leads.html', this)">Leads</button>
+<button onclick="loadPage('qualidade.html', this)">Qualidade</button>
+<button onclick="loadPage('absenteismo.html', this)">Absenteísmo</button>
 </div>
 
-<iframe id="frame" src="funil.html"></iframe>
+<!-- O endereço da página é colocado pelo script abaixo, sempre com ?v=..., para não abrir uma versão antiga guardada pelo navegador -->
+<iframe id="frame" title="Painel"></iframe>
 
 <script>
-function loadPage(page, element){
-  // ?v=... evita que o navegador mostre uma versão antiga guardada em cache
-  document.getElementById('frame').src = page + '?v=' + Date.now();
+const PAGINA_INICIAL = 'painel-hora-a-hora.html';
+const CONFERIR_A_CADA_MIN = 5;
+let paginaAtual = PAGINA_INICIAL;
+let versaoAtual = null;
 
+/* Abre a página sempre com um parâmetro novo (?v=...): o navegador entende como endereço novo e busca a versão mais recente */
+function abrir(page) {
+  paginaAtual = page;
+  versaoAtual = null;
+  document.getElementById('frame').src = page + '?v=' + Date.now();
+  conferirVersao();
+}
+
+function loadPage(page, element) {
+  abrir(page);
   document.querySelectorAll('.menu button').forEach(btn => {
     btn.classList.remove('active');
   });
-
   element.classList.add('active');
 }
+
+/* Confere no servidor, sem usar cache, se o arquivo da página aberta mudou.
+   Se mudou (alguém subiu uma versão nova no GitHub), recarrega o quadro com a versão nova. */
+async function conferirVersao() {
+  try {
+    const r = await fetch(paginaAtual + '?check=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
+    if (!r.ok) return;
+    const versao = r.headers.get('etag') || r.headers.get('last-modified');
+    if (!versao) return;
+    if (versaoAtual && versao !== versaoAtual) {
+      document.getElementById('frame').src = paginaAtual + '?v=' + Date.now();
+    }
+    versaoAtual = versao;
+  } catch (e) { /* sem conexão: tenta de novo no próximo ciclo */ }
+}
+
+abrir(PAGINA_INICIAL);
+setInterval(conferirVersao, CONFERIR_A_CADA_MIN * 60 * 1000);
+// Ao voltar para a aba (depois de deixar o painel aberto em segundo plano), confere na hora
+document.addEventListener('visibilitychange', () => { if (!document.hidden) conferirVersao(); });
 </script>
 
 </body>

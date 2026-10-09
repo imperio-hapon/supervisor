@@ -304,7 +304,8 @@ dash.calc('totais', {
   tema();
   try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => setTimeout(tema, 50)); } catch (e) {}
   [document.documentElement, document.body].forEach(el => { try { new MutationObserver(() => tema()).observe(el, { attributes: true }); } catch (e) {} });
-  const title = s => s.toLowerCase().replace(/(^|\s)\S/g, m => m.toUpperCase());
+  const MIN = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
+  const title = s => String(s || '').toLowerCase().split(/(\s+)/).map((w, i) => (i > 0 && MIN.has(w)) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join('');
   const fmtDate = s => s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : '—';
 
   function fillMarks(id, rows) {
@@ -326,6 +327,8 @@ dash.calc('totais', {
     tb.innerHTML = '';
     rows.forEach(r => {
       const tr = document.createElement('tr');
+      const kf = document.getElementById(tableId).dataset.rowKey;
+      if (kf && r[kf] != null) tr.dataset.key = r[kf];
       cols.forEach(c => {
         const td = document.createElement('td');
         if (c.cls) td.className = c.cls;
@@ -401,7 +404,7 @@ dash.calc('totais', {
 
     if (proj.status === 'ok') {
       fillTable('tab-proj', proj.data, [
-        { f: 'vendedora', fmt: v => v },
+        { f: 'vendedora', fmt: v => title(v) },
         { f: 'vendas_out', cls: 'n', fmt: v => nf0.format(v) },
         { f: 'vidas_out', cls: 'n', fmt: v => nf0.format(v) },
         { f: 'proj_dia', cls: 'n', fmt: v => nf0.format(v) },
@@ -416,19 +419,19 @@ dash.calc('totais', {
 
     if (res.status === 'ok') {
       fillTable('tab-resumo', res.data, [
-        { f: 'vendedora', fmt: v => v },
+        { f: 'vendedora', fmt: v => title(v) },
         { f: 'total', cls: 'n' }, { f: 'creditada', cls: 'n' }, { f: 'outro', cls: 'n' }, { f: 'nao_encontrada', cls: 'n' }
       ]);
     }
 
     if (conf.status === 'ok') {
       fillTable('tab-fora', conf.data.filter(r => r.situacao === 'Não encontrada na base'), [
-        { f: 'vendedora', fmt: v => v }, { f: 'cliente' }, { f: 'cpf' }, { f: 'orcamento' }, { f: 'controle' }, { f: 'data_planilha' },
+        { f: 'vendedora', fmt: v => title(v) }, { f: 'cliente', fmt: v => title(v) }, { f: 'cpf' }, { f: 'orcamento' }, { f: 'controle' }, { f: 'data_planilha' },
         { f: 'status_planilha', cls: 'small' }
       ]);
       fillTable('tab-outro', conf.data.filter(r => r.situacao === 'Creditada a outro vendedor'), [
-        { f: 'vendedora', fmt: v => v }, { f: 'cliente' }, { f: 'controle_base' },
-        { f: 'creditada_para', pill: () => 'warn' }, { f: 'processado_em' }, { f: 'status_planilha', cls: 'small' }
+        { f: 'vendedora', fmt: v => title(v) }, { f: 'cliente', fmt: v => title(v) }, { f: 'controle_base' },
+        { f: 'creditada_para', pill: () => 'warn', fmt: v => title(v) }, { f: 'processado_em' }, { f: 'status_planilha', cls: 'small' }
       ]);
     } else if (conf.status === 'error') { failed(document.querySelector('#tab-fora tbody')); failed(document.querySelector('#tab-outro tbody')); }
 

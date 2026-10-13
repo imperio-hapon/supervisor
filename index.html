@@ -52,17 +52,8 @@ body {
   color: #fff;
 }
 
-/* 🔒 Ocultar botões específicos.
-   Os botões com a classe "visivel" nunca são ocultados por estas regras,
-   mesmo quando abrem um arquivo da lista (ex.: carteira.html e disponivel.html). */
-button[onclick*="vidas.html"]:not(.visivel),
-button[onclick*="disponivel.html"]:not(.visivel),
-button[onclick*="carteira.html"]:not(.visivel),
-button[onclick*="disparos.html"]:not(.visivel),
-button[onclick*="conversao.html"]:not(.visivel),
-button[onclick*="leads.html"]:not(.visivel),
-button[onclick*="qualidade.html"]:not(.visivel),
-button[onclick*="absenteismo.html"]:not(.visivel) {
+/* 🔒 Botões ocultos: para voltar a exibir um botão, retire a classe "oculto" dele */
+.menu button.oculto {
   display: none;
 }
 
@@ -79,29 +70,27 @@ iframe {
 <div class="menu">
 <h2>📊 Império Hap-on</h2>
 
-<button onclick="loadPage('painel-hora-a-hora.html', this)" class="active">Hora a Hora</button>
+<!-- Botões visíveis -->
+<button onclick="loadPage('carteira.html', this)" class="active">Painel de Leads</button>
+<button onclick="loadPage('disponivel.html', this)">Jornada da Equipe</button>
+<button onclick="loadPage('Painel_Gerencial.html', this)">Painel Gerencial</button>
 
-<!-- Novos botões -->
-<button class="visivel" onclick="loadPage('carteira.html', this)">Painel de Leads</button>
-<button class="visivel" onclick="loadPage('disponivel.html', this)">Jornada da Equipe</button>
-<button class="visivel" onclick="loadPage('Painel_Gerencial.html', this)">Painel Gerencial</button>
-
-<!-- Botões ocultos (continuam no código para reativar se precisar) -->
-<button onclick="loadPage('vidas.html', this)">Vidas/Conversão</button>
-<button onclick="loadPage('conversao.html', this)">Conversão</button>
-<button onclick="loadPage('disponivel.html', this)">Disponível / 1º resposta</button>
-<button onclick="loadPage('carteira.html', this)">Carteira de Clientes</button>
-<button onclick="loadPage('disparos.html', this)">Disparos</button>
-<button onclick="loadPage('leads.html', this)">Leads</button>
-<button onclick="loadPage('qualidade.html', this)">Qualidade</button>
-<button onclick="loadPage('absenteismo.html', this)">Absenteísmo</button>
+<!-- Botões ocultos (mantidos no código para reativar se precisar) -->
+<button class="oculto" onclick="loadPage('vidas.html', this)">Vidas/Conversão</button>
+<button class="oculto" onclick="loadPage('conversao.html', this)">Conversão</button>
+<button class="oculto" onclick="loadPage('disponivel.html', this)">Disponível / 1º resposta</button>
+<button class="oculto" onclick="loadPage('carteira.html', this)">Carteira de Clientes</button>
+<button class="oculto" onclick="loadPage('disparos.html', this)">Disparos</button>
+<button class="oculto" onclick="loadPage('leads.html', this)">Leads</button>
+<button class="oculto" onclick="loadPage('qualidade.html', this)">Qualidade</button>
+<button class="oculto" onclick="loadPage('absenteismo.html', this)">Absenteísmo</button>
 </div>
 
 <!-- O endereço da página é colocado pelo script abaixo, sempre com ?v=..., para não abrir uma versão antiga guardada pelo navegador -->
 <iframe id="frame" title="Painel"></iframe>
 
 <script>
-const PAGINA_INICIAL = 'painel-hora-a-hora.html';
+const PAGINA_INICIAL = 'carteira.html';
 const CONFERIR_A_CADA_MIN = 5;
 let paginaAtual = PAGINA_INICIAL;
 let versaoAtual = null;

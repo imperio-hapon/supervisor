@@ -52,15 +52,17 @@ body {
   color: #fff;
 }
 
-/* 🔒 Ocultar botões específicos */
-button[onclick*="vidas.html"],
-button[onclick*="disponivel.html"],
-button[onclick*="carteira.html"],
-button[onclick*="disparos.html"],
-button[onclick*="conversao.html"],
-button[onclick*="leads.html"],
-button[onclick*="qualidade.html"],
-button[onclick*="absenteismo.html"] {
+/* 🔒 Ocultar botões específicos.
+   Os botões com a classe "visivel" nunca são ocultados por estas regras,
+   mesmo quando abrem um arquivo da lista (ex.: carteira.html e disponivel.html). */
+button[onclick*="vidas.html"]:not(.visivel),
+button[onclick*="disponivel.html"]:not(.visivel),
+button[onclick*="carteira.html"]:not(.visivel),
+button[onclick*="disparos.html"]:not(.visivel),
+button[onclick*="conversao.html"]:not(.visivel),
+button[onclick*="leads.html"]:not(.visivel),
+button[onclick*="qualidade.html"]:not(.visivel),
+button[onclick*="absenteismo.html"]:not(.visivel) {
   display: none;
 }
 
@@ -78,6 +80,13 @@ iframe {
 <h2>📊 Império Hap-on</h2>
 
 <button onclick="loadPage('painel-hora-a-hora.html', this)" class="active">Hora a Hora</button>
+
+<!-- Novos botões -->
+<button class="visivel" onclick="loadPage('carteira.html', this)">Painel de Leads</button>
+<button class="visivel" onclick="loadPage('disponivel.html', this)">Jornada da Equipe</button>
+<button class="visivel" onclick="loadPage('Painel_Gerencial.html', this)">Painel Gerencial</button>
+
+<!-- Botões ocultos (continuam no código para reativar se precisar) -->
 <button onclick="loadPage('vidas.html', this)">Vidas/Conversão</button>
 <button onclick="loadPage('conversao.html', this)">Conversão</button>
 <button onclick="loadPage('disponivel.html', this)">Disponível / 1º resposta</button>

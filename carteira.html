@@ -610,6 +610,15 @@ License: MIT
   }
 
 
+  /* ---------- diagnóstico ---------- */
+  .diag{ margin: 8px 0 22px; font-size:13px; color: var(--muted); }
+  .diag summary{ cursor:pointer; font-weight:600; color: var(--blue-deep); padding:6px 0; }
+  .diag-body{ overflow-x:auto; margin-top:8px; }
+  .diag table{ border-collapse:collapse; min-width:720px; width:100%; }
+  .diag th, .diag td{ text-align:left; padding:8px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .diag th{ font-size:11px; color: var(--muted); background: var(--blue-tint); }
+  .diag td.num{ font-family:'Space Grotesk',sans-serif; font-weight:700; color: var(--blue-deep); }
+  .diag .warn{ color: var(--coral-deep); font-weight:600; }
   /* ---------- detalhe do disparo (modal) ---------- */
   .stat-card{ cursor:pointer; }
   .sc-more{ margin-top:12px; font-size:12px; font-weight:600; color: var(--blue); }
@@ -819,6 +828,11 @@ License: MIT
     </div>
   </section>
 
+  <details class="diag" id="diagBox">
+    <summary>Diagnóstico das abas de vendas</summary>
+    <div class="diag-body" id="diagBody"></div>
+  </details>
+
   <div class="footnote">
     <b>Como adicionar um novo disparo:</b> crie uma nova linha na aba <b>DISPARO</b> da planilha com nome, categoria, origem (COMERCIAL/MARKETING), total da base, respostas "sim"/"não" e a data de envio. Clique em "↻ Atualizar dados" aqui no painel para trazer as novidades — nenhuma edição de código é necessária.
   </div>
@@ -979,9 +993,10 @@ License: MIT
     // o telefone com DDI (55...), enquanto a planilha de vendas normalmente
     // não tem o DDI — por isso comparamos pela versão sem DDI (normalizada).
     function normPhone(p){
-      const s = String(p || '');
-      if (/^55\d{10,11}$/.test(s)) return s.slice(2);
-      return s;
+      let t = String(p || '').replace(/\D/g, '').replace(/^0+/, '');
+      if (/^55\d{10,11}$/.test(t)) t = t.slice(2);                 // tira o DDI
+      if (t.length === 11 && t[2] === '9') t = t.slice(0,2) + t.slice(3); // ignora o 9º dígito
+      return t;
     }
     const rowsByPhone = new Map();
     baseData.forEach(r => {
@@ -989,38 +1004,47 @@ License: MIT
       if (!rowsByPhone.has(key)) rowsByPhone.set(key, []);
       rowsByPhone.get(key).push(r);
     });
-    // VENDAS (abas PF / PME / ADESAO). As colunas são localizadas pelo nome do
-    // cabeçalho (com fallback para a posição da aba PF), e cada venda é
-    // atribuída ao disparo que:
-    //   1) contém o telefone na BASE (comparando sem DDI) e
-    //   2) foi disparado ATÉ a data da venda (PF: DATA DIGITAÇÃO · PME: DATA ASSINATURA PROPOSTA · ADESAO: DT_CADASTRAMENTO).
-    // Se o telefone esteve em mais de um disparo antes da venda, vale o mais recente.
+    // VENDAS (abas PF / PME / ADESAO). Cada venda é atribuída ao disparo que
+    //   1) contém o telefone na BASE (comparação tolerante: sem DDI e sem o 9º dígito) e
+    //   2) foi disparado ATÉ a data da venda. Vale o disparo mais recente.
     const normH = h => String(h || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                          .toUpperCase().replace(/[^A-Z0-9]/g, '');
-    function findCol(header, exacts, contains, fallback){
-      const hs = header.map(normH);
+    function findCol(hs, exacts, contains, fallback){
       for (const e of exacts){ const i = hs.indexOf(e); if (i !== -1) return i; }
       for (const c of contains){ const i = hs.findIndex(h => h.includes(c)); if (i !== -1) return i; }
       return fallback;
+    }
+    // a linha de cabeçalho pode não ser a primeira (títulos acima): procura nas 15 primeiras
+    function findHeaderRow(all){
+      const tokens = ['CELULAR','TELEFONE','FONE','VIDAS','VENDEDOR','SUPERVISOR','CPF','STATUS','DATA','NOME'];
+      let best = 0, bestScore = -1;
+      all.slice(0, 15).forEach((row, i) => {
+        const hs = row.map(normH);
+        const score = tokens.filter(t => hs.some(h => h.includes(t))).length;
+        if (score > bestScore) { bestScore = score; best = i; }
+      });
+      return bestScore >= 2 ? best : 0;
     }
     function launchDateOf(row){
       const d = disparos[row.disparo];
       return (d && d.dataEnvio) || row.data || null;
     }
     function attribute(phones, saleISO){
+      let existeNaBase = false;
       for (const p of phones){
         const cands = rowsByPhone.get(normPhone(p));
         if (!cands) continue;
-        const valid = cands.filter(c => {
+        const inBase = cands.filter(c => disparos[c.disparo]);
+        if (inBase.length) existeNaBase = true;
+        const valid = inBase.filter(c => {
           const ld = launchDateOf(c);
-          if (!disparos[c.disparo]) return false;
           return !saleISO || !ld || ld <= saleISO;
         });
         if (!valid.length) continue;
         valid.sort((a,b) => (launchDateOf(b) || '').localeCompare(launchDateOf(a) || ''));
-        return valid[0];
+        return { row: valid[0] };
       }
-      return null;
+      return { reason: existeNaBase ? 'antes' : 'fora' };
     }
 
     // Coluna de data da venda em cada aba (fallback: DATA DIGITAÇÃO / DATA_INICIO)
@@ -1029,38 +1053,54 @@ License: MIT
       PME:    { exact: ['DATAASSINATURAPROPOSTA'], contains: ['ASSINATURA'] },
       ADESAO: { exact: ['DTCADASTRAMENTO'],        contains: ['CADASTRAMENTO'] },
     };
-    (vendasSheets || []).forEach(({ nome, header, rows }) => {
-      const iCel = findCol(header, ['CELULAR'], ['CELULAR'], 16);
-      const iTel = findCol(header, ['TELEFONE'], ['TELEFONE'], 15);
-      const iVid = findCol(header, ['QTVIDASATIVAS'], ['VIDASATIVAS', 'VIDAS'], 29);
+    const diag = [];
+    (vendasSheets || []).forEach(({ nome, all }) => {
+      const hRow = findHeaderRow(all);
+      const header = all[hRow] || [];
+      const rows = all.slice(hRow + 1);
+      const hs = header.map(normH);
+      const phoneCols = [];
+      hs.forEach((h, i) => { if (/CELULAR|TELEFONE|WHATSAPP|FONE/.test(h)) phoneCols.push(i); });
+      if (!phoneCols.length && nome === 'PF') phoneCols.push(16, 15); // só a PF tem layout conhecido
+      const iVid = findCol(hs, ['QTVIDASATIVAS','QTVIDAS','QTDVIDAS','VIDAS','QTUSU'], ['VIDASATIVAS','VIDAS','VIDA','QTUSU'], -1); // PME: Qt.Usu
       const cfg = DATA_VENDA_COL[nome] || DATA_VENDA_COL.PF;
-      const iVenda = findCol(header, cfg.exact, cfg.contains, -1);
-      const iDig = findCol(header, ['DATADIGITACAO'], ['DIGITACAO'], 0);
-      const iVend = findCol(header, ['VENDEDOR2', 'VENDEDOR', 'CORRETOR'], ['VENDEDOR'], -1);
-      const iSup = findCol(header, ['SUPERVISOR'], ['SUPERVISOR'], -1);
-      const iGer = findCol(header, ['GESTAO', 'GERENTE'], ['GERENTE', 'GESTAO'], -1);
+      const iVenda = findCol(hs, cfg.exact, cfg.contains, -1);
+      const iDig = findCol(hs, ['DATADIGITACAO'], ['DIGITACAO'], -1);
+      const iIni = findCol(hs, ['DATAINICIO'], ['DATAINICIO'], -1);
+      const iVend = findCol(hs, ['VENDEDOR2','VENDEDOR','CORRETOR','PROMOTOR'], ['VENDEDOR'], -1);
+      const iSup = findCol(hs, ['SUPERVISOR'], ['SUPERVISOR'], -1);
+      const iGer = findCol(hs, ['GESTAO','GERENTE'], ['GERENTE','GESTAO'], -1);
       const cell = (cols, i) => (i === -1 ? '' : String(cols[i] || '').trim());
-      const iIni = findCol(header, ['DATAINICIO'], ['DATAINICIO'], 9);
+      const dateOf = cols => [iVenda, iDig, iIni].map(i => i === -1 ? null : parseFlexibleDate(cols[i])).find(Boolean) || null;
+      const d = { nome, linhas: rows.length, linhaCabecalho: hRow + 1,
+        colTelefone: phoneCols.length ? phoneCols.map(i => header[i] || ('col ' + (i+1))).join(', ') : null,
+        colVidas: iVid === -1 ? null : header[iVid],
+        colData: iVenda === -1 ? '(não encontrada — usando outra data)' : header[iVenda],
+        semTelefone: 0, semVidas: 0, foraDaBase: 0, antesDoDisparo: 0, atribuidas: 0,
+        exemploData: '' };
       rows.forEach(cols => {
-        const vidas = parseK(cols[iVid]);
-        if (!vidas) return;
-        const phones = [cols[iCel], cols[iTel]]
-          .map(v => String(v || '').replace(/\D/g, '')).filter(Boolean);
-        if (!phones.length) return;
-        const saleISO = (iVenda !== -1 && parseFlexibleDate(cols[iVenda])) || parseFlexibleDate(cols[iDig]) || parseFlexibleDate(cols[iIni]);
-        const matched = attribute(phones, saleISO);
-        if (matched){
-          disparos[matched.disparo].vidasGeradas += vidas;
-          disparos[matched.disparo].vendasGeradas += 1;
-          disparos[matched.disparo].vendas.push({
-            phone: matched.phone, data: saleISO, vidas, origem: nome,
-            vendedor: cell(cols, iVend), supervisor: cell(cols, iSup), gerente: cell(cols, iGer),
-          });
-        }
+        const phones = phoneCols.map(i => String(cols[i] || '').replace(/\D/g, '')).filter(x => x.length >= 8);
+        if (!phones.length) { d.semTelefone++; return; }
+        // sem coluna de vidas: cada venda vale 1
+        const vidas = iVid === -1 ? 1 : parseK(cols[iVid]);
+        if (!vidas) { d.semVidas++; return; }
+        const saleISO = dateOf(cols);
+        if (!d.exemploData && iVenda !== -1 && cols[iVenda]) d.exemploData = cols[iVenda] + ' → ' + (saleISO || 'não reconhecida');
+        const r = attribute(phones, saleISO);
+        if (!r.row) { if (r.reason === 'antes') d.antesDoDisparo++; else d.foraDaBase++; return; }
+        const dd = disparos[r.row.disparo];
+        dd.vidasGeradas += vidas;
+        dd.vendasGeradas += 1;
+        dd.vendas.push({
+          phone: r.row.phone, data: saleISO, vidas, origem: nome,
+          vendedor: cell(cols, iVend), supervisor: cell(cols, iSup), gerente: cell(cols, iGer),
+        });
+        d.atribuidas++;
       });
+      diag.push(d);
     });
 
-    return { disparos, baseData };
+    return { disparos, baseData, diag };
   }
 
   async function fetchCSVText(gid){
@@ -1073,7 +1113,7 @@ License: MIT
   }
   async function fetchSheetWithHeader(gid){
     const all = Papa.parse((await fetchCSVText(gid)).trim(), { skipEmptyLines: true }).data;
-    return { header: all[0] || [], rows: all.slice(1) };
+    return { all };
   }
 
   function setStatus(mode, message){
@@ -1112,6 +1152,7 @@ License: MIT
       const built = buildFromCSV(disparoRows, baseRows, vendasSheets);
       DISPAROS = built.disparos;
       BASE_DATA = built.baseData;
+      renderDiag(built.diag, vendasFalharam);
 
       if (Object.keys(DISPAROS).length === 0) {
         throw new Error('A aba DISPARO não retornou nenhuma linha. Confira o gid configurado.');
@@ -1225,6 +1266,19 @@ License: MIT
         render(selectedDisparos);
       });
     });
+  }
+
+  function renderDiag(diag, falharam){
+    const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    let html = '<table><thead><tr><th>Aba</th><th>Linhas</th><th>Colunas usadas</th><th>Sem telefone</th><th>Vidas = 0</th><th>Telefone fora da BASE</th><th>Venda antes do disparo</th><th>Atribuídas</th></tr></thead><tbody>';
+    (diag || []).forEach(d => {
+      html += `<tr><td><b>${esc(d.nome)}</b></td><td class="num">${d.linhas}</td>
+        <td>Telefone: ${d.colTelefone ? esc(d.colTelefone) : '<span class="warn">esta aba não tem coluna de telefone — não dá para cruzar com a BASE</span>'}<br>Vidas: ${d.colVidas ? esc(d.colVidas) : '<span class="warn">não encontrada (1 por venda)</span>'}<br>Data: ${esc(d.colData)}${d.exemploData ? '<br>Ex.: ' + esc(d.exemploData) : ''}<br>Cabeçalho na linha ${d.linhaCabecalho}</td>
+        <td class="num">${d.semTelefone}</td><td class="num">${d.semVidas}</td><td class="num">${d.foraDaBase}</td><td class="num">${d.antesDoDisparo}</td><td class="num">${d.atribuidas}</td></tr>`;
+    });
+    (falharam || []).forEach(n => { html += `<tr><td><b>${esc(n)}</b></td><td colspan="7" class="warn">Não foi possível carregar esta aba.</td></tr>`; });
+    html += '</tbody></table>';
+    document.getElementById('diagBody').innerHTML = html;
   }
 
   function populateSelectors(){

@@ -173,6 +173,36 @@ details.gh[open] { gap: 12px; }
 .orc-t { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; }
 .orc-t .acts { display: inline-flex; align-items: center; gap: 10px; }
 .btn.sm { font-size: .84rem; padding: 7px 14px; border-radius: 999px; }
+/* Funis de orçamentos */
+.fn-wrap { display: grid; gap: 26px; }
+.funil { display: grid; gap: 14px; }
+.funil + .funil { border-top: 1px solid var(--line); padding-top: 22px; }
+.fn-h { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 14px; }
+.fn-h h3 { font-family: var(--display); font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.fn-h h3 .sw { width: 12px; height: 12px; }
+.fn-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.fc { border: 1px solid var(--line); border-top: 4px solid var(--fc, var(--accent)); border-radius: 12px; padding: 10px 12px 12px; display: grid; gap: 2px; align-content: start; min-width: 0; background: var(--surface); }
+.fc-l { font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.fc-v { font-family: var(--display); font-weight: 700; font-size: 1.8rem; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--fv, var(--fc, var(--ink))); }
+.fc small { font-size: .78rem; color: var(--muted); }
+.fc ul { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 1px; font-size: .78rem; color: var(--ink-2); }
+.fc li { display: flex; justify-content: space-between; gap: 8px; }
+.fc li b { font-variant-numeric: tabular-nums; }
+.fn-body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 20px; align-items: start; }
+.fn-vis { display: grid; gap: 8px; padding: 6px 0; }
+.fn-row { display: grid; grid-template-columns: 48px 1fr; align-items: center; gap: 8px; }
+.fn-pct { font-size: .82rem; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.fn-bar { justify-self: center; border-radius: 6px; padding: 9px 10px; text-align: center; font-size: .86rem; font-weight: 700; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
+.fn-bar span { font-weight: 500; opacity: .9; }
+.fn-tab table { font-size: .86rem; }
+.fn-tab th { background: var(--surface-2); }
+.fn-tab td { padding: 7px 10px; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: 0; }
+.fn-tab tr.grp td { font-weight: 700; background: color-mix(in srgb, var(--surface-2) 60%, transparent); }
+@media (max-width: 760px) { .fn-body { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .fn-tab .et { display: none; } }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fc-v, :root:not([data-theme="light"]) .fn-pct { color: var(--fc) !important; } }
+:root[data-theme="dark"] .fc-v, :root[data-theme="dark"] .fn-pct { color: var(--fc) !important; }
 .id-cod { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--ink-2); }
 .orc-f { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 .sel { display: inline-flex; align-items: center; gap: 6px; font-size: .84rem; color: var(--ink-2); }
@@ -281,11 +311,6 @@ details.rules ul { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 6px
 
   <span id="geradoMark" hidden data-gerado="2026-10-13T18:30:00.000Z"></span>
 
-  <section class="guide" aria-label="Como ler">
-    <div><b>1. Orçamentos em andamento hoje</b><p>Orçamentos PF, PME e Adesão do dia que ainda não viraram venda e não foram cancelados. É o que a equipe ainda pode fechar hoje.</p></div>
-    <div><b>2. Vidas vendidas no mês</b><p>Soma das vidas com venda efetivada do dia 1 até hoje, em PF, PME e Adesão. A barra mostra quanto da meta do mês já foi feito.</p></div>
-    <div><b>3. Orçamentos do mês</b><p>Lista de todos os orçamentos do mês, com data, vendedor, plano, tipo, status, ID / código, vidas e supervisor. Use os filtros para achar o que procura e o botão Baixar .xlsx para levar a lista filtrada para o Excel.</p></div>
-  </section>
 
   <section class="kpis">
     <article class="kpi" aria-labelledby="k1q">
@@ -293,16 +318,7 @@ details.rules ul { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 6px
       <div class="kpi-main"><span class="big" id="kAnd">—</span><span class="big-unit" id="kAndUnit">orçamentos</span></div>
       <div class="foot">
         <span><b class="num" id="kAndVidas">—</b> vidas em negociação</span>
-        <span><b class="num" id="kEfet">—</b> viraram venda hoje</span>
         <span><b class="num" id="kPerd">—</b> cancelados ou recusados hoje</span>
-      </div>
-    </article>
-    <article class="kpi" aria-labelledby="k2q">
-      <p class="kpi-q" id="k2q">Quantas vidas já vendemos no mês?</p>
-      <div class="kpi-main"><span class="big" id="kVid">—</span><span class="big-unit" id="kVidUnit">vidas</span></div>
-      <div style="display:grid;gap:8px">
-        <div class="meter" id="meter" role="img" aria-label="Progresso da meta"></div>
-        <div class="meter-lab"><span id="metaTxt">—</span><span id="paceTxt"></span></div>
       </div>
     </article>
   </section>
@@ -316,43 +332,16 @@ details.rules ul { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 6px
         <div class="mc"><span class="mc-l"><i class="sw ad"></i>Adesão</span><b class="mc-v" id="kAndAD">—</b><small id="kAndADs">—</small></div>
       </div>
     </div>
-    <div class="mini-g">
-      <p class="eyebrow">Vidas vendidas no mês, por tipo</p>
-      <div class="mini-row">
-        <div class="mc"><span class="mc-l"><i class="sw pf"></i>PF</span><b class="mc-v" id="kVidPF">—</b><small id="kVidPFs">—</small></div>
-        <div class="mc"><span class="mc-l"><i class="sw pme"></i>PME</span><b class="mc-v" id="kVidPME">—</b><small id="kVidPMEs">—</small></div>
-        <div class="mc"><span class="mc-l"><i class="sw ad"></i>Adesão</span><b class="mc-v" id="kVidAD">—</b><small id="kVidADs">—</small></div>
-      </div>
-    </div>
   </section>
 
-  <div class="grid2">
-    <section class="sec" aria-labelledby="sH">
-      <div class="sec-h"><div><h2 id="sH">Em que etapa estão os orçamentos</h2><p class="sub">Orçamentos PF de hoje, da digitação ao pagamento. Quanto mais embaixo, mais perto de virar venda.</p></div></div>
-      <div class="hbars" id="statusBars"></div>
-    </section>
-    <section class="sec" aria-labelledby="paH">
-      <div class="sec-h"><div><h2 id="paH">PME e Adesão em andamento</h2><p class="sub" id="paSub">—</p></div>
-        <div class="legend"><span><i class="sw pme"></i>PME</span><span><i class="sw ad"></i>Adesão</span></div></div>
-      <div class="hbars" id="pmeAdBars"></div>
-    </section>
-  </div>
-
-  <div class="grid2">
-    <section class="sec" aria-labelledby="pfH">
-      <div class="sec-h"><div><h2 id="pfH"><i class="sw pf"></i> PF: planos em orçamento hoje</h2><p class="sub" id="planPfSub">Agrupado pela família do plano, em vidas (beneficiários).</p></div></div>
-      <div class="hbars" id="planBarsPF"></div>
-    </section>
-    <section class="sec" aria-labelledby="pmH">
-      <div class="sec-h"><div><h2 id="pmH"><i class="sw pme"></i> PME: planos em orçamento hoje</h2><p class="sub" id="planPmeSub">Agrupado pela família do plano, em vidas (beneficiários).</p></div></div>
-      <div class="hbars" id="planBarsPME"></div>
-    </section>
-  </div>
-
-
+  <section class="sec" aria-labelledby="fnH">
+    <div class="sec-h"><div><h2 id="fnH">Funil de orçamentos</h2><p class="sub" id="fnSub">Orçamentos do mês que ainda não viraram venda, por etapa. Cada funil tem seus filtros de Data e Período.</p></div>
+      <span class="acts"><small class="muted" id="fnXlsxMsg" aria-live="polite"></small><button class="btn ghost sm" id="fnXlsx" type="button">Baixar .xlsx</button></span></div>
+    <div class="fn-wrap" id="funis"></div>
+  </section>
 
   <section class="sec" aria-labelledby="acH">
-    <div class="sec-h"><div><h2 id="acH">Acumulado do dia / Acumulado do mês</h2><p class="sub" id="acSub">Orçamentos por tipo, todos os status.</p></div></div>
+    <div class="sec-h"><div><h2 id="acH">Acumulado do dia / Acumulado do mês</h2><p class="sub" id="acSub">Orçamentos por tipo, sem os que viraram venda.</p></div></div>
     <div class="ac-row">
       <div class="ac"><span class="mc-l"><i class="sw pf"></i>PF</span><div class="ac-pair"><div><small>Dia</small><b class="mc-v" id="acPFd">—</b></div><div><small>Mês</small><b class="mc-v" id="acPFm">—</b></div></div><small class="ac-sub" id="acPFs"></small></div>
       <div class="ac"><span class="mc-l"><i class="sw pme"></i>PME</span><div class="ac-pair"><div><small>Dia</small><b class="mc-v" id="acPMEd">—</b></div><div><small>Mês</small><b class="mc-v" id="acPMEm">—</b></div></div><small class="ac-sub" id="acPMEs"></small></div>
@@ -365,6 +354,7 @@ details.rules ul { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 6px
         <label class="sel"><span>Supervisor</span><select id="orcSup"></select></label>
         <label class="sel"><span>Status</span><select id="orcSt"></select></label>
         <label class="sel"><span>Data</span><select id="orcDia"></select></label>
+        <label class="sel"><span>Período</span><select id="orcPer"></select></label>
       </div>
     </div>
     <p class="sub" id="orcSub">—</p>
@@ -374,18 +364,6 @@ details.rules ul { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 6px
     </table></div>
     <button class="btn ghost more" id="orcMore" type="button" hidden>Mostrar mais</button>
   </section>
-
-  <section class="sec" aria-labelledby="dH">
-    <div class="sec-h"><div><h2 id="dH">Vidas vendidas por dia</h2><p class="sub" id="dSub">—</p></div>
-      <div class="legend"><span><i class="sw pf"></i>PF</span><span><i class="sw pme"></i>PME</span><span><i class="sw ad"></i>Adesão</span></div></div>
-    <div id="chDays" class="wide-chart"></div>
-  </section>
-
-  <section class="sec" aria-labelledby="pH">
-    <div class="sec-h"><div><h2 id="pH"><i class="sw pf"></i> Vidas do mês por plano · PF</h2><p class="sub">Vidas PF vendidas no mês, agrupadas pela família do plano (Nosso Plano, Nosso Médico, Smart Up…).</p></div></div>
-    <div class="hbars" id="planBars"></div>
-  </section>
-
 
   <details class="rules">
     <summary>Como os números são calculados</summary>
@@ -517,11 +495,7 @@ function render() {
   const vidasDe = l => l.reduce((t, i) => t + i.vidas, 0), vtxt = n => `${fmt(n)} ${n === 1 ? 'vida' : 'vidas'} em negociação`;
   $('kAndPF').textContent = fmt(a.pf.length); $('kAndPME').textContent = fmt(pmeL.length); $('kAndAD').textContent = fmt(a.adesao.length); $('kAndVidas').textContent = fmt(andVid);
   $('kAndPFs').textContent = vtxt(vidasDe(a.pf)); $('kAndPMEs').textContent = vtxt(vidasDe(pmeL)); $('kAndADs').textContent = vtxt(vidasDe(a.adesao));
-  $('kEfet').textContent = fmt(a.efetivadas.length); $('kPerd').textContent = fmt(a.perdidos);
-  $('kVid').textContent = fmt(v.total);
-  $('kVidPF').textContent = fmt(v.pf); $('kVidPME').textContent = fmt(v.pme); $('kVidAD').textContent = fmt(v.ad);
-  const part = n => v.total ? `${pct(n / v.total)} das vidas do mês` : '—';
-  $('kVidPFs').textContent = part(v.pf); $('kVidPMEs').textContent = part(v.pme); $('kVidADs').textContent = part(v.ad);
+  $('kPerd').textContent = fmt(a.perdidos);
 
   const today = LEITURAS.filter(l => l.ref === d.ref).sort((x, y) => x.ts.localeCompare(y.ts));
   const prev = today.filter(l => l.hora < String(new Date(d.geradoEm).getHours()).padStart(2, '0')).pop();
@@ -532,73 +506,9 @@ function render() {
     el.textContent = (df > 0 ? '+' : '') + fmt(df) + ' desde ' + prev.hora + 'h';
   };
 
-  // Meta
-  const meter = $('meter'); meter.innerHTML = '';
-  const [yy, mm, dd] = dParts(v.corte || d.ref), diasMes = new Date(yy, mm, 0).getDate();
-  const meta = v.metaTotal || 0, scale = Math.max(meta, v.total) || 1;
-  [['pf', 'var(--pf)', 'PF'], ['pme', 'var(--pme)', 'PME'], ['ad', 'var(--ad)', 'Adesão']].forEach(([k, c, lab]) => {
-    if (!v[k]) return; const i = document.createElement('i'); i.style.width = (v[k] / scale * 100) + '%'; i.style.background = c; meter.appendChild(i);
-    bindTip(i, `<b>${lab}</b>: ${fmt(v[k])} vidas`);
-  });
-  if (meta) {
-    const ritmo = meta * dd / diasMes, p = document.createElement('span'); p.className = 'pace'; p.style.left = (ritmo / scale * 100) + '%'; meter.appendChild(p);
-    const atingido = v.total / meta, noRitmo = v.total / ritmo;
-    $('metaTxt').innerHTML = `<b class="num">${pct(atingido)}</b> da meta de ${fmt(meta)} vidas`;
-    const cls = noRitmo >= 1 ? 'good' : noRitmo >= .9 ? 'warn' : 'bad';
-    const txt = noRitmo >= 1 ? 'Acima do ritmo' : noRitmo >= .9 ? 'Perto do ritmo' : 'Abaixo do ritmo';
-    $('paceTxt').innerHTML = `<span class="pill ${cls}">${txt}</span> traço = ${fmt(Math.round(ritmo))} esperadas até dia ${dd}`;
-    meter.setAttribute('aria-label', `${fmt(v.total)} de ${fmt(meta)} vidas; esperado até hoje ${fmt(Math.round(ritmo))}`);
-  } else { $('metaTxt').textContent = 'Meta do mês não encontrada na planilha'; $('paceTxt').textContent = ''; }
-
-
-  // Etapas
-  const sb = $('statusBars'); sb.innerHTML = '';
-  const maxS = Math.max(1, ...a.status.map(s => s.n));
-  if (!a.status.length) sb.innerHTML = '<p class="empty-chart">Nenhum orçamento PF em andamento.</p>';
-  a.status.forEach(s => {
-    const [lab, st] = etapa(s.status);
-    sb.insertAdjacentHTML('beforeend', `<div class="hb"><span class="hb-l">${esc(lab)}</span><span class="hb-t"><i style="width:${s.n / maxS * 100}%"></i></span><span class="hb-v">${fmt(s.n)}</span></div>`);
-  });
-
-  // PME e Adesão em andamento
-  const pmeAn = pmeL.filter(i => i.status === 'PME ANALISE'), pmePe = pmeL.filter(i => i.status !== 'PME ANALISE');
-  const sv = l => l.reduce((s, i) => s + i.vidas, 0);
-  const adAn = a.adesao.filter(i => i.status === 'ADESAO EM ANALISE'), adPe = a.adesao.filter(i => i.status !== 'ADESAO EM ANALISE');
-  const linhas = [['PME em análise', pmeAn, 'var(--pme)'], ['PME com pendência', pmePe, 'var(--pme)'], ['Adesão em análise', adAn, 'var(--ad)'], ['Adesão pendente', adPe, 'var(--ad)']];
-  const maxPA = Math.max(1, ...linhas.map(l => l[1].length));
-  $('paSub').innerHTML = `PME: <b>${fmt(pmeAn.length)}</b> em análise e <b>${fmt(pmePe.length)}</b> com pendência, somando <b>${fmt(sv(pmeL))}</b> vidas. Adesão: <b>${fmt(adAn.length)}</b> em análise e <b>${fmt(adPe.length)}</b> ${adPe.length === 1 ? 'pendente' : 'pendentes'}, somando <b>${fmt(sv(a.adesao))}</b> ${sv(a.adesao) === 1 ? 'vida' : 'vidas'}.`;
-  $('pmeAdBars').innerHTML = linhas.map(([lab, l, c]) => `<div class="hb"><span class="hb-l">${lab}<small>${fmt(sv(l))} ${sv(l) === 1 ? 'vida' : 'vidas'}</small></span><span class="hb-t"><i style="width:${l.length / maxPA * 100}%;background:${c}${l.length ? '' : ';min-width:0'}"></i></span><span class="hb-v">${fmt(l.length)}</span></div>`).join('');
-
   // Acumulado do dia / do mês (orçamentos, todos os status)
   renderOrc(true);
-
-  // Por dia
-  $('dSub').textContent = `De 01/${String(mm).padStart(2, '0')} até ${dShort(v.corte || d.ref)}, por data da venda efetivada.`;
-  daysChart($('chDays'), v.dias);
-
-  // Planos
-  const pb = $('planBars'); pb.innerHTML = '';
-  const maxP = Math.max(1, ...v.planos.map(p => p.n));
-  const planosPF = v.planosPF || v.planos.filter(p => !p.plano.startsWith('PME'));
-  if (!planosPF.length) pb.innerHTML = '<p class="empty-chart">Nenhuma venda PF no mês até agora.</p>';
-  const maxPF = Math.max(1, ...planosPF.map(p => p.n));
-  planosPF.forEach(p => pb.insertAdjacentHTML('beforeend', `<div class="hb"><span class="hb-l">${esc(p.plano)}</span><span class="hb-t"><i style="width:${p.n / maxPF * 100}%;background:var(--pf)"></i></span><span class="hb-v">${fmt(p.n)}</span></div>`));
-  // PME: planos dos orçamentos em andamento hoje, por família, em vidas (beneficiários)
-  const pmeFam = {}; (a.pme || []).forEach(i => { const f = pmeFam[i.plano] || (pmeFam[i.plano] = { plano: i.plano, vidas: 0, n: 0 }); f.vidas += i.vidas; f.n++; });
-  const pmeArr = Object.values(pmeFam).sort((x, y) => y.vidas - x.vidas || y.n - x.n);
-  // PF: planos dos orçamentos em andamento hoje, por família
-  const pfFam = {}; a.pf.forEach(i => { const f = pfFam[i.plano] || (pfFam[i.plano] = { plano: i.plano, vidas: 0, n: 0 }); f.vidas += i.vidas; f.n++; });
-  const pfArr = Object.values(pfFam).sort((x, y) => y.vidas - x.vidas || y.n - x.n);
-  const pbf = $('planBarsPF'); pbf.innerHTML = '';
-  $('planPfSub').textContent = pfArr.length ? `${fmt(a.pf.length)} ${a.pf.length === 1 ? 'orçamento' : 'orçamentos'} PF em andamento hoje, agrupados pela família do plano, em vidas.` : 'Agrupado pela família do plano, em vidas.';
-  if (!pfArr.length) pbf.innerHTML = '<p class="empty-chart">Nenhum orçamento PF em andamento hoje.</p>';
-  const maxPFo = Math.max(1, ...pfArr.map(p => p.vidas));
-  pfArr.forEach(p => pbf.insertAdjacentHTML('beforeend', `<div class="hb"><span class="hb-l">${esc(p.plano)}<small>${fmt(p.n)} ${p.n === 1 ? 'orçamento' : 'orçamentos'}</small></span><span class="hb-t"><i style="width:${p.vidas / maxPFo * 100}%;background:var(--pf)"></i></span><span class="hb-v">${fmt(p.vidas)}</span></div>`));
-  const pbm = $('planBarsPME'); pbm.innerHTML = '';
-  $('planPmeSub').textContent = pmeArr.length ? `${fmt((a.pme || []).length)} ${(a.pme || []).length === 1 ? 'proposta' : 'propostas'} em análise ou pendência hoje, agrupadas pela família do plano, em vidas (beneficiários).` : 'Agrupado pela família do plano, em vidas (beneficiários).';
-  if (!pmeArr.length) pbm.innerHTML = '<p class="empty-chart">Nenhum orçamento PME em andamento hoje.</p>';
-  const maxPM = Math.max(1, ...pmeArr.map(p => p.vidas));
-  pmeArr.forEach(p => pbm.insertAdjacentHTML('beforeend', `<div class="hb"><span class="hb-l">${esc(p.plano)}<small>${fmt(p.n)} ${p.n === 1 ? 'proposta' : 'propostas'}</small></span><span class="hb-t"><i style="width:${p.vidas / maxPM * 100}%;background:var(--pme)"></i></span><span class="hb-v">${fmt(p.vidas)}</span></div>`));
+  renderFunis();
 
   renderRules();
 }
@@ -614,7 +524,7 @@ function decodeOrc(e) {
   return e.rows.map(([dd, t, s, p, v, n, id]) => ({ d: e.mes + '-' + String(dd).padStart(2, '0'), t: T[t], st: e.st[s], pl: e.pl[p], v: e.vd[v][0], s: e.vd[v][1], n, id: id || '' }));
 }
 function renderOrc(resetSelects) {
-  const d = DATA, all = decodeOrc(d.orc);
+  const d = DATA, all = decodeOrc(d.orc).filter(o => !vendido(o.st));
   const por = t => all.filter(o => o.t === t);
   [['PF', 'PF'], ['PME', 'PME'], ['AD', 'Adesão']].forEach(([k, t]) => {
     const l = por(t), hoje = l.filter(o => o.d === d.ref);
@@ -623,7 +533,7 @@ function renderOrc(resetSelects) {
     $('ac' + k + 's').textContent = l.length ? `${fmt(vid)} ${vid === 1 ? 'vida' : 'vidas'} orçadas no mês` : 'Sem orçamentos no mês';
   });
   const [, mmm] = dParts(d.ref);
-  $('acSub').textContent = `Quantidade de orçamentos por tipo, todos os status: no dia ${dShort(d.ref)} e de 01/${String(mmm).padStart(2, '0')} até ${dShort(d.ref)}.`;
+  $('acSub').textContent = `Quantidade de orçamentos por tipo, sem os que viraram venda: no dia ${dShort(d.ref)} e de 01/${String(mmm).padStart(2, '0')} até ${dShort(d.ref)}.`;
   // filtros
   const tc = $('orcTipo'); tc.innerHTML = '';
   [['Todos', ''], ['PF', 'pf'], ['PME', 'pme'], ['Adesão', 'ad']].forEach(([t, sw]) => {
@@ -643,8 +553,8 @@ function renderOrc(resetSelects) {
   fill('orcSup', [...new Set(base1.map(o => o.s))].sort().map(s => [s, title(s)]));
   fill('orcSt', [...new Set(base1.map(o => o.st))].sort((a, b) => stInfo(a)[0].localeCompare(stInfo(b)[0])).map(s => [s, stInfo(s)[0]]));
   fill('orcDia', [...new Set(base1.map(o => o.d))].sort().reverse().map(x => [x, dShort(x)]));
-  const fs = $('orcSup').value, fst = $('orcSt').value, fd = $('orcDia').value;
-  const rows = base1.filter(o => (!fs || o.s === fs) && (!fst || o.st === fst) && (!fd || o.d === fd));
+  const fs = $('orcSup').value, fst = $('orcSt').value, fd = $('orcDia').value, fp = $('orcPer').value;
+  const rows = base1.filter(o => (!fs || o.s === fs) && (!fst || o.st === fst) && (!fd || o.d === fd) && noPeriodo(o, fp, d.ref));
   orcAtual = rows;
   const vid = rows.reduce((x, o) => x + o.n, 0);
   $('orcSub').textContent = `${fmt(rows.length)} ${rows.length === 1 ? 'orçamento' : 'orçamentos'} · ${fmt(vid)} ${vid === 1 ? 'vida' : 'vidas'}. Do mais recente para o mais antigo.`;
@@ -653,27 +563,113 @@ function renderOrc(resetSelects) {
   const more = $('orcMore'); more.hidden = rows.length <= orcLim;
   more.textContent = `Mostrar mais (${fmt(Math.min(50, rows.length - orcLim))} de ${fmt(rows.length - orcLim)} restantes)`;
 }
-['orcSup', 'orcSt', 'orcDia'].forEach(id => document.getElementById(id).addEventListener('change', () => { orcLim = 50; renderOrc(); }));
+['orcSup', 'orcSt', 'orcDia', 'orcPer'].forEach(id => document.getElementById(id).addEventListener('change', () => { orcLim = 50; renderOrc(); }));
 document.getElementById('orcMore').onclick = () => { orcLim += 50; renderOrc(); };
 
-/* ---------- Baixar a tabela em .xlsx (gerador simples, sem biblioteca) ---------- */
+/* ---------- Venda efetivada sai do painel ---------- */
+const vendido = st => { const s = String(st || '').trim(); return s === 'PROCESSADO' || (s.startsWith('PME') && /IMPLANTAD/.test(s)); };
+/* Período = idade do orçamento em dias, contada a partir do dia de referência */
+const PERIODOS = [['', 'Todos'], ['d5', 'D-5 (até 5 dias)'], ['d10', 'D-10 (6 a 10 dias)'], ['d11', '≥ 11 dias']];
+const idadeDias = (ymd, ref) => { const [a, b, c] = dParts(ymd), [x, y, z] = dParts(ref); return Math.round((Date.UTC(x, y - 1, z) - Date.UTC(a, b - 1, c)) / 864e5); };
+const noPeriodo = (o, per, ref) => { if (!per) return true; const i = idadeDias(o.d, ref); return per === 'd5' ? i <= 5 : per === 'd10' ? i >= 6 && i <= 10 : i >= 11; };
+const perLabel = per => (PERIODOS.find(p => p[0] === per) || PERIODOS[0])[1];
+(() => { const el = document.getElementById('orcPer'); if (el) el.innerHTML = PERIODOS.map(([v, l]) => `<option value="${v}">${l}</option>`).join(''); })();
+
+/* ---------- Funis PF / PME / Adesão ---------- */
+const FUNIS = [
+  { t: 'PF', sw: 'pf', etapas: [
+    { lab: 'Cancelado', cor: '#d93b3b', tx: '#fff', m: s => /CANCEL|RECUS/.test(s) },
+    { lab: 'Em negociação', cor: '#ef7d1a', tx: '#fff', m: s => ['EM DIGITACAO', 'CONFIRMACAO CLIENTE'].includes(s) },
+    { lab: 'Em implantação', cor: '#f0b400', fg: '#9a6b00', tx: '#2a2100', m: s => ['ASSINADO', 'PENDENTE', 'AUDITORIA MEDICA'].includes(s) },
+    { lab: 'Ag. pagamento', cor: '#2e9e55', tx: '#fff', m: s => ['AGUARDANDO PG', 'AUTORIZADO'].includes(s) },
+    { lab: 'Implantado c/ erro', cor: '#3b7ddd', tx: '#fff', m: s => /^VALIDO/.test(s) } ] },
+  { t: 'PME', sw: 'pme', etapas: [
+    { lab: 'Cancelada / devolvida', cor: '#d93b3b', tx: '#fff', m: s => /CANCEL|DEVOLV|RECUS/.test(s) },
+    { lab: 'Sem status', cor: '#8a96a3', tx: '#fff', m: s => s === 'PME' },
+    { lab: 'Com pendência', cor: '#f0b400', fg: '#9a6b00', tx: '#2a2100', m: s => s === 'PME PENDENCIA' },
+    { lab: 'Em análise', cor: '#3b7ddd', tx: '#fff', m: s => s === 'PME ANALISE' } ] },
+  { t: 'Adesão', sw: 'ad', etapas: [
+    { lab: 'Adesão pendente', cor: '#f0b400', fg: '#9a6b00', tx: '#2a2100', m: s => s === 'ADESAO EM ANDAMENTO' },
+    { lab: 'Adesão em análise', cor: '#3b7ddd', tx: '#fff', m: s => s === 'ADESAO EM ANALISE' } ] }
+];
+const OUTROS = { lab: 'Outros status', cor: '#8a96a3', tx: '#fff', m: () => true };
+const fnSel = { PF: { dia: '', per: '' }, PME: { dia: '', per: '' }, 'Adesão': { dia: '', per: '' } };
+const orcAtivos = () => decodeOrc(DATA.orc).filter(o => !vendido(o.st));
+function etapaDe(f, st) { const s = String(st || '').trim(); return f.etapas.find(e => e.m(s)) || OUTROS; }
+function dadosFunil(f) {
+  const sel = fnSel[f.t], ref = DATA.ref;
+  const base = orcAtivos().filter(o => o.t === f.t);
+  const rows = base.filter(o => (!sel.dia || o.d === sel.dia) && noPeriodo(o, sel.per, ref));
+  const ets = [...f.etapas];
+  if (rows.some(o => etapaDe(f, o.st) === OUTROS)) ets.push(OUTROS);
+  const grupos = ets.map(e => {
+    const l = rows.filter(o => etapaDe(f, o.st) === e), st = {};
+    l.forEach(o => { const k = String(o.st).trim(); (st[k] || (st[k] = { st: k, n: 0, vidas: 0 })).n++; st[k].vidas += o.n; });
+    return { e, n: l.length, vidas: l.reduce((x, o) => x + o.n, 0), status: Object.values(st).sort((a, b) => b.n - a.n) };
+  });
+  return { base, rows, grupos, total: rows.length, vidas: rows.reduce((x, o) => x + o.n, 0) };
+}
+function renderFunis() {
+  const box = $('funis'); if (!box || !DATA) return;
+  box.innerHTML = '';
+  FUNIS.forEach(f => {
+    const sel = fnSel[f.t];
+    const dias = [...new Set(orcAtivos().filter(o => o.t === f.t).map(o => o.d))].sort().reverse();
+    if (sel.dia && !dias.includes(sel.dia)) sel.dia = '';
+    const D = dadosFunil(f);
+    const opt = (vals, cur) => vals.map(([v, l]) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(l)}</option>`).join('');
+    const cards = [`<div class="fc" style="--fc:var(--ink)"><span class="fc-l">Total de orçamentos</span><b class="fc-v">${fmt(D.total)}</b><small>${fmt(D.vidas)} ${D.vidas === 1 ? 'vida' : 'vidas'}</small></div>`]
+      .concat(D.grupos.map(g => `<div class="fc" style="--fc:${g.e.cor};--fv:${g.e.fg || g.e.cor}"><span class="fc-l">${esc(g.e.lab)}</span><b class="fc-v">${fmt(g.n)}</b>` +
+        (g.status.length > 1 ? `<ul>${g.status.map(s => `<li><span>${esc(stInfo(s.st)[0])}</span><b>${fmt(s.n)}</b></li>`).join('')}</ul>` : `<small>${fmt(g.vidas)} ${g.vidas === 1 ? 'vida' : 'vidas'}</small>`) + `</div>`));
+    const nE = D.grupos.length;
+    const barras = D.total ? D.grupos.map((g, i) => {
+      const w = nE > 1 ? 100 - i * (45 / (nE - 1)) : 100;
+      return `<div class="fn-row"><span class="fn-pct" style="--fc:${g.e.cor};color:${g.e.fg || g.e.cor}">${g.n && g.n / D.total < .005 ? '&lt;1%' : pct(g.n / D.total)}</span><div class="fn-bar" style="width:${w}%;background:${g.e.cor};color:${g.e.tx}">${esc(g.e.lab)} <span>· ${fmt(g.n)}</span></div></div>`;
+    }).join('') : '<p class="empty-chart">Nenhum orçamento com esse filtro.</p>';
+    const linhas = D.grupos.filter(g => g.n).map(g => g.status.map(s => `<tr><td><i class="dot" style="background:${g.e.cor}"></i>${esc(stInfo(s.st)[0])}</td><td class="muted et">${esc(g.e.lab)}</td><td class="n"><b>${fmt(s.n)}</b></td><td class="n">${fmt(s.vidas)}</td></tr>`).join('')).join('');
+    box.insertAdjacentHTML('beforeend', `<div class="funil" data-t="${f.t}">
+      <div class="fn-h"><h3><i class="sw ${f.sw}"></i> Funil ${f.t}</h3>
+        <div class="orc-f"><label class="sel"><span>Data</span><select data-f="dia">${opt([['', 'Todos'], ...dias.map(x => [x, dShort(x)])], sel.dia)}</select></label>
+        <label class="sel"><span>Período</span><select data-f="per">${opt(PERIODOS, sel.per)}</select></label></div></div>
+      <div class="fn-cards">${cards.join('')}</div>
+      <div class="fn-body"><div class="fn-vis" role="img" aria-label="Funil ${f.t}: ${fmt(D.total)} orçamentos">${barras}</div>
+        <div class="fn-tab tbl-wrap"><table><thead><tr><th>Status</th><th class="et">Etapa</th><th class="n">Qtd.</th><th class="n">Vidas</th></tr></thead>
+        <tbody>${linhas || '<tr><td colspan="4" class="muted">Nenhum orçamento com esse filtro.</td></tr>'}</tbody></table></div></div>
+    </div>`);
+  });
+  box.querySelectorAll('.funil select').forEach(el => el.addEventListener('change', () => {
+    const t = el.closest('.funil').dataset.t; fnSel[t][el.dataset.f] = el.value; renderFunis();
+  }));
+  const [, mm] = dParts(DATA.ref);
+  $('fnSub').textContent = `Orçamentos de 01/${String(mm).padStart(2, '0')} até ${dShort(DATA.ref)} que ainda não viraram venda (vendas efetivadas saem do painel), por etapa. Cada funil tem seus filtros de Data e Período.`;
+}
+
+/* ---------- Baixar .xlsx (gerador simples, sem biblioteca; uma ou várias abas) ---------- */
 const xlsxEsc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
 function xlsxCol(i) { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
-function xlsxBytes(head, rows, widths) {
+function xlsxSheet(head, rows, widths) {
   const cell = (v, r, c, st) => { const ref = xlsxCol(c) + (r + 1); if (v === null || v === undefined || v === '') return '';
     if (typeof v === 'number') return `<c r="${ref}"${st ? ` s="${st}"` : ''}><v>${v}</v></c>`;
     return `<c r="${ref}" t="inlineStr"${st ? ` s="${st}"` : ''}><is><t xml:space="preserve">${xlsxEsc(v)}</t></is></c>`; };
   const lines = [head, ...rows].map((row, r) => `<row r="${r + 1}">${row.map((v, c) => cell(v, r, c, r === 0 ? 1 : 0)).join('')}</row>`).join('');
   const last = xlsxCol(head.length - 1) + (rows.length + 1);
-  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${lines}</sheetData><autoFilter ref="A1:${last}"/></worksheet>`;
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${lines}</sheetData><autoFilter ref="A1:${last}"/></worksheet>`;
+}
+function xlsxBook(sheets) {
+  const nomeAba = s => String(s).replace(/[\\\/\?\*\[\]:]/g, ' ').slice(0, 31);
   const files = {
-    '[Content_Types].xml': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>',
+    '[Content_Types].xml': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+      sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('') +
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>',
     '_rels/.rels': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
-    'xl/workbook.xml': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Orçamentos do mês" sheetId="1" r:id="rId1"/></sheets></workbook>',
-    'xl/_rels/workbook.xml.rels': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
-    'xl/styles.xml': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>',
-    'xl/worksheets/sheet1.xml': sheet
+    'xl/workbook.xml': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' +
+      sheets.map((s, i) => `<sheet name="${xlsxEsc(nomeAba(s.name))}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('') + '</sheets></workbook>',
+    'xl/_rels/workbook.xml.rels': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('') +
+      `<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
+    'xl/styles.xml': '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'
   };
+  sheets.forEach((s, i) => { files[`xl/worksheets/sheet${i + 1}.xml`] = xlsxSheet(s.head, s.rows, s.widths); });
   // ZIP sem compressão (stored)
   const enc = new TextEncoder(), crcT = [];
   for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; crcT[n] = c >>> 0; }
@@ -694,13 +690,13 @@ function xlsxBytes(head, rows, widths) {
   let p = 0; for (const b of all) { out.set(b, p); p += b.length; }
   return out;
 }
-async function salvarArquivo(bytes, nome) {
-  const msg = document.getElementById('orcXlsxMsg'); msg.textContent = '';
+async function salvarArquivo(bytes, nome, msgId) {
+  const msg = document.getElementById(msgId); if (msg) msg.textContent = '';
   if (window.claude && typeof window.claude.use === 'function') {
     let dl = null; try { dl = await window.claude.use('downloads'); } catch (e) {}
     if (dl) {
       try { await dl.save({ filename: nome, data: new Blob([bytes]) }); }
-      catch (e) { if (!e || e.code !== 'declined') msg.textContent = 'Não foi possível baixar aqui.'; }
+      catch (e) { if ((!e || e.code !== 'declined') && msg) msg.textContent = 'Não foi possível baixar aqui.'; }
       return;
     }
   }
@@ -708,11 +704,27 @@ async function salvarArquivo(bytes, nome) {
   const a = document.createElement('a'); a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
+const dataLonga = ymd => dShort(ymd) + '/' + ymd.slice(0, 4);
 document.getElementById('orcXlsx').onclick = () => {
   const head = ['Data', 'Vendedor', 'Plano', 'Tipo', 'Status', 'ID / código', 'Vidas', 'Supervisor'];
-  const rows = orcAtual.map(o => [dShort(o.d) + '/' + o.d.slice(0, 4), title(o.v), o.pl, o.t, stInfo(o.st)[0], o.id || '', o.n, title(o.s)]);
-  const nome = 'orcamentos-do-mes_' + DATA.ref + '.xlsx';
-  salvarArquivo(xlsxBytes(head, rows, [12, 30, 28, 10, 22, 22, 8, 26]), nome);
+  const rows = orcAtual.map(o => [dataLonga(o.d), title(o.v), o.pl, o.t, stInfo(o.st)[0], o.id || '', o.n, title(o.s)]);
+  salvarArquivo(xlsxBook([{ name: 'Orçamentos do mês', head, rows, widths: [12, 30, 28, 10, 22, 22, 8, 26] }]), 'orcamentos-do-mes_' + DATA.ref + '.xlsx', 'orcXlsxMsg');
+};
+document.getElementById('fnXlsx').onclick = () => {
+  const resumo = [], abas = [];
+  FUNIS.forEach(f => {
+    const D = dadosFunil(f), sel = fnSel[f.t];
+    const filtro = `Data: ${sel.dia ? dataLonga(sel.dia) : 'Todos'} · Período: ${perLabel(sel.per)}`;
+    D.grupos.forEach(g => {
+      if (!g.status.length) resumo.push([f.t, filtro, g.e.lab, '', 0, 0]);
+      g.status.forEach(s => resumo.push([f.t, filtro, g.e.lab, stInfo(s.st)[0], s.n, s.vidas]));
+    });
+    resumo.push([f.t, filtro, 'Total', '', D.total, D.vidas]);
+    abas.push({ name: 'Funil ' + f.t, head: ['Data', 'Vendedor', 'Plano', 'Etapa', 'Status', 'ID / código', 'Vidas', 'Supervisor'],
+      rows: D.rows.map(o => [dataLonga(o.d), title(o.v), o.pl, etapaDe(f, o.st).lab, stInfo(o.st)[0], o.id || '', o.n, title(o.s)]), widths: [12, 30, 28, 22, 24, 22, 8, 26] });
+  });
+  const sheets = [{ name: 'Resumo dos funis', head: ['Tipo', 'Filtro', 'Etapa', 'Status', 'Orçamentos', 'Vidas'], rows: resumo, widths: [10, 44, 24, 28, 12, 8] }, ...abas];
+  salvarArquivo(xlsxBook(sheets), 'funis-orcamentos_' + DATA.ref + '.xlsx', 'fnXlsxMsg');
 };
 
 
@@ -787,16 +799,13 @@ function renderRules() {
     d.desdob ? 'O supervisor de cada vendedor segue a hierarquia da planilha Desdobramento Metas. Quem vende pela gestão Josy mas não está nessa planilha aparece como "Sem supervisor no desdobramento".' : null,
     d.desdob ? `Na planilha de metas, ${fmt(d.desdob.lista.length)} nomes foram lidos.` + (d.desdobSemPar && d.desdobSemPar.length ? ` Sem nenhuma venda ou orçamento encontrado nas bases: ${d.desdobSemPar.map(n => esc(title(n))).join(', ')}.` : '') : null,
     `Logins usados por mais de uma gestão (por exemplo, contas administrativas) ficam de fora, porque não dá para saber de quem é o orçamento. Hoje isso tirou <b>${fmt(fora)}</b> orçamentos; outros <b>${fmt(outra)}</b> eram de outras gestões.`,
-    'Orçamento PF em andamento: DATA DIGITAÇÃO igual ao dia de referência, DT_PROCESSAMENTO vazia e status diferente de CANCELADO ou RECUSADO. Com DT_PROCESSAMENTO preenchida, conta como venda efetivada.',
-    `Data de referência: sempre o dia em que os arquivos são enviados (hoje, ${dShort(d.ref)}). Todos os orçamentos (PF, PME e Adesão) só contam se forem desse dia; as vidas vendidas somam do dia 1 do mês até esse dia.`,
-    'Acumulado do dia / do mês: quantidade de orçamentos de todos os status (em andamento, vendidos, cancelados). PF pela DATA DIGITAÇÃO, PME pela data_assinatura, Adesão pela DATA DA CONTRATACAO. O status é o que consta no relatório mais recente enviado.',
+    'Orçamento PF em andamento: DATA DIGITAÇÃO igual ao dia de referência, DT_PROCESSAMENTO vazia e status diferente de CANCELADO ou RECUSADO. Com DT_PROCESSAMENTO preenchida, virou venda e sai do painel.',
+    `Data de referência: sempre o dia em que os arquivos são enviados (hoje, ${dShort(d.ref)}). Os orçamentos em andamento (PF, PME e Adesão) só contam se forem desse dia.`,
+    'Acumulado do dia / do mês e lista Orçamentos do mês: orçamentos de todos os status, menos os que viraram venda (PF com DT_PROCESSAMENTO e PME implantada). PF pela DATA DIGITAÇÃO, PME pela data_assinatura, Adesão pela DATA DA CONTRATACAO. O status é o que consta no relatório mais recente.',
+    'Funil de orçamentos: os mesmos orçamentos do mês, agrupados por etapa. PF: Cancelado (cancelado, recusado, falta de pagamento), Em negociação (em digitação, confirmação do cliente), Em implantação (assinado, pendente, auditoria médica), Ag. pagamento e Implantado c/ erro (válido com dados divergentes ou ausente crítica). PME: cancelada/devolvida, sem status, com pendência e em análise. Adesão: pendente e em análise. Período = idade do orçamento contada do dia de referência: D-5 até 5 dias, D-10 de 6 a 10 dias, ≥ 11 dias.',
     'Adesão em andamento: linhas das planilhas Movimentacoes_pendentes (Adesão pendente) e Movimentacoes_em_adesao (Adesão em análise) com DATA DA CONTRATACAO de hoje. O vendedor é o CORRETOR; quando ele vem vazio ("-"), vale o SOLICITANTE.',
     `PME em andamento: propostas da planilha stats_export assinadas hoje (data_assinatura) e com status "analise" ou "pendencia", uma por propostaID (a planilha repete a proposta por beneficiário). As vidas vêm da coluna beneficiarios. O vendedor é achado pelo CPF (vendedor_cpf) na lista CORRETORES ONLINE.` + (d.andamento.foraPme ? ` Hoje ${fmt(d.andamento.foraPme.semCpf || 0)} propostas assinadas no dia, em análise ou pendência, eram de CPFs fora dessa lista.` : ''),
-    'As vidas de Adesão incluem todas as campanhas da BASE ADESAO (inclusive SINTRO). Por isso alguns totais ficam acima do ranking oficial, que separa a SINTRO.',
-    `Vidas do mês: PF soma QTDE VIDAS por DT_PROCESSAMENTO; PME soma Qt.Usu por DATA ASSINATURA PROPOSTA; Adesão conta 1 vida por linha (TP_USUARIO) por DT_CADASTRAMENTO. Só datas de 01/${d.mes.slice(5)} até ${dShort(v.corte || d.ref)}.`,
-    v.futuras ? `Adesões com DT_CADASTRAMENTO depois de hoje (${fmt(v.futuras)} vidas) ainda não entram; elas aparecem quando a data chegar.` : null,
     d.porLogin && Object.keys(d.porLogin).length ? 'Vendas registradas nas bases como ADMINISTRATIVO, mas feitas por um login de vendedor da planilha de metas, contam para esse vendedor: ' + Object.entries(d.porLogin).map(([f, n]) => `${esc(title(f))} → ${esc(title(n))}`).join('; ') + '.' : null,
-    `Metas por vendedor (META RANKING) vêm de ${esc(v.metaFonte || '—')}. O traço na barra da meta mostra quanto seria esperado até hoje, proporcional aos dias corridos do mês.`,
     'A família do plano usa o início do nome (NP = Nosso Plano). "Responsável (plano não informado)" é a linha do titular responsável, que no relatório não traz o plano.',
     'Atualização: a cada nova versão do painel, os números são recalculados.'
   ].filter(Boolean);

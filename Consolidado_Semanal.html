@@ -194,7 +194,7 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
     <div class="cs-grid">
       <div class="cs-card" id="card-plano">
         <h2 class="cs-h">Vidas por plano</h2>
-        <p class="cs-note">Nome inicial do plano (NOME_PLANO). Barra cheia = semana atual; barra fina = semana anterior.</p>
+        <p class="cs-note">Nome inicial do plano (NOME_PLANO). Barra azul = 12–18/10; barra cinza = 12–18/09.</p>
         <div class="cs-chart" id="ch-plano" data-source="vendas_plano"></div>
       </div>
       <div class="cs-card" id="card-regiao">
@@ -213,7 +213,7 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
   <section class="cs-page" id="origem" data-page="origem" hidden>
     <div class="cs-card" id="card-orig">
       <h2 class="cs-h">Origem do lead (Session Team)</h2>
-      <p class="cs-note">Sessões dos vendedores da gestão, sem as encerradas sem tag. Conversão por origem = vendas ligadas à sessão (ID_SESSAO ou celular) ÷ clientes atendidos na origem. Conversão e SLA mostram só origens com 50 sessões ou mais.</p>
+      <p class="cs-note">Sessões dos vendedores da gestão, sem as encerradas sem tag. Conversão por origem = vendas ligadas à sessão (ID_SESSAO ou celular) ÷ clientes atendidos na origem. Volume e vendas aparecem em % do total; passe o mouse para ver as quantidades. Conversão e SLA mostram só origens com 50 sessões ou mais.</p>
       <div class="cs-bar" role="group" aria-label="Visão" id="f-om">
         <button class="cs-btn" data-v="sessoes" aria-pressed="true">Volume de sessões</button>
         <button class="cs-btn" data-v="vendas" aria-pressed="false">Vendas</button>
@@ -246,7 +246,7 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
   <section class="cs-page" id="tags" data-page="tags" hidden>
     <div class="cs-card" id="card-tags">
       <h2 class="cs-h">Tags de encerramento</h2>
-      <p class="cs-note">Sessões com tag, vendedores da gestão. Encerradas sem tag ficam fora; abertas sem tag não têm motivo e não entram aqui. A tag 10 não é usada como venda: vendas vêm sempre do Levantamento de Vendas.</p>
+      <p class="cs-note">% das sessões com tag, vendedores da gestão. Encerradas sem tag ficam fora; abertas sem tag não têm motivo e não entram aqui. A tag 10 não é usada como venda: vendas vêm sempre do Levantamento de Vendas.</p>
       <div class="cs-legend" id="lg-tags"></div>
       <div class="cs-chart" id="ch-tags" data-source="tags" style="min-height:24rem"></div>
     </div>
@@ -270,7 +270,7 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
     <div class="cs-grid">
       <div class="cs-card" id="card-faixa">
         <h2 class="cs-h">Tempo de espera até a 1ª mensagem</h2>
-        <p class="cs-note">Agent First Response at − Time of Chat Assignment. Tempo mediano: <b data-source="resumo" data-where="indicador=Tempo mediano até a 1ª mensagem (min)" data-field="atual">—</b> min.</p>
+        <p class="cs-note">% das sessões por faixa de espera (Agent First Response at − Time of Chat Assignment). Tempo mediano: <b data-source="resumo" data-where="indicador=Tempo mediano até a 1ª mensagem (min)" data-field="atual">—</b> min.</p>
         <div class="cs-chart" id="ch-faixa" data-source="sla_faixas"></div>
       </div>
       <div class="cs-card" id="card-sladia">
@@ -331,12 +331,12 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
   window.CS.hbars=(host,rows,o={})=>{
     const tip=window.CS.tip(host);
     d3.select(host).selectAll('svg').remove();
-    const W=Math.max(260,host.clientWidth), rowH=o.rowH||(rows.some(r=>r.v2!=null)?30:24), top=6, H=top+rows.length*rowH+(o.ref!=null?18:4);
+    const W=Math.max(260,host.clientWidth), rowH=o.rowH||(rows.some(r=>r.v2!=null)?40:24), top=6, H=top+rows.length*rowH+(o.ref!=null?18:4);
     const svg=d3.select(host).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img');
     const meas=svg.append('g').attr('font-size','12');
     let lw=0;rows.forEach(r=>{const t=meas.append('text').text(r.label);lw=Math.max(lw,t.node().getComputedTextLength());t.remove();});
     lw=Math.min(lw,W*0.42);
-    let vw=0;rows.forEach(r=>{const t=meas.append('text').text(o.fmt(r.v));vw=Math.max(vw,t.node().getComputedTextLength());t.remove();});
+    let vw=0;rows.forEach(r=>{[r.v,r.v2].forEach(v=>{if(v==null)return;const t=meas.append('text').text(o.fmt(v));vw=Math.max(vw,t.node().getComputedTextLength());t.remove();});});
     const x0=lw+10, x1=W-vw-12;
     const mx=o.max!=null?o.max:d3.max(rows,r=>Math.max(r.v||0,r.v2||0,o.ref||0))||1;
     const x=d3.scaleLinear([0,mx],[x0,x1]);
@@ -345,9 +345,10 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
       const y=top+i*rowH;
       const lab=g.append('text').attr('x',0).attr('y',y+rowH/2).attr('dy','0.35em').attr('fill','var(--color-fg)').text(r.label);
       if(lab.node().getComputedTextLength()>lw){let s=r.label;while(s.length>3&&lab.node().getComputedTextLength()>lw){s=s.slice(0,-1);lab.text(s+'…');}}
-      const bh=r.v2!=null?12:14, by=y+(rowH-(r.v2!=null?bh+6:bh))/2;
+      const bh=r.v2!=null?13:14, bh2=11, by=y+(rowH-(r.v2!=null?bh+3+bh2:bh))/2;
       const bar=g.append('rect').attr('x',x0).attr('y',by).attr('height',bh).attr('rx',4).attr('width',Math.max(1,x(r.v||0)-x0)).attr('fill',r.color||dash.colors[0]);
-      if(r.v2!=null) g.append('rect').attr('x',x0).attr('y',by+bh+2).attr('height',4).attr('rx',2).attr('width',Math.max(1,x(r.v2)-x0)).attr('fill','var(--cds-chart-muted)');
+      if(r.v2!=null){g.append('rect').attr('x',x0).attr('y',by+bh+3).attr('height',bh2).attr('rx',4).attr('width',Math.max(1,x(r.v2)-x0)).attr('fill','var(--cds-chart-muted)');
+        g.append('text').attr('x',x(r.v2)+6).attr('y',by+bh+3+bh2/2).attr('dy','0.35em').attr('font-size','11').attr('fill','var(--color-fg-muted)').text(o.fmt(r.v2));}
       g.append('text').attr('x',x(r.v||0)+6).attr('y',by+bh/2).attr('dy','0.35em').attr('fill','var(--color-fg-muted)').text(o.fmt(r.v));
       g.append('rect').attr('x',0).attr('y',y).attr('width',W).attr('height',rowH).attr('fill','transparent')
         .on('mousemove',ev=>tip.show(ev,r.label,o.tip?o.tip(r):[[null,'',o.fmt(r.v)]])).on('mouseleave',()=>tip.hide());
@@ -362,6 +363,10 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
     const tip=window.CS.tip(host);
     d3.select(host).selectAll('svg').remove();
     const W=Math.max(280,host.clientWidth), H=o.h||240, m={t:16,r:8,b:28,l:36};
+    const step=(W-60)/Math.max(1,rows.length);
+    const tmp=d3.select(host).append('svg').attr('width',0).attr('height',0).style('position','absolute');
+    const wrap=rows.some(r=>{const t=tmp.append('text').attr('font-size','11').text(r.label);const w=t.node().getComputedTextLength();t.remove();return w>step*0.9;});
+    tmp.remove(); if(wrap) m.b=40;
     const svg=d3.select(host).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img');
     const mx=(o.max!=null?o.max:d3.max(rows,r=>Math.max(r.v||0,r.v2||0,o.ref||0)))||1;
     const y=d3.scaleLinear([0,mx],[H-m.b,m.t]).nice();
@@ -377,8 +382,11 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
       const draw=(v,xx,c)=>svg.append('rect').attr('x',xx).attr('width',w).attr('y',y(v||0)).attr('height',Math.max(0,y(0)-y(v||0))).attr('rx',4).attr('fill',c);
       if(paired){draw(r.v,cx-w-2,r.color||dash.colors[0]);draw(r.v2,cx+2,'var(--cds-chart-muted)');}
       else draw(r.v,cx-w/2,r.color||dash.colors[0]);
-      if(o.labels){svg.append('text').attr('x',paired?cx-w/2-2:cx).attr('y',y(r.v||0)-4).attr('text-anchor','middle').attr('font-size','11').attr('fill','var(--color-fg-muted)').text(o.fmt(r.v));}
-      svg.append('text').attr('x',cx).attr('y',H-8).attr('text-anchor','middle').attr('font-size','11').attr('fill','var(--color-fg-muted)').text(r.label);
+      if(o.labels){svg.append('text').attr('x',paired?cx-w/2-2:cx).attr('y',y(r.v||0)-4).attr('text-anchor','middle').attr('font-size','11').attr('fill','var(--color-fg)').text(o.fmt(r.v));
+        if(paired&&r.v2!=null) svg.append('text').attr('x',cx+2+w/2).attr('y',y(r.v2||0)-4).attr('text-anchor','middle').attr('font-size','11').attr('fill','var(--color-fg-muted)').text(o.fmt(r.v2));}
+      {const lt=svg.append('text').attr('x',cx).attr('y',wrap?H-22:H-8).attr('text-anchor','middle').attr('font-size','11').attr('fill','var(--color-fg-muted)');
+       const i=r.label.lastIndexOf(' ');
+       if(wrap&&i>0){lt.append('tspan').attr('x',cx).text(r.label.slice(0,i));lt.append('tspan').attr('x',cx).attr('dy','1.2em').text(r.label.slice(i+1));} else lt.text(r.label);}
       svg.append('rect').attr('x',x(r.label)).attr('width',bw).attr('y',m.t).attr('height',H-m.t-m.b).attr('fill','transparent')
         .on('mousemove',ev=>tip.show(ev,r.title||r.label,o.tip(r))).on('mouseleave',()=>tip.hide());
     });
@@ -527,8 +535,10 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
         rows.sort((a,b)=>b[om]-a[om]); rows=rows.slice(0,15);
         const isP=om==='conversao'||om==='sla_pct';
         const ref=om==='conversao'?10:om==='sla_pct'?90:null;
-        window.CS.hbars($('#ch-orig'),rows.map(r=>({label:r.origem,v:r[om],r,color:ref==null?dash.colors[0]:(r[om]>=ref?'var(--cs-good)':dash.colors[0])})),{fmt:isP?fPct:fInt,ref,refLabel:ref!=null?'meta '+ref+'%':'',max:om==='sla_pct'?100:null,
-          tip:x=>[[null,'Sessões',fInt(x.r.sessoes)],[null,'Clientes',fInt(x.r.clientes)],[null,'Vendas ligadas',fInt(x.r.vendas)],[null,'Conversão',fPct(x.r.conversao)],[null,'SLA ≤ 2 min',fPct(x.r.sla_pct)],[null,'Tag mais comum',x.r.tag_principal||'—']]});
+        const tot=d3.sum(O.data,r=>r[om])||1;
+        const val=r=>isP?r[om]:r[om]/tot*100;
+        window.CS.hbars($('#ch-orig'),rows.map(r=>({label:r.origem,v:val(r),r,color:ref==null?dash.colors[0]:(r[om]>=ref?'var(--cs-good)':dash.colors[0])})),{fmt:fPct,ref,refLabel:ref!=null?'meta '+ref+'%':'',max:om==='sla_pct'?100:null,
+          tip:x=>[...(isP?[]:[[null,om==='sessoes'?'Participação nas sessões':'Participação nas vendas ligadas',fPct(x.v)]]),[null,'Sessões',fInt(x.r.sessoes)],[null,'Clientes',fInt(x.r.clientes)],[null,'Vendas ligadas',fInt(x.r.vendas)],[null,'Conversão',fPct(x.r.conversao)],[null,'SLA ≤ 2 min',fPct(x.r.sla_pct)],[null,'Tag mais comum',x.r.tag_principal||'—']]});
       }
       const cols=GC();legend($('#lg-mix'),GR.map((g,i)=>[cols[i],g[1]]));
       if(!fail($('#ch-mix'),O)){
@@ -557,7 +567,7 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
     if(t==='tags'){
       const T=st('tags');const cols=GC();
       legend($('#lg-tags'),[['Improdutivo',0],['Cotação perdida',1],['Em negociação',2],['Venda fechada (tag 10)',3],['Portabilidade',4]].map(([n,i])=>[cols[i],n]));
-      if(!fail($('#ch-tags'),T)) window.CS.hbars($('#ch-tags'),T.data.map(r=>({label:r.tag,v:r.sessoes,r,color:cols[GRP[r.grupo]]})),{fmt:fInt,
+      if(!fail($('#ch-tags'),T)) window.CS.hbars($('#ch-tags'),T.data.map(r=>({label:r.tag,v:r.pct,r,color:cols[GRP[r.grupo]]})),{fmt:fPct,
         tip:x=>[[cols[GRP[x.r.grupo]],'Grupo',x.r.grupo],[null,'Sessões',fInt(x.r.sessoes)+' ('+fPct(x.r.pct)+')'],[null,'Origem principal',x.r.origem_principal+' · '+fInt(x.r.origem_principal_sessoes)]]});
       if(T.status==='ok') window.CS.table($('#t-tags'),T.data,[
         {f:'tag',h:'Tag de encerramento',l:1},{f:'grupo',h:'Grupo',l:1},{f:'sessoes',h:'Sessões',fmt:fInt},{f:'pct',h:'% das sessões com tag',fmt:fPct},
@@ -575,8 +585,8 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:
     }
     if(t==='sla'){
       const F=st('sla_faixas'),SD=st('sla_dia');
-      if(!fail($('#ch-faixa'),F)) window.CS.vbars($('#ch-faixa'),F.data.map(r=>({label:r.faixa.replace(' min','').replace('Mais de ','> '),title:r.faixa,v:r.sessoes,r,color:r.dentro_sla==='Sim'?'var(--cs-good)':dash.colors[0]})),{h:240,labels:true,fmt:fInt,
-        tip:x=>[[null,'Sessões',fInt(x.r.sessoes)],[null,'Dentro do SLA',x.r.dentro_sla]]});
+      if(!fail($('#ch-faixa'),F)) window.CS.vbars($('#ch-faixa'),F.data.map(r=>{const tot=d3.sum(F.data,q=>q.sessoes)||1;const lab=r.faixa.replace('Até','até').replace('Mais de','mais de')+'.';return {label:lab,title:lab,v:r.sessoes/tot*100,r,color:r.dentro_sla==='Sim'?'var(--cs-good)':dash.colors[0]};}),{h:250,labels:true,fmt:fPct,fmtAxis:v=>v+'%',
+        tip:x=>[[null,'Participação',fPct(x.v)],[null,'Sessões',fInt(x.r.sessoes)],[null,'Dentro do SLA',x.r.dentro_sla]]});
       if(!fail($('#ch-sladia'),SD)) window.CS.vbars($('#ch-sladia'),SD.data.map(r=>({label:r.dia,v:r.sla_pct,r,color:r.sla_pct>=90?'var(--cs-good)':dash.colors[0]})),{h:240,labels:true,fmt:fPct,max:100,ref:90,fmtAxis:v=>v+'%',
         tip:x=>[[null,'SLA',fPct(x.r.sla_pct)],[null,'Em até 2 min',fInt(x.r.sla_ate_2min)+' de '+fInt(x.r.sla_base)],[null,'Sessões no dia',fInt(x.r.sessoes)]]});
     }

@@ -653,6 +653,50 @@ License: MIT
   .modal .data-table-wrap{ overflow-x:auto; }
   .modal .data-table{ min-width:760px; }
 
+  /* ---------- filtros + compilado por segmento ---------- */
+  .filterbar{
+    display:flex; flex-wrap:wrap; gap:14px 36px; align-items:flex-start;
+    background: var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:14px 18px; margin-bottom:16px;
+  }
+  .fb-label{ display:block; font-size:11px; font-weight:700; color: var(--muted); margin-bottom:7px; }
+  .filterbar .chip-row{ margin-bottom:0; }
+  .filterbar .date-mode-tabs{ margin-bottom:8px; }
+  .filterbar .date-mode-panel{ margin-bottom:0; }
+  .filterbar select, .filterbar .period-inputs input{ min-width:190px; }
+  .fb-search input{
+    font-family:'Inter',sans-serif; font-size:13px; padding:7px 12px; min-width:200px;
+    border:1px solid var(--line); border-radius:8px; background: var(--bg); color: var(--ink);
+  }
+  .kpi-strip{
+    display:flex; flex-wrap:wrap; gap:0; margin-bottom:16px;
+    background: var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden;
+  }
+  .kpi-item{ flex:1 1 120px; padding:12px 18px; border-right:1px solid var(--line); }
+  .kpi-item:last-child{ border-right:none; }
+  .kpi-item .k-val{ display:block; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; color: var(--blue-deep); }
+  .kpi-item .k-lbl{ font-size:11px; color: var(--muted); }
+  .block.compact{ padding:20px 22px 22px; }
+  .block.compact .data-table-wrap{ overflow-x:auto; }
+  .seg-table{ min-width:980px; }
+  .seg-table th.r, .seg-table td.r{ text-align:right; font-variant-numeric: tabular-nums; }
+  .seg-table td{ padding:9px 14px; white-space:nowrap; }
+  .seg-table th{ white-space:nowrap; }
+  .seg-table tr.seg-row{ cursor:pointer; background: var(--surface); }
+  .seg-table tr.seg-row:hover{ background: var(--blue-tint); }
+  .seg-table tr.seg-row td:first-child{ font-weight:700; color: var(--blue-deep); }
+  .seg-table tr.seg-row.empty{ cursor:default; opacity:.55; }
+  .seg-table tr.seg-row.empty:hover{ background: var(--surface); }
+  .seg-caret{ display:inline-block; width:16px; color: var(--blue); }
+  .seg-table tr.disp-row td{ background: var(--bg); font-size:12.5px; }
+  .seg-table tr.disp-row td:first-child{ padding-left:38px; }
+  .seg-table tr.disp-row{ cursor:pointer; }
+  .seg-table tr.disp-row:hover td{ background: var(--blue-tint); }
+  .seg-table tr.total-row td{ font-weight:700; color: var(--blue-deep); background: var(--blue-tint); border-top:2px solid var(--line); }
+  .seg-table .go{ color: var(--blue); font-weight:600; font-size:12px; }
+  .seg-table .coral{ color: var(--coral-deep); font-weight:600; }
+  .origin-pill{ font-size:10.5px; font-weight:700; padding:2px 9px; border-radius:10px; background: var(--coral-tint); color: var(--coral-deep); }
+
   @media (max-width: 820px){
     body{ padding: 28px 5vw 60px; }
     .hero{ grid-template-columns: 1fr; }
@@ -675,59 +719,6 @@ License: MIT
       <span>HAPVIDA · OPERAÇÕES DE RELACIONAMENTO</span>
     </div>
     <div class="controls">
-      <div class="field">
-        <label for="disparoPickerBtn">Disparos na visão geral</label>
-        <button type="button" class="picker-btn" id="disparoPickerBtn">
-          <span id="disparoPickerLabel">Todos os disparos</span><span class="picker-caret">▾</span>
-        </button>
-        <div class="picker-panel" id="disparoPickerPanel" hidden>
-          <div class="picker-search">
-            <input type="search" id="pickerSearch" placeholder="Buscar disparo por palavra-chave…">
-          </div>
-
-          <div class="picker-filter-group">
-            <span class="picker-filter-label">Categoria</span>
-            <div class="chip-row" id="categoriaChipRow"></div>
-          </div>
-
-          <div class="picker-filter-group">
-            <span class="picker-filter-label">Origem</span>
-            <div class="chip-row" id="origemChipRow"></div>
-          </div>
-
-          <div class="picker-filter-group">
-            <div class="date-mode-tabs">
-              <button type="button" class="date-mode-btn active" data-mode="exata">Data exata</button>
-              <button type="button" class="date-mode-btn" data-mode="mes">Mês</button>
-              <button type="button" class="date-mode-btn" data-mode="periodo">Período</button>
-              <button type="button" class="date-mode-clear" id="dateModeClear">limpar</button>
-            </div>
-            <div class="date-mode-panel" id="dateModeExata">
-              <div class="chip-row" id="dateChipRow"></div>
-            </div>
-            <div class="date-mode-panel" id="dateModeMes" hidden>
-              <select id="monthSelect"><option value="">Todos os meses</option></select>
-            </div>
-            <div class="date-mode-panel" id="dateModePeriodo" hidden>
-              <div class="period-inputs">
-                <input type="date" id="periodoFrom"><span>até</span><input type="date" id="periodoTo">
-              </div>
-            </div>
-          </div>
-
-          <div class="picker-actions-top">
-            <span class="picker-selected-count" id="pickerSelectedCount"></span>
-            <div class="picker-links">
-              <button type="button" id="pickerSelectAll">Selecionar todos</button>
-              <button type="button" id="pickerClear">Limpar seleção</button>
-            </div>
-          </div>
-          <div class="picker-list" id="pickerList"></div>
-          <div class="picker-actions-bottom">
-            <button type="button" id="pickerApply">Aplicar</button>
-          </div>
-        </div>
-      </div>
       <div class="field">
         <label>&nbsp;</label>
         <div class="updated">Última leitura da planilha às <b id="updatedDate">—</b></div>
@@ -752,79 +743,52 @@ License: MIT
 
   <header class="page">
     <h1>Controle de acionamentos</h1>
-    <p>Acompanhamento do funil de disparos via WhatsApp: do envio até a resposta do contato.</p>
+    <p>Compilado por segmento. Clique em um segmento para ver os disparos e em um disparo para ver as vendas.</p>
   </header>
 
-  <div class="hero">
-    <div class="hero-main">
-      <div class="hero-eyebrow">TAXA DE ACEITE</div>
-      <div class="hero-num"><span id="engRate">0%</span><small>da base disse "sim"</small></div>
-      <div class="hero-sub">
-        De <strong id="heroTotalBase">–</strong> pessoas na base, <strong id="heroSim">–</strong> disseram <strong>sim</strong> e
-        <strong id="heroNao">–</strong> disseram <strong>não</strong>.
+  <div class="filterbar">
+    <div class="fb-group">
+      <span class="fb-label">Origem</span>
+      <div class="chip-row" id="origemChipRow"></div>
+    </div>
+    <div class="fb-group">
+      <div class="date-mode-tabs">
+        <span class="fb-label" style="margin:0;">Data do disparo</span>
+        <button type="button" class="date-mode-btn active" data-mode="exata">Data exata</button>
+        <button type="button" class="date-mode-btn" data-mode="mes">Mês</button>
+        <button type="button" class="date-mode-btn" data-mode="periodo">Período</button>
+        <button type="button" class="date-mode-clear" id="dateModeClear">limpar</button>
+      </div>
+      <div class="date-mode-panel" id="dateModeExata"><div class="chip-row" id="dateChipRow"></div></div>
+      <div class="date-mode-panel" id="dateModeMes" hidden><select id="monthSelect"><option value="">Todos os meses</option></select></div>
+      <div class="date-mode-panel" id="dateModePeriodo" hidden>
+        <div class="period-inputs"><input type="date" id="periodoFrom"><span>até</span><input type="date" id="periodoTo"></div>
       </div>
     </div>
-    <div class="ledger">
-      <div class="ledger-title">RESUMO</div>
-      <div class="ledger-row"><span class="label">Total da base</span><span class="value" id="ledgerBase">–</span></div>
-      <div class="ledger-row"><span class="label">Sim</span><span class="value" id="ledgerSim">–</span></div>
-      <div class="ledger-row"><span class="label">Não</span><span class="value" id="ledgerNao">–</span></div>
-      <div class="ledger-row"><span class="label">Sem resposta</span><span class="value" id="ledgerSemResp">–</span></div>
-      <div class="ledger-row"><span class="label">Vidas geradas</span><span class="value" id="ledgerVidas">–</span></div>
-      <div class="ledger-row"><span class="label">Último envio</span><span class="value" id="ledgerUltimoEnvio">–</span></div>
+    <div class="fb-group fb-search">
+      <span class="fb-label">Buscar disparo</span>
+      <input type="search" id="filterSearch" placeholder="palavra-chave…">
     </div>
   </div>
 
-  <section class="block">
-    <div class="block-head">
-      <h2 id="disparoGridTitle">Disparos selecionados</h2>
-      <span class="hint" id="disparoGridHint">contatos e respostas por disparo</span>
-    </div>
-    <div class="disparo-grid" id="disparoGrid"></div>
-  </section>
+  <div class="kpi-strip" id="kpiStrip"></div>
 
-  <section class="block">
+  <section class="block compact">
     <div class="block-head">
-      <h2>Distribuição de respostas</h2>
-      <span class="hint">de toda a base contatada</span>
+      <h2>Compilado por segmento</h2>
+      <span class="hint" id="segHint"></span>
     </div>
-    <div class="segbar">
-      <div class="seg-a" id="segA"></div>
-      <div class="seg-b" id="segB"></div>
-      <div class="seg-c" id="segC"></div>
-    </div>
-    <div class="seg-legend">
-      <div class="seg-item"><span class="seg-dot" style="background:var(--coral)"></span>Sim — <b id="legA">–</b> <span class="pct" id="legAp"></span></div>
-      <div class="seg-item"><span class="seg-dot" style="background:var(--blue)"></span>Não — <b id="legB">–</b> <span class="pct" id="legBp"></span></div>
-      <div class="seg-item"><span class="seg-dot" style="background:#D7DEF2"></span>Sem resposta — <b id="legC">–</b> <span class="pct" id="legCp"></span></div>
-    </div>
-
-    <div class="rates">
-      <div class="rate-card">
-        <div class="rate-label">Taxa de resposta<br>(sim + não / total)</div>
-        <div class="rate-num" id="rateResposta">–</div>
-        <div class="rate-bar"><div id="barResposta"></div></div>
-      </div>
-      <div class="rate-card">
-        <div class="rate-label">Taxa de aceite<br>(sim / total)</div>
-        <div class="rate-num" id="rateAceite">–</div>
-        <div class="rate-bar"><div id="barAceite"></div></div>
-      </div>
-      <div class="rate-card">
-        <div class="rate-label">Taxa de recusa<br>(não / total)</div>
-        <div class="rate-num" id="rateRecusa">–</div>
-        <div class="rate-bar"><div id="barRecusa"></div></div>
-      </div>
-      <div class="rate-card">
-        <div class="rate-label">Aceite entre quem respondeu<br>(sim / (sim + não))</div>
-        <div class="rate-num" id="rateAceiteResp">–</div>
-        <div class="rate-bar"><div id="barAceiteResp"></div></div>
-      </div>
-      <div class="rate-card">
-        <div class="rate-label">Conversão em vendas<br>(vidas / total da base)</div>
-        <div class="rate-num" id="rateConversao">–</div>
-        <div class="rate-bar"><div id="barConversao"></div></div>
-      </div>
+    <div class="data-table-wrap">
+      <table class="data-table seg-table">
+        <thead>
+          <tr>
+            <th>Segmento / Disparo</th><th>Disparos / Origem</th><th>Data</th>
+            <th class="r">Total da base</th><th class="r">Sim</th><th class="r">Não</th><th class="r">Aceite</th>
+            <th class="r">Vendas</th><th class="r">Vidas</th><th class="r">Conversão</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="segBody"></tbody>
+      </table>
     </div>
   </section>
 
@@ -834,7 +798,7 @@ License: MIT
   </details>
 
   <div class="footnote">
-    <b>Como adicionar um novo disparo:</b> crie uma nova linha na aba <b>DISPARO</b> da planilha com nome, categoria, origem (COMERCIAL/MARKETING), total da base, respostas "sim"/"não" e a data de envio. Clique em "↻ Atualizar dados" aqui no painel para trazer as novidades — nenhuma edição de código é necessária.
+    <b>Como adicionar um novo disparo:</b> crie uma nova linha na aba <b>DISPARO</b> da planilha com nome, categoria, origem (COMERCIAL/MARKETING), total da base, respostas "sim"/"não" e a data de envio. Clique em "↻ Atualizar dados" para trazer as novidades — nenhuma edição de código é necessária.
   </div>
 
   </div><!-- /tab-geral -->
@@ -1006,7 +970,8 @@ License: MIT
     });
     // VENDAS (abas PF / PME / ADESAO). Cada venda é atribuída ao disparo que
     //   1) contém o telefone na BASE (comparação tolerante: sem DDI e sem o 9º dígito) e
-    //   2) foi disparado ATÉ a data da venda. Vale o disparo mais recente.
+    //   2) foi disparado ATÉ a data da venda. Se o telefone está em vários disparos, vale o de
+    //      data MAIS PRÓXIMA da venda (o mais recente antes dela); a venda é contada uma única vez.
     const normH = h => String(h || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                          .toUpperCase().replace(/[^A-Z0-9]/g, '');
     function findCol(hs, exacts, contains, fallback){
@@ -1076,9 +1041,14 @@ License: MIT
         colTelefone: phoneCols.length ? phoneCols.map(i => header[i] || ('col ' + (i+1))).join(', ') : null,
         colVidas: iVid === -1 ? null : header[iVid],
         colData: iVenda === -1 ? '(não encontrada — usando outra data)' : header[iVenda],
-        semTelefone: 0, semVidas: 0, foraDaBase: 0, antesDoDisparo: 0, atribuidas: 0,
+        semTelefone: 0, semVidas: 0, foraDaBase: 0, antesDoDisparo: 0, atribuidas: 0, duplicadas: 0,
         exemploData: '' };
+      const vistas = new Set();
       rows.forEach(cols => {
+        // linha idêntica a outra já lida na mesma aba = duplicata da exportação
+        const chave = cols.map(c => String(c || '').trim()).join('\u0001');
+        if (vistas.has(chave)) { d.duplicadas++; return; }
+        vistas.add(chave);
         const phones = phoneCols.map(i => String(cols[i] || '').replace(/\D/g, '')).filter(x => x.length >= 8);
         if (!phones.length) { d.semTelefone++; return; }
         // sem coluna de vidas: cada venda vale 1
@@ -1158,12 +1128,9 @@ License: MIT
         throw new Error('A aba DISPARO não retornou nenhuma linha. Confira o gid configurado.');
       }
 
-      activeCategoria = 'todas';
       activeOrigem = 'todos';
-      populateSelectors();
-      selectedDisparos = new Set(disparosNoEscopo()); // padrão: todos os disparos no escopo atual
-      updatePickerLabel();
-      render(selectedDisparos);
+      populatePhoneFilter();
+      renderAll();
       phonePage = 1;
       renderPhoneTable();
 
@@ -1185,196 +1152,56 @@ License: MIT
   }
 
   // ---------------------------------------------------------------
-  // Filtros de Categoria e Origem (nível de página)
+  // Filtros (origem, data, busca) e compilado por segmento
   // ---------------------------------------------------------------
-  let activeCategoria = 'todas';
+  const fmt = n => Number(n || 0).toLocaleString('pt-BR');
+  const pct = n => (n*100).toFixed(1).replace('.', ',') + '%';
+  const pct2 = n => (n*100).toFixed(2).replace('.', ',') + '%';
+
   let activeOrigem = 'todos';
+  let activeDateChips = new Set();   // datas (ISO); vazio = todas
+  let dateMode = 'exata';            // 'exata' | 'mes' | 'periodo'
+  let activeMonth = '';              // 'YYYY-MM'
+  let periodoFrom = '';
+  let periodoTo = '';
+  const expandedSegs = new Set();
 
-  function normCat(s){ return String(s||'').trim().toUpperCase(); }
+  const normTxt = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toUpperCase();
+  function segKey(cat){
+    const k = normTxt(cat);
+    return k === 'PROJETOS' ? 'PROJETO' : k;
+  }
+  const SEGMENTOS_FIXOS = [
+    { key: 'VPC', label: 'VPC' }, { key: 'PF', label: 'PF' }, { key: 'ADESAO', label: 'ADESÃO' },
+    { key: 'PME', label: 'PME' }, { key: 'PROJETO', label: 'PROJETO' },
+  ];
 
-  function categoriasDisponiveis(){
-    const set = new Set(Object.values(DISPAROS).map(d => d.categoria));
-    const arr = [...set];
-    arr.sort((a,b) => {
-      const ia = CATEGORIA_ORDEM.indexOf(normCat(a));
-      const ib = CATEGORIA_ORDEM.indexOf(normCat(b));
-      if(ia === -1 && ib === -1) return a.localeCompare(b);
-      if(ia === -1) return 1;
-      if(ib === -1) return -1;
-      return ia - ib;
-    });
-    return arr;
-  }
-  function origensDisponiveis(){
-    return [...new Set(Object.values(DISPAROS).map(d => d.origem))].sort();
-  }
-
-  // disparos que passam nos filtros de categoria + origem (mas não nos de
-  // busca/data, que são aplicados só dentro da lista do picker)
-  function disparosNoEscopo(){
-    return Object.keys(DISPAROS).filter(n => {
-      const d = DISPAROS[n];
-      if(activeCategoria !== 'todas' && normCat(d.categoria) !== normCat(activeCategoria)) return false;
-      if(activeOrigem !== 'todos' && normCat(d.origem) !== normCat(activeOrigem)) return false;
-      return true;
-    });
-  }
-
-  function renderCategoriaChips(){
-    const row = document.getElementById('categoriaChipRow');
-    const cats = categoriasDisponiveis();
-    const chips = ['todas', ...cats];
-    row.innerHTML = chips.map(c => {
-      const label = c === 'todas' ? 'Todas' : c;
-      const active = normCat(activeCategoria) === normCat(c) ? 'active' : '';
-      return `<button type="button" class="chip ${active}" data-cat="${c.replace(/"/g,'&quot;')}">${label}</button>`;
-    }).join('');
-    row.querySelectorAll('.chip').forEach(chip => {
-      chip.addEventListener('click', (e) => {
-        e.stopPropagation();
-        activeCategoria = chip.dataset.cat;
-        selectedDisparos = new Set(disparosNoEscopo());
-        renderCategoriaChips();
-        renderDateChips();
-        renderMonthSelect();
-        renderPickerList();
-        updatePickerLabel();
-        render(selectedDisparos);
-      });
-    });
-  }
-
-  function renderOrigemChips(){
-    const row = document.getElementById('origemChipRow');
-    const origens = origensDisponiveis();
-    const chips = ['todos', ...origens];
-    row.innerHTML = chips.map(o => {
-      const label = o === 'todos' ? 'Todos' : (o.charAt(0) + o.slice(1).toLowerCase());
-      const active = normCat(activeOrigem) === normCat(o) ? 'active' : '';
-      return `<button type="button" class="chip ${active}" data-origem="${o.replace(/"/g,'&quot;')}">${label}</button>`;
-    }).join('');
-    row.querySelectorAll('.chip').forEach(chip => {
-      chip.addEventListener('click', (e) => {
-        e.stopPropagation();
-        activeOrigem = chip.dataset.origem;
-        selectedDisparos = new Set(disparosNoEscopo());
-        renderOrigemChips();
-        renderDateChips();
-        renderMonthSelect();
-        renderPickerList();
-        updatePickerLabel();
-        render(selectedDisparos);
-      });
-    });
-  }
+  function formatDateBRShort(iso){ if(!iso) return 'sem data'; const [y,m,d] = iso.split('-'); return `${d}/${m}`; }
+  function formatDateBRFull(iso){ if(!iso) return 'sem data'; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
+  const NOMES_MES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  function formatMonthLabel(ym){ const [y,m] = ym.split('-'); return `${NOMES_MES[parseInt(m,10)-1]}/${y}`; }
 
   function renderDiag(diag, falharam){
     const esc = v => String(v ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    let html = '<table><thead><tr><th>Aba</th><th>Linhas</th><th>Colunas usadas</th><th>Sem telefone</th><th>Vidas = 0</th><th>Telefone fora da BASE</th><th>Venda antes do disparo</th><th>Atribuídas</th></tr></thead><tbody>';
+    let html = '<table><thead><tr><th>Aba</th><th>Linhas</th><th>Colunas usadas</th><th>Sem telefone</th><th>Vidas = 0</th><th>Telefone fora da BASE</th><th>Venda antes do disparo</th><th>Linhas duplicadas</th><th>Atribuídas</th></tr></thead><tbody>';
     (diag || []).forEach(d => {
       html += `<tr><td><b>${esc(d.nome)}</b></td><td class="num">${d.linhas}</td>
         <td>Telefone: ${d.colTelefone ? esc(d.colTelefone) : '<span class="warn">esta aba não tem coluna de telefone — não dá para cruzar com a BASE</span>'}<br>Vidas: ${d.colVidas ? esc(d.colVidas) : '<span class="warn">não encontrada (1 por venda)</span>'}<br>Data: ${esc(d.colData)}${d.exemploData ? '<br>Ex.: ' + esc(d.exemploData) : ''}<br>Cabeçalho na linha ${d.linhaCabecalho}</td>
-        <td class="num">${d.semTelefone}</td><td class="num">${d.semVidas}</td><td class="num">${d.foraDaBase}</td><td class="num">${d.antesDoDisparo}</td><td class="num">${d.atribuidas}</td></tr>`;
+        <td class="num">${d.semTelefone}</td><td class="num">${d.semVidas}</td><td class="num">${d.foraDaBase}</td><td class="num">${d.antesDoDisparo}</td><td class="num">${d.duplicadas}</td><td class="num">${d.atribuidas}</td></tr>`;
     });
-    (falharam || []).forEach(n => { html += `<tr><td><b>${esc(n)}</b></td><td colspan="7" class="warn">Não foi possível carregar esta aba.</td></tr>`; });
+    (falharam || []).forEach(n => { html += `<tr><td><b>${esc(n)}</b></td><td colspan="8" class="warn">Não foi possível carregar esta aba.</td></tr>`; });
     html += '</tbody></table>';
     document.getElementById('diagBody').innerHTML = html;
   }
 
-  function populateSelectors(){
-    renderCategoriaChips();
-    renderOrigemChips();
-    renderPickerList();
 
-    const phoneDisparoFilter = document.getElementById('phoneDisparoFilter');
-    phoneDisparoFilter.innerHTML = '<option value="todos">Todos os disparos</option>';
+  function populatePhoneFilter(){
+    const sel = document.getElementById('phoneDisparoFilter');
+    sel.innerHTML = '<option value="todos">Todos os disparos</option>';
     Object.keys(DISPAROS).forEach(name => {
-      const o1 = document.createElement('option'); o1.value = name; o1.textContent = name;
-      phoneDisparoFilter.appendChild(o1);
+      const o = document.createElement('option'); o.value = name; o.textContent = name; sel.appendChild(o);
     });
   }
-
-  document.getElementById('refreshBtn').addEventListener('click', loadData);
-
-  const fmt = n => n.toLocaleString('pt-BR');
-  const pct = n => (n*100).toFixed(1).replace('.', ',') + '%';
-  const pctInt = n => Math.round(n*100) + '%';
-
-  // ---------------------------------------------------------------
-  // Seletor múltiplo de disparos (Visão geral)
-  // ---------------------------------------------------------------
-  let selectedDisparos = new Set();
-  let activeDateChips = new Set(); // datas (ISO) marcadas como filtro; vazio = todas
-  let dateMode = 'exata'; // 'exata' | 'mes' | 'periodo'
-  let activeMonth = '';   // 'YYYY-MM'
-  let periodoFrom = '';
-  let periodoTo = '';
-
-  function formatDateBRShort(iso){
-    if(!iso) return 'sem data';
-    const [y,m,d] = iso.split('-');
-    return `${d}/${m}`;
-  }
-  function formatDateBRFull(iso){
-    if(!iso) return 'sem data';
-    const [y,m,d] = iso.split('-');
-    return `${d}/${m}/${y}`;
-  }
-  const NOMES_MES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-  function formatMonthLabel(ym){
-    const [y,m] = ym.split('-');
-    return `${NOMES_MES[parseInt(m,10)-1]}/${y}`;
-  }
-
-  function renderDateChips(){
-    const row = document.getElementById('dateChipRow');
-    const dates = [...new Set(disparosNoEscopo().map(n => DISPAROS[n].dataEnvio).filter(Boolean))].sort();
-    if(dates.length === 0){ row.innerHTML = '<span class="picker-empty" style="padding:4px 0;">Nenhuma data disponível.</span>'; return; }
-    row.innerHTML = dates.map(iso => `
-      <button type="button" class="chip ${activeDateChips.has(iso) ? 'active' : ''}" data-date="${iso}">${formatDateBRFull(iso)}</button>
-    `).join('');
-    row.querySelectorAll('.chip').forEach(chip => {
-      chip.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const d = chip.dataset.date;
-        activeDateChips.has(d) ? activeDateChips.delete(d) : activeDateChips.add(d);
-        renderDateChips();
-        renderPickerList();
-      });
-    });
-  }
-
-  function renderMonthSelect(){
-    const sel = document.getElementById('monthSelect');
-    const months = [...new Set(disparosNoEscopo().map(n => DISPAROS[n].dataEnvio).filter(Boolean).map(iso => iso.slice(0,7)))].sort();
-    sel.innerHTML = '<option value="">Todos os meses</option>' +
-      months.map(ym => `<option value="${ym}" ${activeMonth===ym?'selected':''}>${formatMonthLabel(ym)}</option>`).join('');
-  }
-
-  function setDateMode(mode){
-    dateMode = mode;
-    document.querySelectorAll('.date-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-    document.getElementById('dateModeExata').hidden = mode !== 'exata';
-    document.getElementById('dateModeMes').hidden = mode !== 'mes';
-    document.getElementById('dateModePeriodo').hidden = mode !== 'periodo';
-  }
-  document.querySelectorAll('.date-mode-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => { e.stopPropagation(); setDateMode(btn.dataset.mode); renderPickerList(); });
-  });
-  document.getElementById('dateModeClear').addEventListener('click', (e) => {
-    e.stopPropagation();
-    activeDateChips.clear(); activeMonth = ''; periodoFrom = ''; periodoTo = '';
-    document.getElementById('monthSelect').value = '';
-    document.getElementById('periodoFrom').value = '';
-    document.getElementById('periodoTo').value = '';
-    renderDateChips();
-    renderPickerList();
-  });
-  document.getElementById('monthSelect').addEventListener('change', (e) => {
-    activeMonth = e.target.value; renderPickerList();
-  });
-  document.getElementById('periodoFrom').addEventListener('change', (e) => { periodoFrom = e.target.value; renderPickerList(); });
-  document.getElementById('periodoTo').addEventListener('change', (e) => { periodoTo = e.target.value; renderPickerList(); });
 
   function passaFiltroData(iso){
     if(dateMode === 'exata') return activeDateChips.size === 0 || activeDateChips.has(iso);
@@ -1382,264 +1209,150 @@ License: MIT
     if(dateMode === 'periodo'){
       if(periodoFrom && (!iso || iso < periodoFrom)) return false;
       if(periodoTo && (!iso || iso > periodoTo)) return false;
-      return true;
     }
     return true;
   }
+  const passaOrigem = d => activeOrigem === 'todos' || normTxt(d.origem) === normTxt(activeOrigem);
 
-  function updateSelectedCount(){
-    document.getElementById('pickerSelectedCount').textContent =
-      `${document.querySelectorAll('#pickerList input[type="checkbox"]:checked').length} de ${document.querySelectorAll('#pickerList input[type="checkbox"]').length} marcados`;
-  }
-
-  function disparoStatCardHTML(n, dd, { withCheckbox }){
-    const cliques = dd.falarAgora + dd.naoInteresse;
-    const semResp = Math.max(dd.totalBase - cliques, 0);
-    const aceite = dd.totalBase > 0 ? Math.round(dd.falarAgora / dd.totalBase * 100) : 0;
-    const isSel = selectedDisparos.has(n);
-    const origemLabel = dd.origem ? (dd.origem.charAt(0) + dd.origem.slice(1).toLowerCase()) : '';
-    if(withCheckbox){
-      return `
-      <label class="disparo-card ${isSel ? 'selected' : ''}">
-        <input type="checkbox" value="${n.replace(/"/g,'&quot;')}" ${isSel ? 'checked' : ''}>
-        <span class="dc-check">✓</span>
-        <div class="dc-top">
-          <span class="dc-name">${n}</span>
-          <span class="dc-date-pill">${formatDateBRShort(dd.dataEnvio)}</span>
-        </div>
-        <div class="dc-badges">
-          <span class="dc-badge-cat">${dd.categoria}</span>
-          <span class="dc-badge-origem">${origemLabel}</span>
-        </div>
-        <div class="dc-stats">
-          <div class="dc-stat"><span class="dc-stat-val">${fmt(dd.totalBase)}</span><span class="dc-stat-label">Total da base</span></div>
-          <div class="dc-stat"><span class="dc-stat-val dc-coral">${fmt(dd.falarAgora)}</span><span class="dc-stat-label">Sim</span></div>
-          <div class="dc-stat"><span class="dc-stat-val dc-blue">${fmt(dd.naoInteresse)}</span><span class="dc-stat-label">Não</span></div>
-          <div class="dc-stat"><span class="dc-stat-val">${aceite}%</span><span class="dc-stat-label">Aceite</span></div>
-        </div>
-        <div class="dc-stats dc-stats-resp">
-          <div class="dc-stat"><span class="dc-stat-val dc-coral">${fmt(dd.vidasGeradas)}</span><span class="dc-stat-label">Vidas geradas</span></div>
-          <div class="dc-stat"><span class="dc-stat-val">${fmt(dd.vendasGeradas)}</span><span class="dc-stat-label">Vendas</span></div>
-        </div>
-      </label>`;
-    }
-    return `
-      <div class="stat-card" data-nome="${n.replace(/"/g,'&quot;')}" tabindex="0" role="button" title="Ver detalhes das vendas">
-        <div class="sc-top">
-          <span class="sc-name">${n}</span>
-          <span class="sc-date-pill">${formatDateBRFull(dd.dataEnvio)}</span>
-        </div>
-        <div class="dc-badges" style="margin-bottom:14px;">
-          <span class="dc-badge-cat">${dd.categoria}</span>
-          <span class="dc-badge-origem">${origemLabel}</span>
-        </div>
-        <div class="sc-section-label">RESPOSTAS · ${aceite}% DE ACEITE</div>
-        <div class="sc-stats">
-          <div><span class="sc-stat-val">${fmt(dd.totalBase)}</span><span class="sc-stat-label">Total da base</span></div>
-          <div><span class="sc-stat-val dc-coral">${fmt(dd.falarAgora)}</span><span class="sc-stat-label">Sim</span></div>
-          <div><span class="sc-stat-val dc-blue">${fmt(dd.naoInteresse)}</span><span class="sc-stat-label">Não</span></div>
-          <div><span class="sc-stat-val dc-gray">${fmt(semResp)}</span><span class="sc-stat-label">Sem resposta</span></div>
-        </div>
-        <hr class="sc-divider">
-        <div class="sc-section-label">CONVERSÃO EM VENDAS</div>
-        <div class="sc-stats">
-          <div><span class="sc-stat-val dc-coral" style="font-size:20px;">${fmt(dd.vidasGeradas)}</span><span class="sc-stat-label">Vidas ativas geradas</span></div>
-          <div><span class="sc-stat-val" style="font-size:20px;">${fmt(dd.vendasGeradas)}</span><span class="sc-stat-label">Vendas</span></div>
-        </div>
-        <div class="sc-more">Ver detalhes das vendas →</div>
-      </div>`;
-  }
-
-  function renderPickerList(){
-    const searchTerm = document.getElementById('pickerSearch').value.trim().toLowerCase();
-    const list = document.getElementById('pickerList');
-    const names = disparosNoEscopo().filter(n => {
-      if(searchTerm && !n.toLowerCase().includes(searchTerm)) return false;
-      if(!passaFiltroData(DISPAROS[n].dataEnvio)) return false;
+  function disparosFiltrados(){
+    const q = document.getElementById('filterSearch').value.trim().toLowerCase();
+    return Object.keys(DISPAROS).filter(n => {
+      const d = DISPAROS[n];
+      if(!passaOrigem(d)) return false;
+      if(!passaFiltroData(d.dataEnvio)) return false;
+      if(q && !n.toLowerCase().includes(q)) return false;
       return true;
     });
-
-    if(names.length === 0){
-      list.innerHTML = '<div class="picker-empty">Nenhum disparo encontrado.</div>';
-      updateSelectedCount();
-      return;
-    }
-    list.innerHTML = names.map(n => disparoStatCardHTML(n, DISPAROS[n], { withCheckbox: true })).join('');
-
-    list.querySelectorAll('.disparo-card input[type="checkbox"]').forEach(cb => {
-      cb.addEventListener('change', () => {
-        cb.closest('.disparo-card').classList.toggle('selected', cb.checked);
-        updateSelectedCount();
-      });
-    });
-    updateSelectedCount();
   }
 
-  function updatePickerLabel(){
-    const total = Object.keys(DISPAROS).length;
-    const n = selectedDisparos.size;
-    const label = document.getElementById('disparoPickerLabel');
-    if(n === 0) label.textContent = 'Nenhum disparo selecionado';
-    else if(n === total) label.textContent = 'Todos os disparos';
-    else if(n === 1) label.textContent = [...selectedDisparos][0];
-    else label.textContent = `${n} disparos selecionados`;
-  }
-
-  const pickerBtn = document.getElementById('disparoPickerBtn');
-  const pickerPanel = document.getElementById('disparoPickerPanel');
-  pickerPanel.addEventListener('click', (e) => e.stopPropagation());
-
-  function positionPickerPanel(){
-    const btnRect = pickerBtn.getBoundingClientRect();
-    const panelWidth = Math.min(460, window.innerWidth - 24);
-    let left = btnRect.left;
-    if(left + panelWidth > window.innerWidth - 12) left = window.innerWidth - panelWidth - 12;
-    if(left < 12) left = 12;
-    pickerPanel.style.top = (btnRect.bottom + 8) + 'px';
-    pickerPanel.style.left = left + 'px';
-  }
-  window.addEventListener('resize', () => { if(!pickerPanel.hidden) positionPickerPanel(); });
-  window.addEventListener('scroll', () => { if(!pickerPanel.hidden) positionPickerPanel(); }, true);
-
-  pickerBtn.addEventListener('click', () => {
-    pickerPanel.hidden = !pickerPanel.hidden;
-    if(!pickerPanel.hidden){ positionPickerPanel(); renderDateChips(); renderMonthSelect(); renderPickerList(); }
-  });
-  document.addEventListener('click', (e) => {
-    if(!pickerPanel.hidden && !pickerPanel.contains(e.target) && e.target !== pickerBtn && !pickerBtn.contains(e.target)){
-      pickerPanel.hidden = true;
-    }
-  });
-  document.getElementById('pickerSearch').addEventListener('input', renderPickerList);
-  document.getElementById('pickerSelectAll').addEventListener('click', () => {
-    document.querySelectorAll('#pickerList .disparo-card').forEach(card => {
-      card.classList.add('selected');
-      card.querySelector('input').checked = true;
-    });
-    updateSelectedCount();
-  });
-  document.getElementById('pickerClear').addEventListener('click', () => {
-    document.querySelectorAll('#pickerList .disparo-card').forEach(card => {
-      card.classList.remove('selected');
-      card.querySelector('input').checked = false;
-    });
-    updateSelectedCount();
-  });
-  document.getElementById('pickerApply').addEventListener('click', () => {
-    // Substitui a seleção pelo que está marcado agora (considerando só os
-    // itens visíveis na lista, já filtrados por busca/data).
-    selectedDisparos = new Set(
-      [...document.querySelectorAll('#pickerList input[type="checkbox"]:checked')].map(cb => cb.value)
-    );
-    updatePickerLabel();
-    render(selectedDisparos);
-    pickerPanel.hidden = true;
-  });
-
-  function aggregateSelected(names){
-    const agg = { dataEnvio:null, totalBase:0, falarAgora:0, naoInteresse:0, vidasGeradas:0, vendasGeradas:0 };
-    names.forEach(n=>{
-      const d = DISPAROS[n];
-      if(!d) return;
-      agg.totalBase     += d.totalBase;
-      agg.falarAgora    += d.falarAgora;
-      agg.naoInteresse  += d.naoInteresse;
-      agg.vidasGeradas  += d.vidasGeradas;
-      agg.vendasGeradas += d.vendasGeradas;
-      if(!agg.dataEnvio || d.dataEnvio > agg.dataEnvio) agg.dataEnvio = d.dataEnvio;
-    });
-    return agg;
-  }
-
-  function renderDisparoGrid(names){
-    const grid = document.getElementById('disparoGrid');
-    const title = document.getElementById('disparoGridTitle');
-    const hint = document.getElementById('disparoGridHint');
-    const total = Object.keys(DISPAROS).length;
-
-    title.textContent = names.length === total ? 'Todos os disparos' :
-                         names.length === 1 ? names[0] :
-                         `${names.length} disparos selecionados`;
-    hint.textContent = `${names.length} disparo${names.length===1?'':'s'} • total da base, sim e não por disparo`;
-
-    if(names.length === 0){
-      grid.innerHTML = '<div class="disparo-grid-empty">Nenhum disparo selecionado. Use o filtro acima para escolher.</div>';
-      return;
-    }
-
-    const sorted = [...names].sort((a,b) => (DISPAROS[b]?.dataEnvio || '').localeCompare(DISPAROS[a]?.dataEnvio || ''));
-
-    grid.innerHTML = sorted.map(n => {
-      const dd = DISPAROS[n];
-      if(!dd) return '';
-      return disparoStatCardHTML(n, dd, { withCheckbox: false });
+  function renderOrigemChips(){
+    const row = document.getElementById('origemChipRow');
+    const origens = [...new Set(Object.values(DISPAROS).map(d => d.origem))].sort();
+    row.innerHTML = ['todos', ...origens].map(o => {
+      const label = o === 'todos' ? 'Todos' : (o.charAt(0) + o.slice(1).toLowerCase());
+      const active = normTxt(activeOrigem) === normTxt(o) ? 'active' : '';
+      return `<button type="button" class="chip ${active}" data-origem="${o.replace(/"/g,'&quot;')}">${label}</button>`;
     }).join('');
+    row.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
+      activeOrigem = chip.dataset.origem; renderAll();
+    }));
   }
 
-  function render(selection){
-    const names = [...selection];
-    const d = names.length === 1 ? (DISPAROS[names[0]] || aggregateSelected(names)) : aggregateSelected(names);
-    const cliques = d.falarAgora + d.naoInteresse;
-    const semResposta = Math.max(d.totalBase - cliques, 0);
-    const safeDiv = (a, b) => b > 0 ? a / b : 0;
-    const taxaResposta = safeDiv(cliques, d.totalBase);
-    const taxaAceite = safeDiv(d.falarAgora, d.totalBase);
-    const taxaRecusa = safeDiv(d.naoInteresse, d.totalBase);
-    const taxaAceiteResp = safeDiv(d.falarAgora, cliques);
-    const taxaConversao = safeDiv(d.vidasGeradas, d.totalBase);
+  function renderDateControls(){
+    const base = Object.values(DISPAROS).filter(passaOrigem);
+    const dates = [...new Set(base.map(d => d.dataEnvio).filter(Boolean))].sort();
+    const row = document.getElementById('dateChipRow');
+    row.innerHTML = dates.length ? dates.map(iso =>
+      `<button type="button" class="chip ${activeDateChips.has(iso) ? 'active' : ''}" data-date="${iso}">${formatDateBRFull(iso)}</button>`).join('')
+      : '<span class="hint" style="font-size:12px;color:var(--muted);">Nenhuma data disponível.</span>';
+    row.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
+      const d = chip.dataset.date;
+      activeDateChips.has(d) ? activeDateChips.delete(d) : activeDateChips.add(d);
+      renderAll();
+    }));
+    const months = [...new Set(dates.map(iso => iso.slice(0,7)))];
+    document.getElementById('monthSelect').innerHTML = '<option value="">Todos os meses</option>' +
+      months.map(ym => `<option value="${ym}" ${activeMonth===ym?'selected':''}>${formatMonthLabel(ym)}</option>`).join('');
+    document.querySelectorAll('.date-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === dateMode));
+    document.getElementById('dateModeExata').hidden = dateMode !== 'exata';
+    document.getElementById('dateModeMes').hidden = dateMode !== 'mes';
+    document.getElementById('dateModePeriodo').hidden = dateMode !== 'periodo';
+  }
 
-    const ultimoEnvio = d.dataEnvio ? new Date(d.dataEnvio+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+  document.querySelectorAll('.date-mode-btn').forEach(btn => btn.addEventListener('click', () => { dateMode = btn.dataset.mode; renderAll(); }));
+  document.getElementById('dateModeClear').addEventListener('click', () => {
+    activeDateChips.clear(); activeMonth = ''; periodoFrom = ''; periodoTo = '';
+    document.getElementById('periodoFrom').value = ''; document.getElementById('periodoTo').value = '';
+    renderAll();
+  });
+  document.getElementById('monthSelect').addEventListener('change', e => { activeMonth = e.target.value; renderAll(); });
+  document.getElementById('periodoFrom').addEventListener('change', e => { periodoFrom = e.target.value; renderAll(); });
+  document.getElementById('periodoTo').addEventListener('change', e => { periodoTo = e.target.value; renderAll(); });
+  document.getElementById('filterSearch').addEventListener('input', renderAll);
 
-    document.getElementById('engRate').textContent = pctInt(taxaAceite);
-    document.getElementById('heroTotalBase').textContent = fmt(d.totalBase);
-    document.getElementById('heroSim').textContent = fmt(d.falarAgora);
-    document.getElementById('heroNao').textContent = fmt(d.naoInteresse);
-
-    document.getElementById('ledgerBase').textContent = fmt(d.totalBase);
-    document.getElementById('ledgerSim').textContent = fmt(d.falarAgora);
-    document.getElementById('ledgerNao').textContent = fmt(d.naoInteresse);
-    document.getElementById('ledgerSemResp').textContent = fmt(semResposta);
-    document.getElementById('ledgerVidas').textContent = fmt(d.vidasGeradas);
-    document.getElementById('ledgerUltimoEnvio').textContent = ultimoEnvio;
-
-    // grade de cards — um por disparo selecionado
-    renderDisparoGrid(names);
-
-    // responses segmented bar
-    const total = d.totalBase || 1;
-    document.getElementById('segA').dataset.w = (d.falarAgora/total*100).toFixed(2);
-    document.getElementById('segB').dataset.w = (d.naoInteresse/total*100).toFixed(2);
-    document.getElementById('segC').dataset.w = (semResposta/total*100).toFixed(2);
-    document.getElementById('legA').textContent = fmt(d.falarAgora);
-    document.getElementById('legB').textContent = fmt(d.naoInteresse);
-    document.getElementById('legC').textContent = fmt(semResposta);
-    document.getElementById('legAp').textContent = '('+pct(d.falarAgora/total)+')';
-    document.getElementById('legBp').textContent = '('+pct(d.naoInteresse/total)+')';
-    document.getElementById('legCp').textContent = '('+pct(semResposta/total)+')';
-
-    // rates
-    document.getElementById('rateResposta').textContent = pct(taxaResposta);
-    document.getElementById('rateAceite').textContent = pct(taxaAceite);
-    document.getElementById('rateRecusa').textContent = pct(taxaRecusa);
-    document.getElementById('rateAceiteResp').textContent = pct(taxaAceiteResp);
-    document.getElementById('rateConversao').textContent = pct(taxaConversao);
-    document.getElementById('barResposta').dataset.w = Math.min(taxaResposta*100,100);
-    document.getElementById('barAceite').dataset.w = Math.min(taxaAceite*100,100);
-    document.getElementById('barRecusa').dataset.w = Math.min(taxaRecusa*100,100);
-    document.getElementById('barAceiteResp').dataset.w = Math.min(taxaAceiteResp*100,100);
-    document.getElementById('barConversao').dataset.w = Math.min(taxaConversao*100,100);
-
-    // trigger one orchestrated fill-in animation
-    requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>{
-        document.querySelectorAll('[data-w]').forEach(el=>{
-          el.style.width = el.dataset.w + '%';
-        });
-      });
+  function somar(nomes){
+    const t = { n: nomes.length, totalBase: 0, sim: 0, nao: 0, vendas: 0, vidas: 0 };
+    nomes.forEach(n => {
+      const d = DISPAROS[n];
+      t.totalBase += d.totalBase; t.sim += d.falarAgora; t.nao += d.naoInteresse;
+      t.vendas += d.vendasGeradas; t.vidas += d.vidasGeradas;
     });
+    return t;
+  }
+  const safeDiv = (a, b) => b > 0 ? a / b : 0;
+
+  function renderKpis(t){
+    const items = [
+      ['Disparos', fmt(t.n)], ['Total da base', fmt(t.totalBase)], ['Sim', fmt(t.sim)], ['Não', fmt(t.nao)],
+      ['Aceite', pct(safeDiv(t.sim, t.totalBase))], ['Vendas', fmt(t.vendas)], ['Vidas ativas', fmt(t.vidas)],
+      ['Conversão', pct2(safeDiv(t.vidas, t.totalBase))],
+    ];
+    document.getElementById('kpiStrip').innerHTML = items.map(([l, v]) =>
+      `<div class="kpi-item"><span class="k-val">${v}</span><span class="k-lbl">${l}</span></div>`).join('');
   }
 
-  // (seletor de disparo agora é o multi-select acima; nada a religar aqui)
+  function renderSegTable(){
+    const nomes = disparosFiltrados();
+    const grupos = new Map(SEGMENTOS_FIXOS.map(s => [s.key, { label: s.label, nomes: [] }]));
+    nomes.forEach(n => {
+      const k = segKey(DISPAROS[n].categoria);
+      if(!grupos.has(k)) grupos.set(k, { label: DISPAROS[n].categoria, nomes: [] });
+      grupos.get(k).nomes.push(n);
+    });
+    let html = '';
+    grupos.forEach((g, key) => {
+      const t = somar(g.nomes);
+      const vazio = g.nomes.length === 0;
+      const aberto = expandedSegs.has(key) && !vazio;
+      html += `<tr class="seg-row ${vazio ? 'empty' : ''}" data-seg="${key}">
+        <td><span class="seg-caret">${vazio ? '' : (aberto ? '▾' : '▸')}</span>${g.label}</td>
+        <td>${t.n} disparo${t.n===1?'':'s'}</td>
+        <td>${vazio ? '—' : ''}</td>
+        <td class="r">${fmt(t.totalBase)}</td><td class="r coral">${fmt(t.sim)}</td><td class="r">${fmt(t.nao)}</td>
+        <td class="r">${pct(safeDiv(t.sim, t.totalBase))}</td>
+        <td class="r">${fmt(t.vendas)}</td><td class="r">${fmt(t.vidas)}</td>
+        <td class="r">${pct2(safeDiv(t.vidas, t.totalBase))}</td><td></td></tr>`;
+      if(aberto){
+        [...g.nomes].sort((a,b) => (DISPAROS[b].dataEnvio||'').localeCompare(DISPAROS[a].dataEnvio||'') || a.localeCompare(b))
+          .forEach(n => {
+            const d = DISPAROS[n];
+            const o = d.origem ? d.origem.charAt(0) + d.origem.slice(1).toLowerCase() : '';
+            html += `<tr class="disp-row" data-nome="${n.replace(/"/g,'&quot;')}">
+              <td>${escHTML(n)}</td><td><span class="origin-pill">${escHTML(o)}</span></td><td>${formatDateBRFull(d.dataEnvio)}</td>
+              <td class="r">${fmt(d.totalBase)}</td><td class="r coral">${fmt(d.falarAgora)}</td><td class="r">${fmt(d.naoInteresse)}</td>
+              <td class="r">${pct(safeDiv(d.falarAgora, d.totalBase))}</td>
+              <td class="r">${fmt(d.vendasGeradas)}</td><td class="r">${fmt(d.vidasGeradas)}</td>
+              <td class="r">${pct2(safeDiv(d.vidasGeradas, d.totalBase))}</td><td><span class="go">ver vendas →</span></td></tr>`;
+          });
+      }
+    });
+    const T = somar(nomes);
+    html += `<tr class="total-row"><td>Total</td><td>${T.n} disparo${T.n===1?'':'s'}</td><td></td>
+      <td class="r">${fmt(T.totalBase)}</td><td class="r">${fmt(T.sim)}</td><td class="r">${fmt(T.nao)}</td>
+      <td class="r">${pct(safeDiv(T.sim, T.totalBase))}</td><td class="r">${fmt(T.vendas)}</td><td class="r">${fmt(T.vidas)}</td>
+      <td class="r">${pct2(safeDiv(T.vidas, T.totalBase))}</td><td></td></tr>`;
+    document.getElementById('segBody').innerHTML = html;
+    document.getElementById('segHint').textContent = nomes.length === Object.keys(DISPAROS).length
+      ? 'todos os disparos' : `${nomes.length} de ${Object.keys(DISPAROS).length} disparos (filtro ativo)`;
+    return T;
+  }
+
+  document.getElementById('segBody').addEventListener('click', e => {
+    const disp = e.target.closest('tr.disp-row');
+    if(disp){ openDetail(disp.dataset.nome); return; }
+    const seg = e.target.closest('tr.seg-row');
+    if(seg && !seg.classList.contains('empty')){
+      const k = seg.dataset.seg;
+      expandedSegs.has(k) ? expandedSegs.delete(k) : expandedSegs.add(k);
+      renderSegTable();
+    }
+  });
+
+  function renderAll(){
+    renderOrigemChips();
+    renderDateControls();
+    renderKpis(renderSegTable());
+  }
 
   // ---------------------------------------------------------------
   // Tabs
@@ -1791,15 +1504,6 @@ License: MIT
     const ov = document.getElementById('detailOverlay');
     ov.classList.remove('show'); ov.setAttribute('aria-hidden','true');
   }
-  document.getElementById('disparoGrid').addEventListener('click', e => {
-    const card = e.target.closest('.stat-card');
-    if(card) openDetail(card.dataset.nome);
-  });
-  document.getElementById('disparoGrid').addEventListener('keydown', e => {
-    if((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('stat-card')){
-      e.preventDefault(); openDetail(e.target.dataset.nome);
-    }
-  });
   document.getElementById('detailClose').addEventListener('click', closeDetail);
   document.getElementById('detailOverlay').addEventListener('click', e => { if(e.target.id === 'detailOverlay') closeDetail(); });
   document.addEventListener('keydown', e => { if(e.key === 'Escape') closeDetail(); });

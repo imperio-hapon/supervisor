@@ -104,6 +104,25 @@ details.src summary{cursor:pointer;font-weight:600;font-size:14px}
 .empty{padding:30px;text-align:center;color:var(--ink2)}
 .foot{color:var(--ink3);font-size:13px;max-width:90ch}
 [hidden]{display:none!important}
+.mx{border-collapse:separate;border-spacing:0;width:auto}
+.mx td,.mx th{padding:0;border-bottom:1px solid var(--line)}
+.mx th.rot{height:78px;vertical-align:bottom;white-space:nowrap;padding:0;min-width:36px;max-width:36px;width:36px}
+.mx th.rot>div{transform:translate(12px,-6px) rotate(-50deg);width:36px;transform-origin:bottom left}
+.mx th.rot span{font-size:11px;font-weight:600;color:var(--ink2);padding-left:2px}
+.mx th.rot.today span{color:var(--ink)}
+.mx th.rot.wk span{color:var(--wknd)}
+.mx td.c{width:36px;min-width:36px;height:30px;text-align:center;font-size:11px;line-height:1.15;border-left:1px solid var(--paper);cursor:default}
+.mx td.c.click{cursor:pointer}
+.mx td.c .lt{color:var(--late);font-weight:700}
+.mx td.c .ex{color:var(--extra);font-weight:700}
+.mx td.c .lw{color:var(--warn)}
+.mx td.nm{text-align:left;padding:4px 12px 4px 0;font-size:13px;white-space:nowrap;position:sticky;left:0;background:var(--paper);z-index:1}
+.mx td.tot,.mx th.tot{text-align:right;padding:4px 8px;font-size:13px;white-space:nowrap}
+.mx th.tot{vertical-align:bottom;font-size:12px;color:var(--ink2);font-weight:600;white-space:normal;max-width:80px;line-height:1.2;padding-bottom:6px}
+.mx td.sep,.mx th.sep{border-left:2px solid var(--line)}
+.mx tr.grp td{font-weight:700;font-size:13px;color:var(--ink2);padding:12px 0 4px;border-bottom:0;position:sticky;left:0;background:var(--paper)}
+.mx tfoot td{font-weight:600;font-size:11px;color:var(--ink2);border-bottom:0;padding-top:4px}
+.mx tfoot td.nm{font-size:13px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -120,17 +139,17 @@ details.src summary{cursor:pointer;font-weight:600;font-size:14px}
 
 <div id="main" hidden>
 <div class="filters" id="filters">
-  <div class="f">Período
+  <div class="f per">Período
     <div class="row"><input type="date" id="dFrom" aria-label="Data inicial"><span>até</span><input type="date" id="dTo" aria-label="Data final"></div>
   </div>
-  <div class="f">Atalhos
+  <div class="f per">Atalhos
     <div class="seg" id="presets">
       <button data-p="last">Último dia</button><button data-p="w">Esta semana</button><button data-p="7">7 dias</button><button data-p="m">Mês</button><button data-p="all">Tudo</button>
     </div>
   </div>
   <div class="f">Supervisor<select id="fSup"></select></div>
   <div class="f">Agente<select id="fAg"></select></div>
-  <div class="f">Dias
+  <div class="f per">Dias
     <div class="seg" id="fDays"><button data-v="all" aria-pressed="true">Todos</button><button data-v="wd">Dias úteis</button><button data-v="we">Fim de semana</button></div>
   </div>
   <div class="f">Tolerância
@@ -145,6 +164,7 @@ details.src summary{cursor:pointer;font-weight:600;font-size:14px}
   <button role="tab" data-t="geral" aria-selected="true">Visão do período</button>
   <button role="tab" data-t="semana">Semanal</button>
   <button role="tab" data-t="dia">Dia a dia</button>
+  <button role="tab" data-t="mapa">Atrasos e extras</button>
   <button role="tab" data-t="fds">Fim de semana</button>
 </nav>
 
@@ -218,7 +238,7 @@ details.src summary{cursor:pointer;font-weight:600;font-size:14px}
     <div class="scroll"><svg id="gantt" role="img" aria-label="Linha do tempo"></svg></div>
   </section>
   <section>
-    <h2>Quadro de horário</h2>
+    <div class="head2"><div><h2>Quadro de horário</h2><p class="lead">Exporte o dia exibido ou todos os dias do período filtrado.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="expDay">Exportar dia</button><button class="btn" id="expPer">Exportar período</button></div></div>
     <div class="scroll"><table id="tDay"></table></div>
   </section>
   <section>
@@ -240,6 +260,33 @@ details.src summary{cursor:pointer;font-weight:600;font-size:14px}
   <section>
     <div class="head2"><h2 style="margin:0">Registro detalhado</h2><select id="logSel" aria-label="Escolher agente"></select></div>
     <div class="scroll"><table id="tLog"></table></div>
+  </section>
+</div>
+
+<!-- ============ ATRASOS E EXTRAS ============ -->
+<div id="v-mapa" role="tabpanel" hidden>
+  <div class="head2" style="margin-bottom:14px">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn" id="prevMes" aria-label="Mês anterior">‹</button>
+      <select id="mesSel" aria-label="Mês"></select>
+      <button class="btn" id="nextMes" aria-label="Próximo mês">›</button>
+      <div class="seg" id="mxMode"><button data-v="ambos" aria-pressed="true">Atrasos e extras</button><button data-v="late">Só atrasos</button><button data-v="extra">Só horas extras</button></div>
+    </div>
+    <button class="btn" id="expMx">Exportar planilha</button>
+  </div>
+  <div class="stats" id="mStats"></div>
+  <section>
+    <h2>Dias úteis</h2>
+    <p class="lead">Minutos de atraso (vermelho, acima da tolerância; amarelo, dentro dela) e horas trabalhadas fora do expediente (azul) por promotor em cada dia. Traço indica dia útil sem registro. Clique em uma célula para abrir o dia.</p>
+    <div class="scroll"><table class="mx" id="mxWd"></table></div>
+  </section>
+  <section>
+    <h2>Fim de semana</h2>
+    <p class="lead">Acompanhamento à parte, porque o trabalho no sábado e no domingo não é obrigatório. Cada célula mostra as horas trabalhadas no dia.</p>
+    <div class="stats" id="mWkStats"></div>
+    <div class="scroll"><table class="mx" id="mxWe"></table></div>
+    <h2 style="margin-top:22px;font-size:16px">Andamento por fim de semana</h2>
+    <div class="scroll"><table id="tWkTrend"></table></div>
   </section>
 </div>
 
@@ -728,15 +775,112 @@ function renderFds(){
   $("tFdsCmp").innerHTML=`<thead><tr><th>Tipo de dia</th><th>Agente/dias</th><th>Média trabalhada</th><th>Entrada média</th><th>Saída média</th><th>Disponível</th><th>Pausa média</th><th>Trocas de status por dia</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r.lab}</b></td><td>${r.n}</td><td>${dur(r.work)}</td><td>${hm(r.inp)}</td><td>${hm(r.out)}</td><td>${r.dp==null?"–":Math.round(r.dp)+"%"}</td><td>${dur(r.pausa)}</td><td>${r.ch==null?"–":r.ch.toFixed(1).replace(".",",")}</td></tr>`).join("")}</tbody>`;
 }
 
+/* ================= ATRASOS E EXTRAS ================= */
+let MESSEL="",MXMODE="ambos";
+const MESL=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const cmin=m=>{m=Math.round(m);return m<60?String(m):Math.floor(m/60)+"h"+String(m%60).padStart(2,"0")};
+function download(name,rows){const csv=rows.map(r=>r.map(v=>{v=v==null?"":String(v);return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(";")).join("\r\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function monthDays(){
+  const [,mx]=dataRange();const [y,m]=MESSEL.split("-").map(Number);const out=[];
+  for(let d=1;d<=31;d++){const o=new Date(y,m-1,d);if(o.getMonth()!==m-1)break;const k=dKey(o);if(k>mx)break;out.push(k)}
+  return out;
+}
+function mesList(){return [...new Set(DAYS.map(d=>d.date.slice(0,7)))].sort()}
+function renderMapa(){
+  const ms=mesList();if(!ms.includes(MESSEL))MESSEL=ms[ms.length-1];
+  $("mesSel").innerHTML=ms.map(k=>{const[y,m]=k.split("-");return `<option value="${k}" ${k===MESSEL?"selected":""}>${MESL[+m-1]} de ${y}</option>`}).join("");
+  $("prevMes").disabled=ms.indexOf(MESSEL)===0;$("nextMes").disabled=ms.indexOf(MESSEL)===ms.length-1;
+  const L=DAYS.filter(d=>d.date.startsWith(MESSEL)&&(!F.sup||d.sup===F.sup)&&(!F.ag||d.ag===F.ag));
+  const days=monthDays(),wd=days.filter(k=>![0,6].includes(dObj(k).getDay())),we=days.filter(k=>[0,6].includes(dObj(k).getDay()));
+  const idx={};L.forEach(d=>idx[d.ag+"|"+d.date]=d);
+  const agSup={};L.forEach(d=>agSup[d.ag]=d.sup);
+  // agentes ativos no mês (com algum registro)
+  const bySup=groupBy(Object.keys(agSup),a=>agSup[a]);const sups=Object.keys(bySup).sort();
+  const multi=sups.length>1;
+  const W=L.filter(d=>!d.wk),Wk=L.filter(d=>d.wk);
+  const lates=W.filter(isLate);
+  stats("mStats",[
+    [wd.length,"Dias úteis no mês",days.length?`até ${dFmt(days[days.length-1])}`:""],
+    [Object.keys(agSup).length,"Promotores",F.sup||"todas as equipes"],
+    [lates.length,"Atrasos",`${dur(sum(lates,d=>d.late))} somados, tolerância de ${CFG.TOL} min`],
+    [pct(W.length-lates.length,W.length),"Pontualidade","dias úteis sem atraso"],
+    [dur(sum(W,d=>d.extra)),"Horas extras em dias úteis",`${W.filter(d=>d.extra>=5).length} dias com extra`],
+    [dur(sum(Wk,d=>d.work)),"Horas no fim de semana","acompanhamento à parte"]
+  ]);
+  const cellWd=(ag,k)=>{const d=idx[ag+"|"+k];if(!d)return `<td class="c"><span class="muted">–</span></td>`;
+    const lt=d.late,ex=d.extra,isL=isLate(d);const show=MXMODE;
+    let inner="",bg="";
+    if(show==="late"){if(lt>0){inner=`<span class="${isL?"lt":"lw"}">${cmin(lt)}</span>`;if(isL)bg=`color-mix(in srgb,var(--late) ${Math.round(10+Math.min(1,lt/60)*35)}%,var(--paper))`}}
+    else if(show==="extra"){if(ex>=1){inner=`<span class="ex">${cmin(ex)}</span>`;bg=`color-mix(in srgb,var(--extra) ${Math.round(10+Math.min(1,ex/180)*35)}%,var(--paper))`}}
+    else{inner=(lt>0?`<div class="${isL?"lt":"lw"}">${cmin(lt)}</div>`:"")+(ex>=1?`<div class="ex">${cmin(ex)}</div>`:"");if(isL&&ex>=1)bg="";else if(isL)bg=`color-mix(in srgb,var(--late) 12%,var(--paper))`;else if(ex>=1)bg=`color-mix(in srgb,var(--extra) 10%,var(--paper))`}
+    if(!inner)inner=`<span class="muted" style="font-size:10px">ok</span>`;
+    return `<td class="c click" data-d="${k}" style="${bg?"background:"+bg:""}" title="${esc(ag)} em ${dFmt(k)}: entrada ${hm(d.inp)}${lt>0?` (atraso ${dur(lt)})`:""}, saída ${hm(d.out)}${ex>=1?`, extra ${dur(ex)}`:""}">${inner}</td>`};
+  const hdr=(ks,tots)=>`<thead><tr><th></th>${ks.map(k=>{const o=dObj(k);return `<th class="rot ${[0,6].includes(o.getDay())?"wk":""}"><div><span>${dFmt(k)} ${DOW[o.getDay()].toLowerCase()}</span></div></th>`}).join("")}${tots.map((h,i)=>`<th class="tot ${i===0?"sep":""}">${h}</th>`).join("")}</tr></thead>`;
+  // dias úteis
+  let h=hdr(wd,["Atrasos","Tempo de atraso","Horas extras","Saldo extra − atraso","Dias sem registro"])+"<tbody>";
+  const rowsExp=[];
+  sups.forEach(sup=>{
+    if(multi)h+=`<tr class="grp"><td colspan="${wd.length+6}">${esc(sup)}</td></tr>`;
+    bySup[sup].sort().forEach(ag=>{
+      const l=W.filter(d=>d.ag===ag),lt=l.filter(isLate),lm=sum(lt,d=>d.late),ex=sum(l,d=>d.extra),miss=wd.filter(k=>!idx[ag+"|"+k]).length,sal=ex-lm;
+      h+=`<tr><td class="nm"><b>${esc(ag)}</b></td>${wd.map(k=>cellWd(ag,k)).join("")}<td class="tot sep">${lt.length?`<span class="tag t-late">${lt.length}</span>`:`<span class="tag t-ok">0</span>`}</td><td class="tot">${lm?dur(lm):"–"}</td><td class="tot">${ex>=1?`<span class="tag t-extra">${dur(ex)}</span>`:"–"}</td><td class="tot" style="color:var(${sal>=0?"--ok":"--late"})">${sdur(sal)}</td><td class="tot">${miss||"–"}</td></tr>`;
+      rowsExp.push({ag,sup,l,lt:lt.length,lm,ex,miss});
+    });
+  });
+  const ft=wd.map(k=>{const l=W.filter(d=>d.date===k);const n=l.filter(isLate).length,e=sum(l,d=>d.extra);return `<td class="c" title="${dFmt(k)}: ${n} atrasos, ${dur(e)} de extra">${n?`<div class="lt">${n}</div>`:""}${e>=1?`<div class="ex">${cmin(e)}</div>`:""}</td>`}).join("");
+  h+=`</tbody><tfoot><tr><td class="nm">Total do dia <span class="muted" style="font-weight:400">(atrasos / extra)</span></td>${ft}<td class="tot sep">${lates.length}</td><td class="tot">${dur(sum(lates,d=>d.late))}</td><td class="tot">${dur(sum(W,d=>d.extra))}</td><td class="tot"></td><td class="tot"></td></tr></tfoot>`;
+  $("mxWd").innerHTML=wd.length&&Object.keys(agSup).length?h:`<tbody><tr><td class="empty">Sem registros neste mês.</td></tr></tbody>`;
+  window.__mx={wd,we,idx,rowsExp,sups,bySup};
+  // fim de semana
+  const weAg=[...new Set(Wk.map(d=>d.ag))];
+  const pairs={};we.forEach(k=>{const s=dObj(k).getDay()===6?k:addD(k,-1);(pairs[s]=pairs[s]||[]).push(k)});
+  const pk=Object.keys(pairs).sort();
+  stats("mWkStats",[[we.length,"Sábados e domingos no mês",`${pk.length} fins de semana`],[weAg.length,"Promotores que trabalharam",`de ${Object.keys(agSup).length}`],[dur(sum(Wk,d=>d.work)),"Horas trabalhadas",Wk.length?`média de ${dur(sum(Wk,d=>d.work)/Wk.length)} por dia trabalhado`:""],[Wk.length,"Dias trabalhados (promotor/dia)",""]]);
+  if(!we.length){$("mxWe").innerHTML=`<tbody><tr><td class="empty">Ainda não houve fim de semana neste mês.</td></tr></tbody>`}
+  else{
+    let g=hdr(we,["Dias","Horas","Média por dia"])+"<tbody>";
+    sups.forEach(sup=>{if(multi)g+=`<tr class="grp"><td colspan="${we.length+4}">${esc(sup)}</td></tr>`;
+      bySup[sup].sort().forEach(ag=>{const l=Wk.filter(d=>d.ag===ag),w=sum(l,d=>d.work);
+        g+=`<tr><td class="nm"><b>${esc(ag)}</b></td>${we.map(k=>{const d=idx[ag+"|"+k];if(!d)return `<td class="c"><span class="muted">·</span></td>`;const a=Math.min(1,d.work/540);return `<td class="c click" data-d="${k}" style="background:color-mix(in srgb,var(--wknd) ${Math.round(15+a*55)}%,var(--paper));font-weight:600" title="${esc(ag)} em ${dFmt(k)}: ${hm(d.inp)} a ${hm(d.out)}, ${dur(d.work)} trabalhadas">${cmin(d.work)}</td>`}).join("")}<td class="tot sep">${l.length||"–"}</td><td class="tot">${w?`<span class="tag t-wk">${dur(w)}</span>`:"–"}</td><td class="tot">${l.length?dur(w/l.length):"–"}</td></tr>`})});
+    g+=`</tbody><tfoot><tr><td class="nm">Total do dia</td>${we.map(k=>{const l=Wk.filter(d=>d.date===k);return `<td class="c">${l.length?`<div>${l.length}</div><div style="color:var(--wknd)">${cmin(sum(l,d=>d.work))}</div>`:""}</td>`}).join("")}<td class="tot sep">${Wk.length}</td><td class="tot">${dur(sum(Wk,d=>d.work))}</td><td class="tot"></td></tr></tfoot>`;
+    $("mxWe").innerHTML=g;
+  }
+  let prev=null;
+  $("tWkTrend").innerHTML=pk.length?`<thead><tr><th>Fim de semana</th><th>Promotores</th><th>Sábado</th><th>Domingo</th><th>Horas totais</th><th>Média por promotor</th><th>Variação</th><th class="l">Quem trabalhou</th></tr></thead><tbody>${pk.map(s=>{const ks=pairs[s];const l=Wk.filter(d=>ks.includes(d.date));const w=sum(l,d=>d.work);const n=new Set(l.map(d=>d.ag)).size;
+    const sab=l.filter(d=>d.dow===6),dom=l.filter(d=>d.dow===0);const v=prev==null?null:w-prev;prev=w;
+    return `<tr><td><b>${ks.map(dFmt).join(" e ")}</b></td><td>${n}</td><td>${sab.length?`${sab.length} (${dur(sum(sab,d=>d.work))})`:"–"}</td><td>${dom.length?`${dom.length} (${dur(sum(dom,d=>d.work))})`:"–"}</td><td><b>${w?dur(w):"–"}</b></td><td>${n?dur(w/n):"–"}</td><td>${v==null?"–":`<span style="color:var(${v>=0?"--ok":"--late"})">${sdur(v)}</span>`}</td><td class="l">${[...new Set(l.map(d=>short(d.ag)))].join(", ")||'<span class="muted">ninguém</span>'}</td></tr>`}).join("")}</tbody>`:"";
+  document.querySelectorAll("#v-mapa td.click").forEach(td=>td.onclick=()=>{DAY=td.dataset.d;F.from=F.from&&F.from<=DAY?F.from:DAY;F.to=F.to&&F.to>=DAY?F.to:DAY;$("dFrom").value=F.from;$("dTo").value=F.to;F.days="all";syncDays();setTab("dia")});
+}
+function exportMapa(){
+  const M=window.__mx;if(!M)return;const{wd,we,idx,rowsExp,sups,bySup}=M;
+  const head=["Promotor","Supervisor","Indicador",...wd.map(k=>dFmt(k)+" "+DOW[dObj(k).getDay()]),"Total"];
+  const rows=[head];
+  rowsExp.forEach(r=>{
+    rows.push([r.ag,r.sup,"Atraso (min)",...wd.map(k=>{const d=idx[r.ag+"|"+k];return d?Math.round(d.late):"sem registro"}),Math.round(r.l.reduce((s,d)=>s+d.late,0))]);
+    rows.push([r.ag,r.sup,"Horas extras (min)",...wd.map(k=>{const d=idx[r.ag+"|"+k];return d?Math.round(d.extra):""}),Math.round(r.ex)]);
+  });
+  rows.push([]);rows.push(["Fim de semana (não obrigatório)"]);
+  rows.push(["Promotor","Supervisor","Indicador",...we.map(k=>dFmt(k)+" "+DOW[dObj(k).getDay()]),"Total"]);
+  sups.forEach(s=>bySup[s].sort().forEach(ag=>{const v=we.map(k=>{const d=idx[ag+"|"+k];return d?Math.round(d.work):""});rows.push([ag,s,"Horas trabalhadas (min)",...v,v.reduce((t,x)=>t+(+x||0),0)])}));
+  rows.push([]);rows.push([`Atraso conta acima de ${CFG.TOL} min de tolerância no total; células mostram todos os minutos após ${hm(CFG.S0)}. Extra é o tempo trabalhado antes de ${hm(CFG.S0)} ou depois de ${hm(CFG.S1)}.`]);
+  download(`atrasos_e_extras_${MESSEL}.csv`,rows);
+}
+function quadroRows(list){
+  const head=["Data","Dia","Promotor","Supervisor","Entrada","Atraso (min)","Atrasou (acima da tolerância)","Saída","Saída antecipada (min)","Antes do expediente (min)","Após o expediente (min)","Logado","Pausas","Almoço","Trabalhado","Disponível","Saldo vs 8h","Fora do sistema no expediente","Aderência %","Sem logout",...ORDER.map(k=>k+" (min)")];
+  const hh=m=>{m=Math.round(m);const s=m<0?"-":"";m=Math.abs(m);return s+Math.floor(m/60)+":"+String(m%60).padStart(2,"0")};
+  return [head,...[...list].sort((a,b)=>a.date.localeCompare(b.date)||a.sup.localeCompare(b.sup)||a.ag.localeCompare(b.ag)).map(d=>[dFmt(d.date)+"/"+d.date.slice(0,4),DOWL[d.dow],d.ag,d.sup,hm(d.inp),d.wk?"":Math.round(d.late),d.wk?"fim de semana":isLate(d)?"sim":"não",hm(d.out),d.wk?"":Math.round(d.early),d.wk?"":Math.round(d.wBefore),d.wk?Math.round(d.work):Math.round(d.wAfter),hh(d.logged),hh(d.pausa),d.lunch?hh(d.lunch.d):"",hh(d.work),hh(d.disp),hh(d.work-(d.wk?0:CFG.META)),d.wk?"":hh((CFG.S1-CFG.S0)-d.loggedIn),d.wk?"":Math.round(d.wIn/CFG.META*100),d.noLogout?"sim":"não",...ORDER.map(k=>Math.round(d.by[k]||0))])];
+}
+
 /* ================= controle ================= */
-function setTab(t){TAB=t;document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t===t));["geral","semana","dia","fds"].forEach(k=>$("v-"+k).hidden=k!==t);render();if(t==="dia")$("v-dia").scrollIntoView({block:"start"})}
+function setTab(t){TAB=t;document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t===t));["geral","semana","dia","mapa","fds"].forEach(k=>$("v-"+k).hidden=k!==t);document.querySelectorAll(".f.per").forEach(e=>e.hidden=t==="mapa");render();if(t==="dia")$("v-dia").scrollIntoView({block:"start"})}
 function syncDays(){document.querySelectorAll("#fDays button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===F.days))}
 function render(){
   tip.style.opacity=0;
   if(!DAYS.length){$("sub").textContent="Nenhum dado carregado.";return}
   const [mn,mx]=dataRange();
   $("sub").textContent=`${new Set(DAYS.map(d=>d.ag)).size} agentes, ${new Set(DAYS.map(d=>d.sup)).size} supervisores, registros de ${dFmt(mn)} a ${dFmt(mx)}/${mx.slice(0,4)}. Expediente das ${hm(CFG.S0)} às ${hm(CFG.S1)}.`;
-  ({geral:renderGeral,semana:renderSemana,dia:renderDia,fds:renderFds})[TAB]();
+  ({geral:renderGeral,semana:renderSemana,dia:renderDia,mapa:renderMapa,fds:renderFds})[TAB]();
 }
 function banner(type,html){const b=$("banner");b.className="banner on "+type;b.innerHTML=html}
 function loadRows(rows,keep){
@@ -772,9 +916,16 @@ $("nextDay").onclick=()=>{const o=$("daySel");if(o.selectedIndex<o.options.lengt
 $("logSel").onchange=renderLog;
 document.querySelectorAll("#modeG button").forEach(b=>b.onclick=()=>{MODEG=b.dataset.v;document.querySelectorAll("#modeG button").forEach(x=>x.setAttribute("aria-pressed",x===b));render()});
 document.querySelectorAll("#modeD button").forEach(b=>b.onclick=()=>{MODED=b.dataset.v;document.querySelectorAll("#modeD button").forEach(x=>x.setAttribute("aria-pressed",x===b));render()});
+$("expDay").onclick=()=>download(`quadro_de_horario_${DAY}.csv`,quadroRows(filtered().filter(d=>d.date===DAY)));
+$("expPer").onclick=()=>download(`quadro_de_horario_${F.from}_a_${F.to}.csv`,quadroRows(filtered()));
+$("expMx").onclick=exportMapa;
+$("mesSel").onchange=e=>{MESSEL=e.target.value;render()};
+$("prevMes").onclick=()=>{const m=mesList();const i=m.indexOf(MESSEL);if(i>0){MESSEL=m[i-1];render()}};
+$("nextMes").onclick=()=>{const m=mesList();const i=m.indexOf(MESSEL);if(i<m.length-1){MESSEL=m[i+1];render()}};
+document.querySelectorAll("#mxMode button").forEach(b=>b.onclick=()=>{MXMODE=b.dataset.v;document.querySelectorAll("#mxMode button").forEach(x=>x.setAttribute("aria-pressed",x===b));render()});
 $("expAg").onclick=()=>{const r=window.__agRows||[];const h=["Agente","Supervisor","Dias","Atrasos","Atraso medio (min)","Entrada media","Saida media","Trabalhado (h)","Saldo (h)","Extra dias uteis (h)","Fim de semana (h)","Disponivel %","Saidas antecipadas","Sem logout"];
   const lines=[h.join(";")].concat(r.map(x=>[x.ag,x.sup,x.n,x.lates,Math.round(x.lateAvg||0),hm(x.inAvg),hm(x.outAvg),(x.work/60).toFixed(2),(x.saldo/60).toFixed(2),(x.extra/60).toFixed(2),(x.weWork/60).toFixed(2),Math.round(x.disp/x.logged*100),x.early,x.noLog].join(";").replace(/\./g,",")));
-  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+lines.join("\n")],{type:"text/csv"}));a.download=`jornada_${F.from}_a_${F.to}.csv`;a.click()};
+  download(`consolidado_${F.from}_a_${F.to}.csv`,lines.map(l=>l.split(";")))};
 let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(render,150)});
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
 

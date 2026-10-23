@@ -335,7 +335,7 @@ details.rules ul { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 6px
   </section>
 
   <section class="sec" aria-labelledby="fnH">
-    <div class="sec-h"><div><h2 id="fnH">Funil de orçamentos</h2><p class="sub" id="fnSub">Orçamentos do mês que ainda não viraram venda, por etapa. Cada funil tem seus filtros de Data e Período.</p></div>
+    <div class="sec-h"><div><h2 id="fnH">Funil de orçamentos</h2><p class="sub" id="fnSub">Orçamentos do mês que ainda não viraram venda, por etapa. Cada funil tem seus filtros de Data, Período e Supervisor(a).</p></div>
       <span class="acts"><small class="muted" id="fnXlsxMsg" aria-live="polite"></small><button class="btn ghost sm" id="fnXlsx" type="button">Baixar .xlsx</button></span></div>
     <div class="fn-wrap" id="funis"></div>
   </section>
@@ -348,7 +348,7 @@ details.rules ul { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 6px
       <div class="ac"><span class="mc-l"><i class="sw ad"></i>Adesão</span><div class="ac-pair"><div><small>Dia</small><b class="mc-v" id="acADd">—</b></div><div><small>Mês</small><b class="mc-v" id="acADm">—</b></div></div><small class="ac-sub" id="acADs"></small></div>
     </div>
     <div class="orc-h">
-      <div class="orc-t"><h3>Orçamentos do mês</h3><span class="acts"><small class="muted" id="orcXlsxMsg" aria-live="polite"></small><button class="btn ghost sm" id="orcXlsx" type="button">Baixar .xlsx</button></span></div>
+      <div class="orc-t"><h3>Orçamentos do mês</h3></div>
       <div class="orc-f">
         <div class="filters" id="orcTipo" role="group" aria-label="Filtrar por tipo"></div>
         <label class="sel"><span>Supervisor</span><select id="orcSup"></select></label>
@@ -595,13 +595,13 @@ const FUNIS = [
     { lab: 'Dados enviados ao fornecedor', cor: '#3b7ddd', tx: '#fff', m: s => /DADOS ENVIADOS/.test(s) } ] }
 ];
 const OUTROS = { lab: 'Outros status', cor: '#8a96a3', tx: '#fff', m: () => true };
-const fnSel = { PF: { dia: '', per: '' }, PME: { dia: '', per: '' }, 'Adesão': { dia: '', per: '' } };
+const fnSel = { PF: { dia: '', per: '', sup: '' }, PME: { dia: '', per: '', sup: '' }, 'Adesão': { dia: '', per: '', sup: '' } };
 const orcAtivos = () => decodeOrc(DATA.orc).filter(o => !vendido(o.st));
 function etapaDe(f, st) { const s = String(st || '').trim(); return f.etapas.find(e => e.m(s)) || OUTROS; }
 function dadosFunil(f) {
   const sel = fnSel[f.t], ref = DATA.ref;
   const base = orcAtivos().filter(o => o.t === f.t);
-  const rows = base.filter(o => (!sel.dia || o.d === sel.dia) && noPeriodo(o, sel.per, ref));
+  const rows = base.filter(o => (!sel.dia || o.d === sel.dia) && noPeriodo(o, sel.per, ref) && (!sel.sup || o.s === sel.sup));
   const ets = [...f.etapas];
   if (rows.some(o => etapaDe(f, o.st) === OUTROS)) ets.push(OUTROS);
   const grupos = ets.map(e => {
@@ -618,6 +618,8 @@ function renderFunis() {
     const sel = fnSel[f.t];
     const dias = [...new Set(orcAtivos().filter(o => o.t === f.t).map(o => o.d))].sort().reverse();
     if (sel.dia && !dias.includes(sel.dia)) sel.dia = '';
+    const sups = [...new Set(orcAtivos().filter(o => o.t === f.t).map(o => o.s).filter(Boolean))].sort();
+    if (sel.sup && !sups.includes(sel.sup)) sel.sup = '';
     const D = dadosFunil(f);
     const opt = (vals, cur) => vals.map(([v, l]) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(l)}</option>`).join('');
     const cards = [`<div class="fc" style="--fc:var(--ink)"><span class="fc-l">Total de orçamentos</span><b class="fc-v">${fmt(D.total)}</b><small>${fmt(D.vidas)} ${D.vidas === 1 ? 'vida' : 'vidas'}</small></div>`]
@@ -632,7 +634,8 @@ function renderFunis() {
     box.insertAdjacentHTML('beforeend', `<div class="funil" data-t="${f.t}">
       <div class="fn-h"><h3><i class="sw ${f.sw}"></i> Funil ${f.t}</h3>
         <div class="orc-f"><label class="sel"><span>Data</span><select data-f="dia">${opt([['', 'Todos'], ...dias.map(x => [x, dShort(x)])], sel.dia)}</select></label>
-        <label class="sel"><span>Período</span><select data-f="per">${opt(PERIODOS, sel.per)}</select></label></div></div>
+        <label class="sel"><span>Período</span><select data-f="per">${opt(PERIODOS, sel.per)}</select></label>
+        <label class="sel"><span>Supervisor(a)</span><select data-f="sup">${opt([['', 'Todos'], ...sups.map(x => [x, title(x)])], sel.sup)}</select></label></div></div>
       <div class="fn-cards">${cards.join('')}</div>
       <div class="fn-body"><div class="fn-vis" role="img" aria-label="Funil ${f.t}: ${fmt(D.total)} orçamentos">${barras}</div>
         <div class="fn-tab tbl-wrap"><table><thead><tr><th>Status</th><th class="et">Etapa</th><th class="n">Qtd.</th><th class="n">Vidas</th></tr></thead>
@@ -643,7 +646,7 @@ function renderFunis() {
     const t = el.closest('.funil').dataset.t; fnSel[t][el.dataset.f] = el.value; renderFunis();
   }));
   const [, mm] = dParts(DATA.ref);
-  $('fnSub').textContent = `Orçamentos de 01/${String(mm).padStart(2, '0')} até ${dShort(DATA.ref)} que ainda não viraram venda (vendas efetivadas saem do painel), por etapa. Cada funil tem seus filtros de Data e Período.`;
+  $('fnSub').textContent = `Orçamentos de 01/${String(mm).padStart(2, '0')} até ${dShort(DATA.ref)} que ainda não viraram venda (vendas efetivadas saem do painel), por etapa. Cada funil tem seus filtros de Data, Período e Supervisor(a).`;
 }
 
 /* ---------- Baixar .xlsx (gerador simples, sem biblioteca; uma ou várias abas) ---------- */
@@ -707,16 +710,11 @@ async function salvarArquivo(bytes, nome, msgId) {
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 const dataLonga = ymd => dShort(ymd) + '/' + ymd.slice(0, 4);
-document.getElementById('orcXlsx').onclick = () => {
-  const head = ['Data', 'Vendedor', 'Plano', 'Tipo', 'Status', 'ID / código', 'Vidas', 'Supervisor'];
-  const rows = orcAtual.map(o => [dataLonga(o.d), title(o.v), o.pl, o.t, stInfo(o.st)[0], o.id || '', o.n, title(o.s)]);
-  salvarArquivo(xlsxBook([{ name: 'Orçamentos do mês', head, rows, widths: [12, 30, 28, 10, 22, 22, 8, 26] }]), 'orcamentos-do-mes_' + DATA.ref + '.xlsx', 'orcXlsxMsg');
-};
 document.getElementById('fnXlsx').onclick = () => {
   const resumo = [], abas = [];
   FUNIS.forEach(f => {
     const D = dadosFunil(f), sel = fnSel[f.t];
-    const filtro = `Data: ${sel.dia ? dataLonga(sel.dia) : 'Todos'} · Período: ${perLabel(sel.per)}`;
+    const filtro = `Data: ${sel.dia ? dataLonga(sel.dia) : 'Todos'} · Período: ${perLabel(sel.per)} · Supervisor(a): ${sel.sup ? title(sel.sup) : 'Todos'}`;
     D.grupos.forEach(g => {
       if (!g.status.length) resumo.push([f.t, filtro, g.e.lab, '', 0, 0]);
       g.status.forEach(s => resumo.push([f.t, filtro, g.e.lab, stInfo(s.st)[0], s.n, s.vidas]));

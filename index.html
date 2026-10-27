@@ -67,9 +67,9 @@ iframe {
 <h2>📊 Império Hap-on</h2>
 
 <!-- Botões visíveis -->
-<button onclick="loadPage(URL_HORA_A_HORA, this)">Hora a Hora</button>
+<button onclick="loadPage(URL_HORA_A_HORA, this)" class="active">Hora a Hora</button>
 <button onclick="loadPage('funil.html', this)">Painel de Leads</button>
-<button onclick="loadPage('carteira.html', this)" class="active">Controle de Acionamentos</button>
+<button onclick="loadPage('carteira.html', this)">Controle de Acionamentos</button>
 <button onclick="loadPage('disponivel.html', this)">Jornada da Equipe</button>
 <button onclick="loadPage('Consolidado_Semanal.html', this)">Consolidado Semanal</button>
 
@@ -91,13 +91,14 @@ iframe {
 <script>
 /* Ao mudar este arquivo, troque também este número (qualquer valor novo serve).
    Quem estiver com o menu antigo aberto recebe o novo sozinho, sem limpar cache. */
-const VERSAO_MENU = '2026-10-23-2';
+const VERSAO_MENU = '2026-10-27-1';
 
 /* Endereço do Painel Hora a Hora publicado no GitHub Pages (site imperio-hapon.github.io/supervisor).
    Se o endereço do site for outro, troque só esta linha. */
 const URL_HORA_A_HORA = 'https://imperio-hapon.github.io/supervisor/painel-hora-a-hora.html';
 
-const PAGINA_INICIAL = 'carteira.html';
+/* Página que abre primeiro: o Painel Hora a Hora */
+const PAGINA_INICIAL = URL_HORA_A_HORA;
 const CONFERIR_A_CADA_MIN = 2;
 let paginaAtual = PAGINA_INICIAL;
 let assinaturaAtual = null;

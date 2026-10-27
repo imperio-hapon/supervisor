@@ -256,6 +256,11 @@ tr.wkstart td{border-top:2px solid var(--line)}
 .cbt{flex:1;height:8px;background:var(--soft);border-radius:4px;overflow:hidden;min-width:40px}
 .cbt i{display:block;height:100%;background:var(--fabio);border-radius:4px}
 tr.we .cbt i{background:var(--s-close)}
+#rPer button[aria-pressed=true]{background:var(--ink);color:var(--panel)}
+th.gh{text-align:center;border-bottom:2px solid var(--line)}th.gF2{color:var(--fabio)}th.gJ2{color:var(--josy)}
+.split2{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--soft)}.split2 i{display:block;height:100%}.split2 .f{background:var(--fabio)}.split2 .j{background:var(--josy)}
+small.shr{color:var(--muted);font-weight:600;font-size:11px}
+#rGest td,#rGest th{padding:9px 8px}
 </style>
 </head>
 <body>
@@ -335,14 +340,24 @@ tr.we .cbt i{background:var(--s-close)}
   <div id="rDay"></div>
 </section>
 <section class="panel">
-  <h2>Comparativo</h2>
-  <p class="hint">Períodos em andamento são comparados com o mesmo número de dias do período anterior.</p>
-  <div class="scroll noframe"><table id="rSum"></table></div>
+  <h2>Comparativo por gestão</h2>
+  <p class="hint">Fabio × Josy em cada período. Períodos em andamento são comparados com o mesmo número de dias do período anterior. Não segue os filtros de gestão e equipe.</p>
+  <div class="scroll noframe"><table id="rGest"></table></div>
 </section>
 <section class="panel">
-  <h2>Por equipe</h2>
-  <p class="hint">Leads no período atual, com o valor do período anterior e a variação embaixo.</p>
-  <div class="scroll"><table id="rTeam"></table></div>
+  <div class="phead"><div><h2>Leads por fila e gestão</h2><p class="hint" id="rFilaHint"></p></div>
+  <div class="seg" role="group" aria-label="Período" id="rPer"><button data-p="0">Dia</button><button data-p="2">Semana</button><button data-p="3">Quinzena</button><button data-p="4">Mês</button></div></div>
+  <div class="scroll"><table id="rFila"></table></div>
+</section>
+<section class="panel">
+  <h2>Gestão Josy: supervisores</h2>
+  <p class="hint">Leads de cada supervisor no período atual, com o período anterior e a variação embaixo, e a participação de cada um no total da gestão.</p>
+  <div class="scroll"><table id="rJosy"></table></div>
+</section>
+<section class="panel">
+  <h2>Gestão Josy: supervisores por fila</h2>
+  <p class="hint" id="rJFilaHint"></p>
+  <div class="scroll"><table id="rJFila"></table></div>
 </section>
 <div class="grid">
   <section class="panel"><h2>Dia a dia</h2><p class="hint">Últimos 31 dias. Fins de semana em cinza.</p><div class="scroll"><table id="rDays"></table></div></section>
@@ -430,7 +445,7 @@ function shape(raw){skipped=0;
     o.d=parseDate(o.start); o.hasFirst=!!String(o.first||'').trim(); o.fd=parseDate(o.first); o.cd=parseDate(o.close);
     o.closed=o.status==='CLOSE'||o.status==='CLOSED'||!!o.cd; o.id=String(o.id||'').trim();
     o.frMin=(o.d&&o.fd&&o.fd>=o.d)?(o.fd-o.d)/6e4:null; o.durMin=(o.d&&o.cd&&o.cd>=o.d)?(o.cd-o.d)/6e4:null;
-    o.g=o.sup==='FABIO'?'Fabio':'Josy'; return o}).filter(o=>{if(!o.prom){skipped++;return false}return true})}
+    o.g=o.sup==='FABIO'?'Fabio':'Josy'; o.promReal=o.prom; if(o.g==='Fabio'&&o.prom)o.prom='Equipe Fabio'; return o}).filter(o=>{if(!o.prom){skipped++;return false}return true})}
 function parseText(txt){
   txt=String(txt).replace(/^\uFEFF/,'');
   const first=txt.split(/\r?\n/)[0]||'';
@@ -481,12 +496,12 @@ function render(){
   const base=all.filter(r=>!state.sup||r.sup===state.sup);
   const nf=base.filter(r=>r.g==='Fabio').length, nj=base.filter(r=>r.g==='Josy').length, tot=nf+nj;
   $('#nF').textContent=nf;$('#nJ').textContent=nj;
-  const pf=new Set(base.filter(r=>r.g==='Fabio').map(r=>r.prom)).size, pj=new Set(base.filter(r=>r.g==='Josy').map(r=>r.prom)).size;
+  const pf=new Set(base.filter(r=>r.g==='Fabio').map(r=>r.promReal)).size, pj=new Set(base.filter(r=>r.g==='Josy').map(r=>r.prom)).size;
   $('#mF').textContent=`${fp(pct(nf,tot))} dos leads, ${pf} promotores`;$('#mJ').textContent=`${fp(pct(nj,tot))} dos leads, ${pj} promotores`;
   $('#bF').style.width=pct(nf,tot)+'%';$('#bJ').style.width=pct(nj,tot)+'%';
   const noResp=F.filter(r=>!r.hasFirst).length, closed=F.filter(r=>r.closed).length;
   const conv=F.filter(isConv).length, atag=F.filter(r=>r.atag).length;
-  const proms=new Set(F.map(r=>r.prom)).size;
+  const proms=new Set(F.map(r=>r.promReal)).size;
   const med=a=>{a=a.filter(x=>x!=null).sort((x,y)=>x-y);return a.length?(a.length%2?a[(a.length-1)/2]:(a[a.length/2-1]+a[a.length/2])/2):null};
   $('#kpis').innerHTML=[[F.length,'leads no filtro'],[proms ? (F.length/proms).toFixed(1).replace('.',','):'0','leads por promotor'],[noResp,'sem 1ª resposta'],[fmtMin(med(F.map(r=>r.frMin))),'1ª resposta (mediana)'],[closed,'encerrados'],[fmtMin(med(F.map(r=>r.durMin))),'duração até encerrar (mediana)'],[fp(pct(atag,F.length)),'com tag de chat'],[fp(pct(conv,F.length)),'conversão']]
     .map(([v,l])=>`<div class="kpi"><b>${v}</b><small>${l}</small></div>`).join('');
@@ -581,7 +596,7 @@ function renderDays(){
 })();
 
 /* ---------- Resumo de leads (tabelas) ---------- */
-let resDay=null;
+let resDay=null,resPer=2;
 const wdN=['dom','seg','ter','qua','qui','sex','sáb'];
 const nDays=(f,t)=>Math.round((t-f)/DAY)+1;
 const lastOfMonth=d=>new Date(d.getFullYear(),d.getMonth()+1,0);
@@ -620,16 +635,38 @@ function renderRes(){
     card(D.filter(r=>r.closed).length,'encerrados')+
     card(D.filter(isConv).length,'convertidos',D.length?fp(pct(D.filter(isConv).length,D.length))+' de conversão':'')+
     card(pk?pk[0]+'h':'—','hora de pico',pk?pk[1]+' leads':'')+`</div>`;
-  /* resumo de períodos */
+  /* comparativo por gestão (ignora filtros de gestão/equipe) */
+  const ALL=rows.filter(r=>true),FB=ALL.filter(r=>r.g==='Fabio'),JS=ALL.filter(r=>r.g==='Josy');
   const P=periodsFor(ref);
-  $('#rSum').innerHTML=`<thead><tr><th>Período</th><th>Atual</th><th class="r">Leads</th><th>Comparado com</th><th class="r">Leads</th><th class="r">Variação</th><th class="r">Média/dia</th>${showG?'<th class="r">Fabio</th><th class="r">Josy</th>':''}</tr></thead><tbody>`+
-    P.map(p=>{const a=cnt(S,...p.a),b=cnt(S,...p.b);return `<tr><td><b>${p.k}</b></td><td>${rngLbl(...p.a)}</td><td class="r big2">${a}</td><td>${rngLbl(...p.b)}<span class="sub2">${p.bl}</span></td><td class="r">${b}</td><td class="r">${dPct(a,b)}</td><td class="r">${(a/nDays(...p.a)).toFixed(1).replace('.',',')}</td>${showG?`<td class="r">${cnt(S.filter(r=>r.g==='Fabio'),...p.a)}</td><td class="r">${cnt(S.filter(r=>r.g==='Josy'),...p.a)}</td>`:''}</tr>`}).join('')+'</tbody>';
-  /* por equipe */
-  const sups=[...new Set(S.map(r=>r.sup))].sort(supOrder);const PP=[P[0],P[2],P[3],P[4]];
-  const tcell=(SS,p)=>{const a=cnt(SS,...p.a),b=cnt(SS,...p.b);return `<td class="r"><b>${a}</b><span class="sub2">${b} antes · ${dPct(a,b)}</span></td>`};
-  $('#rTeam').innerHTML=`<thead><tr><th>Equipe</th>${PP.map(p=>`<th class="r">${p.k}<span class="sub2">${rngLbl(...p.a)}</span></th>`).join('')}</tr></thead><tbody>`+
-    sups.map(s=>{const SS=S.filter(r=>r.sup===s);return `<tr><td><b>${esc(s)}</b> ${gl(s==='FABIO'?'Fabio':'Josy')}</td>${PP.map(p=>tcell(SS,p)).join('')}</tr>`}).join('')+
-    (sups.length>1?`<tr class="tfoot"><td><b>Total</b></td>${PP.map(p=>tcell(S,p)).join('')}</tr>`:'')+'</tbody>';
+  const gc=(SS,p)=>{const a=cnt(SS,...p.a),b=cnt(SS,...p.b);return `<td class="r big2">${a}</td><td class="r">${b}</td><td class="r">${dPct(a,b)}</td>`};
+  $('#rGest').innerHTML=`<thead><tr><th rowspan="2">Período</th><th rowspan="2">Atual × anterior</th><th colspan="3" class="gh gF2">Gestão Fabio</th><th colspan="3" class="gh gJ2">Gestão Josy</th><th colspan="2" class="gh">Total</th></tr>
+    <tr><th class="r">Atual</th><th class="r">Antes</th><th class="r">Var.</th><th class="r">Atual</th><th class="r">Antes</th><th class="r">Var.</th><th class="r">Atual</th><th class="r">% Fabio</th></tr></thead><tbody>`+
+    P.map(p=>{const fa=cnt(FB,...p.a),ja=cnt(JS,...p.a);return `<tr><td><b>${p.k}</b></td><td>${rngLbl(...p.a)}<span class="sub2">× ${rngLbl(...p.b)}</span></td>${gc(FB,p)}${gc(JS,p)}<td class="r big2">${fa+ja}</td><td class="r">${fp(pct(fa,fa+ja))}</td></tr>`}).join('')+'</tbody>';
+  /* fila × gestão */
+  const per=P[resPer];
+  document.querySelectorAll('#rPer button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.p===resPer));
+  $('#rFilaHint').textContent=`${per.k}: ${rngLbl(...per.a)}, comparado com ${rngLbl(...per.b)} (${per.bl}).`;
+  const inA=r=>inRng(r,...per.a),inB=r=>inRng(r,...per.b);
+  const filas=[...countMap(ALL.filter(r=>inA(r)||inB(r)),r=>r.fila).entries()].sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  const fc=(SS,f)=>{const a=SS.filter(r=>r.fila===f&&inA(r)).length,b=SS.filter(r=>r.fila===f&&inB(r)).length;return[a,b]};
+  const fr=(lab,fa,fb,ja,jb,cls='')=>`<tr class="${cls}"><td>${lab}</td><td class="r big2">${fa}</td><td class="r">${dPct(fa,fb)}</td><td class="r big2">${ja}</td><td class="r">${dPct(ja,jb)}</td><td class="r"><b>${fa+ja}</b></td><td class="r">${dPct(fa+ja,fb+jb)}</td><td><div class="split2"><i class="f" style="width:${pct(fa,fa+ja)}%"></i><i class="j" style="width:${pct(ja,fa+ja)}%"></i></div></td></tr>`;
+  let tf=[0,0,0,0];
+  $('#rFila').innerHTML=`<thead><tr><th>Fila</th><th class="r">Fabio</th><th class="r">Var.</th><th class="r">Josy</th><th class="r">Var.</th><th class="r">Total</th><th class="r">Var.</th><th style="width:18%">Fabio × Josy</th></tr></thead><tbody>`+
+    (filas.length?filas.map(f=>{const[fa,fb]=fc(FB,f),[ja,jb]=fc(JS,f);tf[0]+=fa;tf[1]+=fb;tf[2]+=ja;tf[3]+=jb;return fr(esc(f),fa,fb,ja,jb)}).join('')+fr('<b>Total</b>',...tf,'tfoot'):'<tr><td colspan="8" style="color:var(--muted)">Sem leads no período.</td></tr>')+'</tbody>';
+  /* gestão Josy: supervisores */
+  const jsups=[...new Set(JS.map(r=>r.sup))].sort(supOrder);const PP=[P[0],P[2],P[3],P[4]];
+  const tcell=(SS,p,tot)=>{const a=cnt(SS,...p.a),b=cnt(SS,...p.b);return `<td class="r"><b class="big2">${a}</b>${tot!=null?` <small class="shr">${fp(pct(a,tot))}</small>`:''}<span class="sub2">${b} antes · ${dPct(a,b)}</span></td>`};
+  const totJ=PP.map(p=>cnt(JS,...p.a));
+  $('#rJosy').innerHTML=`<thead><tr><th>Supervisor</th>${PP.map(p=>`<th class="r">${p.k}<span class="sub2">${rngLbl(...p.a)}</span></th>`).join('')}</tr></thead><tbody>`+
+    jsups.map(s=>{const SS=JS.filter(r=>r.sup===s);return `<tr><td><b>${esc(s)}</b><span class="sub2">${new Set(SS.filter(r=>inRng(r,...P[4].a)).map(r=>r.prom)).size} vendedores no mês</span></td>${PP.map((p,i)=>tcell(SS,p,totJ[i])).join('')}</tr>`}).join('')+
+    `<tr class="tfoot"><td><b>Total gestão Josy</b></td>${PP.map(p=>tcell(JS,p,null)).join('')}</tr></tbody>`;
+  /* Josy: supervisor × fila */
+  $('#rJFilaHint').textContent=`${per.k}: ${rngLbl(...per.a)}. Use os botões de período acima para mudar.`;
+  const JA=JS.filter(inA);const jf=[...countMap(JA,r=>r.fila).entries()].sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  const cellM={};JA.forEach(r=>{const k=r.sup+'|'+r.fila;cellM[k]=(cellM[k]||0)+1});const mxc=Math.max(1,...Object.values(cellM));
+  $('#rJFila').innerHTML=jf.length?`<thead><tr><th>Fila</th>${jsups.map(s=>`<th class="r">${esc(s)}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody>`+
+    jf.map(f=>{let tot=0;const tds=jsups.map(s=>{const v=cellM[s+'|'+f]||0;tot+=v;return v?`<td class="r" style="background:color-mix(in srgb,var(--josy) ${8+v/mxc*40}%,transparent)">${v}</td>`:'<td class="r z">·</td>'}).join('');return `<tr><td>${esc(f)}</td>${tds}<td class="r"><b>${tot}</b></td></tr>`}).join('')+
+    `<tr class="tfoot"><td><b>Total</b></td>${jsups.map(s=>`<td class="r"><b>${JA.filter(r=>r.sup===s).length}</b></td>`).join('')}<td class="r"><b>${JA.length}</b></td></tr></tbody>`:'<tbody><tr><td style="color:var(--muted)">Sem leads da gestão Josy no período.</td></tr></tbody>';
   const fd0=(()=>{let m=null;S.forEach(r=>{if(r.d&&(!m||r.d<m))m=r.d});return m?sod(m):ref})();
   /* dia a dia */
   const days=[];for(let i=0;i<31;i++){const d=addD(ref,-i);if(d<fd0)break;days.push(d)}
@@ -735,7 +772,7 @@ function renderTeams(){
   if(state.sup&&!sups.includes(state.sup)&&!rows.some(r=>r.sup===state.sup))state.sup='';
   const dot=s=>`<span class="gd" style="background:${s==='FABIO'?'var(--fabio)':'var(--josy)'}"></span>`;
   $('#teams').innerHTML='<span class="tl">Equipe</span>'+`<button data-s="" aria-pressed="${!state.sup}">Todas<span class="c">${S.length}</span></button>`+
-    sups.map(s=>`<button data-s="${esc(s)}" aria-pressed="${state.sup===s}">${dot(s)}${esc(s)}<span class="c">${c.get(s)}</span></button>`).join('');
+    sups.map(s=>`<button data-s="${esc(s)}" aria-pressed="${state.sup===s}">${dot(s)}${s==='FABIO'?'Gestão Fabio':esc(s)}<span class="c">${c.get(s)}</span></button>`).join('');
   $('#teams').querySelectorAll('button').forEach(b=>b.onclick=()=>{state.sup=b.dataset.s;fillFilters();render()});
 }
 const expScope=()=>rows.filter(r=>(state.g==='all'||r.g===state.g)&&inRange(r));
@@ -821,6 +858,7 @@ $('#fPreset').onchange=e=>{applyPreset(e.target.value);render()};
 $('#fFrom').onchange=()=>{state.preset='custom';state.from=fromIso($('#fFrom').value);render()};
 $('#fTo').onchange=()=>{state.preset='custom';state.to=fromIso($('#fTo').value);render()};
 $('#rPick').onchange=e=>{resDay=fromIso(e.target.value);renderRes()};
+document.querySelectorAll('#rPer button').forEach(b=>b.onclick=()=>{resPer=+b.dataset.p;renderRes()});
 $('#kw').oninput=()=>{try{localStorage.setItem('leadsKw',$('#kw').value)}catch(e){};render()};
 const dlg=$('#dlg');
 const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};

@@ -238,6 +238,24 @@ th,td{overflow-wrap:break-word}
 .rotT.compact td.rotc{padding:6px 1px;font-size:12px}
 .rotT.compact th.r,.rotT.compact td.r{padding-left:5px;padding-right:5px}
 .rotT.compact th.r{white-space:normal}
+
+/* resumo de leads */
+.rcards{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+@media (max-width:900px){.rcards{grid-template-columns:repeat(2,1fr)}}
+.rc{background:var(--panel);padding:14px 16px}
+.rc b{display:block;font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.rc b .sep{color:var(--muted);font-weight:500}
+.rc small{display:block;color:var(--muted);font-size:13px;font-weight:600;margin-top:2px}
+.rc em{display:block;font-style:normal;font-size:12px;color:var(--muted);margin-top:6px}
+td.big2{font-size:15px;font-weight:700}
+tr.we td{color:var(--muted)}tr.we td.big2{color:var(--muted)}
+tr.wkstart td{border-top:2px solid var(--line)}
+#rSum td,#rSum th{padding:10px}
+.scroll tr.tfoot td{background:var(--soft)}
+.cb{display:flex;align-items:center;gap:8px}.cb>span:last-child{min-width:34px;text-align:right}
+.cbt{flex:1;height:8px;background:var(--soft);border-radius:4px;overflow:hidden;min-width:40px}
+.cbt i{display:block;height:100%;background:var(--fabio);border-radius:4px}
+tr.we .cbt i{background:var(--s-close)}
 </style>
 </head>
 <body>
@@ -264,7 +282,7 @@ th,td{overflow-wrap:break-word}
 </header>
 
 <div class="banner" id="banner" hidden></div>
-<nav class="nav" role="tablist"><button role="tab" data-v="leads" aria-selected="true">Leads e conversão</button><button role="tab" data-v="cmp" aria-selected="false">Comparar períodos</button><button role="tab" data-v="atag" aria-selected="false">Agent Tags</button><button role="tab" data-v="ctag" aria-selected="false">Tags de encerramento</button><button role="tab" data-v="base" aria-selected="false">Base de sessões</button></nav>
+<nav class="nav" role="tablist"><button role="tab" data-v="leads" aria-selected="true">Leads e conversão</button><button role="tab" data-v="res" aria-selected="false">Resumo de leads</button><button role="tab" data-v="atag" aria-selected="false">Agent Tags</button><button role="tab" data-v="ctag" aria-selected="false">Tags de encerramento</button><button role="tab" data-v="base" aria-selected="false">Base de sessões</button></nav>
 <div class="teams" id="teams" role="group" aria-label="Equipes"></div>
 <div class="view" id="view-leads">
 <section class="split" aria-label="Divisão de leads entre gestões">
@@ -310,26 +328,29 @@ th,td{overflow-wrap:break-word}
 </section>
 
 </div>
-<div class="view" id="view-cmp" hidden>
+<div class="view" id="view-res" hidden>
 <section class="panel">
-  <h2>Comparar períodos</h2>
-  <p class="hint" id="cmpRef">Respeita os filtros de gestão e supervisor. O período do topo não se aplica aqui.</p>
-  <div class="cmpbar">
-    <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700">Comparação
-      <select id="cPreset"><option value="d">Último dia × dia anterior</option><option value="dw">Último dia × mesmo dia da semana passada</option><option value="wtd" selected>Semana atual × mesmos dias da semana passada</option><option value="w">Semana passada × semana retrasada</option><option value="7">Últimos 7 dias × 7 dias anteriores</option><option value="custom">Personalizado</option></select></label>
-    <fieldset><legend><span class="swA"></span>Período A</legend><input type="date" id="aFrom" aria-label="A de"> até <input type="date" id="aTo" aria-label="A até"></fieldset>
-    <fieldset><legend><span class="swB"></span>Período B</legend><input type="date" id="bFrom" aria-label="B de"> até <input type="date" id="bTo" aria-label="B até"></fieldset>
-  </div>
+  <div class="phead"><div><h2 id="rDayT">Como foi o dia</h2><p class="hint">Segue os filtros de gestão e equipe. Por padrão mostra o último dia com dados.</p></div>
+  <label class="range">Dia <input type="date" id="rPick"></label></div>
+  <div id="rDay"></div>
+</section>
+<section class="panel">
+  <h2>Comparativo</h2>
+  <p class="hint">Períodos em andamento são comparados com o mesmo número de dias do período anterior.</p>
+  <div class="scroll noframe"><table id="rSum"></table></div>
+</section>
+<section class="panel">
+  <h2>Por equipe</h2>
+  <p class="hint">Leads no período atual, com o valor do período anterior e a variação embaixo.</p>
+  <div class="scroll"><table id="rTeam"></table></div>
 </section>
 <div class="grid">
-  <section class="panel"><h2>Indicadores</h2><p class="hint">Variação de A em relação a B.</p><div class="scroll"><table id="cKpi"></table></div></section>
-  <section class="panel"><h2>Por supervisor</h2><p class="hint">Leads recebidos em cada período.</p><div class="scroll"><table id="cSup"></table></div></section>
-</div>
-<section class="panel"><h2>Entrada por hora</h2><p class="hint"><span class="swA"></span>A &nbsp; <span class="swB"></span>B. Passe o mouse para ver os valores.</p><div class="gbars" id="cHour"></div></section>
-<section class="panel" id="cWdWrap"><h2>Entrada por dia da semana</h2><p class="hint"><span class="swA"></span>A &nbsp; <span class="swB"></span>B</p><div class="gbars" id="cWd"></div></section>
-<div class="grid">
-  <section class="panel"><h2>Por promotor</h2><p class="hint">Ordenado pela maior variação.</p><div class="scroll"><table id="cProm"></table></div></section>
-  <section class="panel"><h2>Por fila</h2><p class="hint">Ordenado pela maior variação.</p><div class="scroll"><table id="cFila"></table></div></section>
+  <section class="panel"><h2>Dia a dia</h2><p class="hint">Últimos 31 dias. Fins de semana em cinza.</p><div class="scroll"><table id="rDays"></table></div></section>
+  <div>
+    <section class="panel"><h2>Semana a semana</h2><p class="hint">Semanas de segunda a domingo. Variação pela média diária.</p><div class="scroll"><table id="rWeek"></table></div></section>
+    <section class="panel"><h2>Quinzena a quinzena</h2><p class="hint">1ª quinzena: dias 1 a 15. 2ª: dia 16 ao fim do mês.</p><div class="scroll"><table id="rFort"></table></div></section>
+    <section class="panel"><h2>Mês a mês</h2><p class="hint">Variação pela média diária.</p><div class="scroll"><table id="rMonth"></table></div></section>
+  </div>
 </div>
 </div>
 
@@ -508,7 +529,7 @@ function render(){
   $('#convNote').innerHTML=conv?`${conv} leads convertidos no filtro.`:
     `Nenhuma tag de encerramento na base atual indica venda${ctags.length?` (tags encontradas: ${ctags.map(esc).join('; ')})`:''}. Ajuste as palavras acima para os nomes reais das tags de venda, e a taxa passa a ser calculada.`;
 
-  renderTeams();renderDays();renderATag(F);renderCTag(F);renderBase(F);renderCmp();
+  renderTeams();renderDays();renderATag(F);renderCTag(F);renderBase(F);renderRes();
 }
 
 const gl=g=>`<span class="g${g[0]}">${g}</span>`;
@@ -559,65 +580,78 @@ function renderDays(){
     syncRangeInputs();render()});
 })();
 
-/* ---------- comparação ---------- */
-const cmp={preset:'wtd',aFrom:null,aTo:null,bFrom:null,bTo:null};
-function cmpPreset(){
-  if(cmp.preset==='custom')return;const r=refDay(),mo=monday(r);let A,B;
-  switch(cmp.preset){
-    case 'd':A=[r,r];B=[addD(r,-1),addD(r,-1)];break;
-    case 'dw':A=[r,r];B=[addD(r,-7),addD(r,-7)];break;
-    case 'w':A=[addD(mo,-7),addD(mo,-1)];B=[addD(mo,-14),addD(mo,-8)];break;
-    case '7':A=[addD(r,-6),r];B=[addD(r,-13),addD(r,-7)];break;
-    default:A=[mo,r];B=[addD(mo,-7),addD(r,-7)];}
-  [cmp.aFrom,cmp.aTo]=A;[cmp.bFrom,cmp.bTo]=B;
+/* ---------- Resumo de leads (tabelas) ---------- */
+let resDay=null;
+const wdN=['dom','seg','ter','qua','qui','sex','sáb'];
+const nDays=(f,t)=>Math.round((t-f)/DAY)+1;
+const lastOfMonth=d=>new Date(d.getFullYear(),d.getMonth()+1,0);
+const minD=(a,b)=>a<b?a:b;
+function cnt(S,f,t){let n=0;const F=f.getTime(),T=t.getTime();for(const r of S){if(!r.d)continue;const x=sod(r.d).getTime();if(x>=F&&x<=T)n++}return n}
+function dPct(a,b,{avg}={}){if(b===0&&a===0)return '<span class="flat">0</span>';if(b===0)return '<span class="up">novo</span>';
+  const d=(a-b)/b*100;if(Math.abs(d)<0.5)return '<span class="flat">= 0%</span>';return `<span class="${d>0?'up':'down'}">${d>0?'▲':'▼'} ${fp(Math.abs(d))}</span>`}
+function rngLbl(f,t){return iso(f)===iso(t)?`${wdN[f.getDay()]} ${ddmm(f)}`:`${ddmm(f)} a ${ddmm(t)}`}
+function periodsFor(ref){
+  const mo=monday(ref),qs=ref.getDate()<=15?new Date(ref.getFullYear(),ref.getMonth(),1):new Date(ref.getFullYear(),ref.getMonth(),16);
+  const pqs=qs.getDate()===1?new Date(ref.getFullYear(),ref.getMonth()-1,16):new Date(ref.getFullYear(),ref.getMonth(),1);
+  const pqe=addD(qs,-1);const k=nDays(qs,ref)-1;
+  const m1=new Date(ref.getFullYear(),ref.getMonth(),1),pm1=new Date(ref.getFullYear(),ref.getMonth()-1,1);
+  return[
+    {k:'Dia',a:[ref,ref],b:[addD(ref,-1),addD(ref,-1)],bl:'dia anterior'},
+    {k:'Dia × semana passada',a:[ref,ref],b:[addD(ref,-7),addD(ref,-7)],bl:'mesmo dia da semana passada'},
+    {k:'Semana',a:[mo,ref],b:[addD(mo,-7),addD(ref,-7)],bl:'mesmos dias da semana anterior'},
+    {k:'Quinzena',a:[qs,ref],b:[pqs,minD(addD(pqs,k),pqe)],bl:'mesmos dias da quinzena anterior'},
+    {k:'Mês',a:[m1,ref],b:[pm1,minD(addD(pm1,ref.getDate()-1),lastOfMonth(pm1))],bl:'mesmos dias do mês anterior'}];
 }
-function dcell(a,b,opt={}){
-  if(a==null||b==null)return '<td class="r flat">—</td>';
-  const d=a-b;if(Math.abs(d)<1e-9)return '<td class="r flat">0</td>';
-  const good=opt.good===undefined?null:(opt.good?d>0:d<0);
-  const cls=good===null?(d>0?'up':'down'):(good?'up':'down');
-  let txt;if(opt.pp)txt=(d>0?'+':'')+d.toFixed(1).replace('.',',')+' p.p.';
-  else if(opt.min)txt=(d>0?'+':'−')+fmtMin(Math.abs(d));
-  else{txt=(d>0?'+':'')+(Number.isInteger(d)?d:d.toFixed(1).replace('.',','));if(b>0)txt+=` (${d>0?'+':''}${fp(d/b*100)})`}
-  return `<td class="r ${cls}">${d>0?'▲':'▼'} ${txt}</td>`;
-}
-function metrics(a,days){const cl=a.filter(r=>r.closed);const proms=new Set(a.map(r=>r.prom)).size;
-  return{n:a.length,perDay:days?a.length/days:0,proms,perProm:proms?a.length/proms:0,noResp:a.filter(r=>!r.hasFirst).length,fr:gmed(a.map(r=>r.frMin)),
-    cl:cl.length,conv:pct(a.filter(isConv).length,a.length),atag:pct(a.filter(r=>r.atag).length,a.length),ctag:cl.length?pct(cl.filter(r=>r.ctag).length,cl.length):null}}
-function gbars(el,labels,A,B){const m=Math.max(1,...A,...B);
-  el.innerHTML=labels.map((l,i)=>`<div class="gb" title="${l}: A ${A[i]} · B ${B[i]}"><div class="pair"><i class="a" style="height:${A[i]/m*100}%"></i><i class="b" style="height:${B[i]/m*100}%"></i></div><div class="lab">${l}</div></div>`).join('')}
-function renderCmp(){
-  cmpPreset();
-  ['aFrom','aTo','bFrom','bTo'].forEach(k=>$('#'+k).value=iso(cmp[k]));
-  const A=rows.filter(r=>scope(r)&&inRng(r,cmp.aFrom,cmp.aTo)),B=rows.filter(r=>scope(r)&&inRng(r,cmp.bFrom,cmp.bTo));
-  const span=(f,t)=>f&&t?Math.round((t-f)/DAY)+1:0;const dA=span(cmp.aFrom,cmp.aTo),dB=span(cmp.bFrom,cmp.bTo);
-  const lbl=(f,t)=>f&&t?(iso(f)===iso(t)?f.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}):`${ddmm(f)} a ${ddmm(t)}`):'—';
-  $('#cmpRef').textContent=`A: ${lbl(cmp.aFrom,cmp.aTo)} (${dA} dia${dA>1?'s':''}) · B: ${lbl(cmp.bFrom,cmp.bTo)} (${dB} dia${dB>1?'s':''}). Último dia com dados: ${ddmm(refDay())}. Respeita os filtros de gestão e supervisor; o período do topo não se aplica aqui.`;
-  const ma=metrics(A,dA),mb=metrics(B,dB);
-  const n1=v=>v.toFixed(1).replace('.',',');
-  const K=[['Leads recebidos','n',v=>v,{}],['Leads por dia','perDay',n1,{}],['Promotores ativos','proms',v=>v,{}],['Leads por promotor','perProm',n1,{}],
-    ['Sem 1ª resposta','noResp',v=>v,{good:false}],['1ª resposta (mediana)','fr',fmtMin,{good:false,min:true}],['Encerrados','cl',v=>v,{}],
-    ['Conversão','conv',fp,{good:true,pp:true}],['Leads com Agent Tag','atag',fp,{good:true,pp:true}],['Encerrados com tag','ctag',v=>v==null?'—':fp(v),{good:true,pp:true}]];
-  $('#cKpi').innerHTML=`<tr><th>Indicador</th><th class="r"><span class="swA"></span>A</th><th class="r"><span class="swB"></span>B</th><th class="r">Variação</th></tr>`+
-    K.map(([l,k,f,o])=>`<tr><td>${l}</td><td class="r"><b>${ma[k]==null?'—':f(ma[k])}</b></td><td class="r">${mb[k]==null?'—':f(mb[k])}</td>${dcell(ma[k],mb[k],o)}</tr>`).join('');
-  const diffTable=(el,key,title,limit)=>{const ca=countMap(A,key),cb=countMap(B,key);const keys=[...new Set([...ca.keys(),...cb.keys()])];
-    const L=keys.map(k=>({k,a:ca.get(k)||0,b:cb.get(k)||0})).sort((x,y)=>Math.abs(y.a-y.b)-Math.abs(x.a-x.b)||y.a-x.a);
-    $(el).innerHTML=`<tr><th>${title}</th><th class="r"><span class="swA"></span>A</th><th class="r"><span class="swB"></span>B</th><th class="r">Variação</th></tr>`+
-      (L.length?L.slice(0,limit||999).map(x=>`<tr><td>${esc(x.k)}</td><td class="r"><b>${x.a}</b></td><td class="r">${x.b}</td>${dcell(x.a,x.b)}</tr>`).join(''):'<tr><td colspan="4" style="color:var(--muted)">Sem leads nos dois períodos.</td></tr>')+
-      (limit&&L.length>limit?`<tr><td colspan="4" class="cap">Mostrando ${limit} de ${L.length}.</td></tr>`:'')};
-  {const ca=countMap(A,r=>r.sup),cb=countMap(B,r=>r.sup);const keys=[...new Set([...ca.keys(),...cb.keys()])].sort(supOrder);
-   const g=s=>s==='FABIO'?'Fabio':'Josy';
-   $('#cSup').innerHTML=`<tr><th>Supervisor</th><th class="r"><span class="swA"></span>A</th><th class="r"><span class="swB"></span>B</th><th class="r">Variação</th></tr>`+
-    keys.map(k=>`<tr><td><b>${esc(k)}</b> ${gl(g(k))}</td><td class="r"><b>${ca.get(k)||0}</b></td><td class="r">${cb.get(k)||0}</td>${dcell(ca.get(k)||0,cb.get(k)||0)}</tr>`).join('')+
-    ['Fabio','Josy'].filter(x=>state.g==='all'||state.g===x).map(x=>{const a=A.filter(r=>r.g===x).length,b=B.filter(r=>r.g===x).length;return `<tr style="background:var(--soft)"><td><b>Total gestão ${x}</b></td><td class="r"><b>${a}</b></td><td class="r"><b>${b}</b></td>${dcell(a,b)}</tr>`}).join('')}
-  diffTable('#cProm',r=>r.prom,'Promotor',40); diffTable('#cFila',r=>r.fila,'Fila',40);
-  const hA=Array(24).fill(0),hB=Array(24).fill(0);A.forEach(r=>{if(r.d)hA[r.d.getHours()]++});B.forEach(r=>{if(r.d)hB[r.d.getHours()]++});
-  const hs=[...Array(24).keys()].filter(h=>hA[h]||hB[h]);const h0=hs.length?Math.min(...hs):8,h1=hs.length?Math.max(...hs):18;const H=[];for(let h=h0;h<=h1;h++)H.push(h);
-  gbars($('#cHour'),H.map(h=>h+'h'),H.map(h=>hA[h]),H.map(h=>hB[h]));
-  $('#cWdWrap').hidden=!(dA>1||dB>1);
-  if(dA>1||dB>1){const order=[1,2,3,4,5,6,0],nm=['dom','seg','ter','qua','qui','sex','sáb'];const wA=Array(7).fill(0),wB=Array(7).fill(0);
-    A.forEach(r=>{if(r.d)wA[r.d.getDay()]++});B.forEach(r=>{if(r.d)wB[r.d.getDay()]++});
-    gbars($('#cWd'),order.map(i=>nm[i]),order.map(i=>wA[i]),order.map(i=>wB[i]))}
+const shade=()=>'';const cbar=(v,m)=>`<div class="cb"><span class="cbt"><i style="width:${m?v/m*100:0}%"></i></span><span>${v}</span></div>`;
+function renderRes(){
+  const S=rows.filter(scope);const box=$('#view-res');if(!box)return;
+  if(!S.length){$('#rDay').innerHTML='<p class="note">Sem dados para os filtros.</p>';return}
+  const ref=resDay||refDay();$('#rPick').value=iso(ref);
+  const showG=state.g==='all'&&!state.sup;
+  /* como foi o dia */
+  const D=S.filter(r=>r.d&&iso(r.d)===iso(ref)),Y=S.filter(r=>r.d&&iso(r.d)===iso(addD(ref,-1))),W=S.filter(r=>r.d&&iso(r.d)===iso(addD(ref,-7)));
+  const hrs=countMap(D,r=>String(r.d.getHours()));const pk=[...hrs.entries()].sort((a,b)=>b[1]-a[1])[0];
+  const card=(v,l,cmp)=>`<div class="rc"><b>${v}</b><small>${l}</small>${cmp?`<em>${cmp}</em>`:''}</div>`;
+  $('#rDayT').textContent=`Como foi o dia: ${ref.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}`;
+  $('#rDay').innerHTML=`<div class="rcards">`+
+    card(D.length,'leads recebidos',`${dPct(D.length,Y.length)} vs dia anterior (${Y.length}) · ${dPct(D.length,W.length)} vs semana passada (${W.length})`)+
+    (showG?card(`${D.filter(r=>r.g==='Fabio').length} <span class="sep">/</span> ${D.filter(r=>r.g==='Josy').length}`,'Fabio / Josy'):card(new Set(D.map(r=>r.prom)).size,'promotores com leads'))+
+    card(D.filter(r=>!r.hasFirst).length,'sem 1ª resposta',D.length?fp(pct(D.filter(r=>!r.hasFirst).length,D.length))+' do dia':'')+
+    card(D.filter(r=>r.closed).length,'encerrados')+
+    card(D.filter(isConv).length,'convertidos',D.length?fp(pct(D.filter(isConv).length,D.length))+' de conversão':'')+
+    card(pk?pk[0]+'h':'—','hora de pico',pk?pk[1]+' leads':'')+`</div>`;
+  /* resumo de períodos */
+  const P=periodsFor(ref);
+  $('#rSum').innerHTML=`<thead><tr><th>Período</th><th>Atual</th><th class="r">Leads</th><th>Comparado com</th><th class="r">Leads</th><th class="r">Variação</th><th class="r">Média/dia</th>${showG?'<th class="r">Fabio</th><th class="r">Josy</th>':''}</tr></thead><tbody>`+
+    P.map(p=>{const a=cnt(S,...p.a),b=cnt(S,...p.b);return `<tr><td><b>${p.k}</b></td><td>${rngLbl(...p.a)}</td><td class="r big2">${a}</td><td>${rngLbl(...p.b)}<span class="sub2">${p.bl}</span></td><td class="r">${b}</td><td class="r">${dPct(a,b)}</td><td class="r">${(a/nDays(...p.a)).toFixed(1).replace('.',',')}</td>${showG?`<td class="r">${cnt(S.filter(r=>r.g==='Fabio'),...p.a)}</td><td class="r">${cnt(S.filter(r=>r.g==='Josy'),...p.a)}</td>`:''}</tr>`}).join('')+'</tbody>';
+  /* por equipe */
+  const sups=[...new Set(S.map(r=>r.sup))].sort(supOrder);const PP=[P[0],P[2],P[3],P[4]];
+  const tcell=(SS,p)=>{const a=cnt(SS,...p.a),b=cnt(SS,...p.b);return `<td class="r"><b>${a}</b><span class="sub2">${b} antes · ${dPct(a,b)}</span></td>`};
+  $('#rTeam').innerHTML=`<thead><tr><th>Equipe</th>${PP.map(p=>`<th class="r">${p.k}<span class="sub2">${rngLbl(...p.a)}</span></th>`).join('')}</tr></thead><tbody>`+
+    sups.map(s=>{const SS=S.filter(r=>r.sup===s);return `<tr><td><b>${esc(s)}</b> ${gl(s==='FABIO'?'Fabio':'Josy')}</td>${PP.map(p=>tcell(SS,p)).join('')}</tr>`}).join('')+
+    (sups.length>1?`<tr class="tfoot"><td><b>Total</b></td>${PP.map(p=>tcell(S,p)).join('')}</tr>`:'')+'</tbody>';
+  const fd0=(()=>{let m=null;S.forEach(r=>{if(r.d&&(!m||r.d<m))m=r.d});return m?sod(m):ref})();
+  /* dia a dia */
+  const days=[];for(let i=0;i<31;i++){const d=addD(ref,-i);if(d<fd0)break;days.push(d)}
+  const byDay={};S.forEach(r=>{if(!r.d)return;const k=iso(r.d);const o=byDay[k]||(byDay[k]={n:0,f:0,j:0});o.n++;o[r.g==='Fabio'?'f':'j']++});
+  const g=k=>byDay[iso(k)]||{n:0,f:0,j:0};const mx=Math.max(1,...days.map(d=>g(d).n));
+  const vals=days.map(d=>g(d).n).filter(v=>v>0);const avg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;
+  $('#rDays').innerHTML=`<thead><tr><th>Data</th><th>Leads</th>${showG?'<th class="r">Fabio</th><th class="r">Josy</th>':''}<th class="r">vs dia anterior</th><th class="r">vs semana passada</th></tr></thead><tbody>`+
+    days.map(d=>{const v=g(d),y=g(addD(d,-1)),w=g(addD(d,-7)),we=d.getDay()===0||d.getDay()===6;
+      return `<tr class="${we?'we':''} ${d.getDay()===1?'wkstart':''}"><td>${wdN[d.getDay()]} ${ddmm(d)}</td><td class="big2">${cbar(v.n,mx)}</td>${showG?`<td class="r">${v.f}</td><td class="r">${v.j}</td>`:''}<td class="r">${dPct(v.n,y.n)}</td><td class="r">${dPct(v.n,w.n)}</td></tr>`}).join('')+
+    `<tr class="tfoot"><td><b>Média (dias com leads)</b></td><td class="r"><b>${avg.toFixed(1).replace('.',',')}</b></td>${showG?'<td></td><td></td>':''}<td></td><td></td></tr></tbody>`;
+  /* históricos */
+  const first=S.reduce((m,r)=>r.d&&(!m||r.d<m)?r.d:m,null);const fd=first?sod(first):ref;
+  const hist=(el,list,lbl)=>{const data=list.filter(([f,t])=>t>=fd).map(([f,t,full])=>{const n=cnt(S,f,t);return{f,t,n,avg:n/nDays(f,t),full}});const m=Math.max(1,...data.map(x=>x.n));
+    $(el).innerHTML=`<thead><tr><th>${lbl}</th><th>Leads</th><th class="r">Média/dia</th><th class="r">Variação</th></tr></thead><tbody>`+
+      data.map((x,i)=>{const prev=data[i+1];return `<tr><td>${rngLbl(x.f,x.t)}${x.full?'':'<span class="sub2">em andamento</span>'}</td><td class="big2">${cbar(x.n,m)}</td><td class="r">${x.avg.toFixed(1).replace('.',',')}</td><td class="r">${prev?dPct(x.avg,prev.avg):'<span class="flat">—</span>'}</td></tr>`}).join('')+'</tbody>'};
+  const wk=[];let mo=monday(ref);for(let i=0;i<8;i++){const s=addD(mo,-7*i),e=addD(s,6);wk.push([s,i===0?ref:e,i>0||iso(e)===iso(ref)])}
+  hist('#rWeek',wk,'Semana');
+  const qz=[];let cs=ref.getDate()<=15?new Date(ref.getFullYear(),ref.getMonth(),1):new Date(ref.getFullYear(),ref.getMonth(),16);
+  for(let i=0;i<6;i++){const ce=cs.getDate()===1?new Date(cs.getFullYear(),cs.getMonth(),15):lastOfMonth(cs);qz.push([cs,i===0?ref:ce,i>0||iso(ce)===iso(ref)]);cs=cs.getDate()===1?new Date(cs.getFullYear(),cs.getMonth()-1,16):new Date(cs.getFullYear(),cs.getMonth(),1)}
+  hist('#rFort',qz,'Quinzena');
+  const ms=[];for(let i=0;i<6;i++){const s=new Date(ref.getFullYear(),ref.getMonth()-i,1),e=lastOfMonth(s);ms.push([s,i===0?ref:e,i>0||iso(e)===iso(ref)])}
+  hist('#rMonth',ms,'Mês');
 }
 
 /* ---------- tabela ordenável ---------- */
@@ -786,8 +820,7 @@ $('#fSup').onchange=e=>{state.sup=e.target.value;render()};
 $('#fPreset').onchange=e=>{applyPreset(e.target.value);render()};
 $('#fFrom').onchange=()=>{state.preset='custom';state.from=fromIso($('#fFrom').value);render()};
 $('#fTo').onchange=()=>{state.preset='custom';state.to=fromIso($('#fTo').value);render()};
-$('#cPreset').onchange=()=>{cmp.preset=$('#cPreset').value;cmpPreset();renderCmp()};
-['aFrom','aTo','bFrom','bTo'].forEach(id=>$('#'+id).onchange=()=>{cmp.preset='custom';$('#cPreset').value='custom';cmp[id]=fromIso($('#'+id).value);renderCmp()});
+$('#rPick').onchange=e=>{resDay=fromIso(e.target.value);renderRes()};
 $('#kw').oninput=()=>{try{localStorage.setItem('leadsKw',$('#kw').value)}catch(e){};render()};
 const dlg=$('#dlg');
 const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
